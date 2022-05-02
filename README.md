@@ -1,7 +1,7 @@
 # GreasePad
-**Freehand Drawing guided by Geometric Reasoning**
+**Freehand Drawing guided by Geometric REASoning**
 
-The *GreasePad* provides a drawing area and expects pen strokes as the only user input. These strokes are approximated by straight line segments leading to line drawings. During this interactive process, geometric relations such as orthogonallity are recognized and automatically enforced by an adjustment procedure. The program can be utilzed to analyse systems of straight lines and constraints (theorem proving) or to outline the shapes of human-made objects in images. As an input pointing device, you can use a computer mouse, a stylus, or one of your fingers in combination with a touchscreen.
+The *GreasePad* provides a drawing area and expects pen strokes as the only user input. These strokes are approximated by straight line segments leading to line drawings. During this interactive process, geometric relations such as orthogonallity are recognized and automatically enforced by an adjustment procedure. The program can be utilzed to analyse systems of straight lines and constraints (theorem proving) or to outline the shapes of human-made objects in images. As a pointing device, you can use a computer mouse, a stylus, or one of your fingers in combination with a touchscreen.
 
 
 ### Screenshots
@@ -12,7 +12,7 @@ The *GreasePad* provides a drawing area and expects pen strokes as the only user
 
 ### Copyright
 
-Copyright (C) 2022 Jochen Meidow, [Fraunhofer IOSB](http::/www.iosb.fraunhofer.de), Germany.
+Copyright (c) 2022 Jochen Meidow, [Fraunhofer IOSB](http::/www.iosb.fraunhofer.de), Germany.
 
 
 ### Licensing
