@@ -36,7 +36,7 @@ For the compiliation and building of the programme, the following components are
 - Get the Qt toolkit and the Eigen library.
 - Clone the source code, i.e.,
 `git clone www.github.com/FraunhoferIOSB/GreasePad.git`
-- Building the programme, e.g., using the integrated development environment *QtCreator*.
+- Building the programme, e.g., using the integrated development environment *QtCreator* or using *CMake* with the file *CMakeLists.txt*.
 
 ### Contributing to GreasePad
 
