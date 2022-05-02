@@ -1,0 +1,102 @@
+/*
+ * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
+ * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#include "global.h"
+#include "qstroke.h"
+
+#include <QGraphicsSceneMouseEvent>
+#include <QPainter>
+
+namespace QEntity {
+
+QPen QStroke::s_defaultPen = QPen();
+bool QStroke::s_show = false;
+
+void QStroke::serialize( QDataStream &out ) const
+{
+    // qDebug() << Q_FUNC_INFO;
+    out << m_pen;
+    out << polygon(); //  pointSet_;
+}
+
+bool QStroke::deserialize( QDataStream &in )
+{
+    // qDebug() << Q_FUNC_INFO;
+    in >> m_pen;
+    // in >> pointSet_;
+    QPolygonF p;
+    in >> p;
+    setPolygon(p);
+    return in.status()==0;
+}
+
+
+QStroke::QStroke() {
+    // qDebug() << Q_FUNC_INFO;
+    setVisible( s_show );
+    setFlag( ItemIsSelectable, true);
+}
+
+QStroke::QStroke( const QPolygonF &p )
+    : QGraphicsPolygonItem ( p)
+{
+    // qDebug() << Q_FUNC_INFO << s_show;
+    setVisible( s_show );
+    setFlag( ItemIsSelectable, true);
+
+    m_pen = s_defaultPen;
+}
+
+void QStroke::paint( QPainter *painter,
+                     const QStyleOptionGraphicsItem *option,
+                     QWidget *widget)
+{
+    Q_UNUSED(option)
+    Q_UNUSED(widget)
+    // qDebug() << Q_FUNC_INFO;
+
+    if ( isSelected() ) {
+        painter->setPen( QPen( Qt::black, 2, Qt::DashLine, Qt::RoundCap) );
+        painter->drawPolygon( boundingRect() );
+    }
+    painter->setPen( m_pen );
+    painter->drawPoints( polygon() );
+
+    // ?? QGraphicsPolygonItem::paint(painter,option,widget);
+}
+
+
+/*QStroke & QStroke::operator=( const QStroke &other)
+{
+    // qDebug() << Q_FUNC_INFO;
+    if ( &other != this ) {
+        m_pen      = other.m_pen;
+    }
+    return *this;
+}*/
+
+void QStroke::mousePressEvent( QGraphicsSceneMouseEvent * event )
+{
+    // qDebug() << Q_FUNC_INFO ;
+    if ( event->button() == Qt::RightButton ) {
+        setSelected( !isSelected() );
+    }
+}
+
+
+} // namespace QEntity

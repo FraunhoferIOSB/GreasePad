@@ -1,0 +1,1207 @@
+/*
+ * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
+ * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#include "commands.h"
+#include "mainscene.h"
+#include "mainview.h"
+#include "mainwindow.h"
+#include "qformattool.h"
+
+#include "qconstraints.h"
+#include "qsegment.h"
+#include "qstroke.h"
+
+#include <QApplication>
+#include <QBuffer>
+#include <QClipboard>
+#include <QCoreApplication>
+#include <QDebug>
+#include <QDir>
+#include <QDoubleSpinBox>
+#include <QFile>
+#include <QFileDialog>
+#include <QGraphicsScene>
+#include <QGraphicsSceneMouseEvent>
+#include <QGraphicsView>
+#include <QImageReader>
+#include <QLabel>
+#include <QMenu>
+#include <QMenuBar>
+#include <QMessageBox>
+#include <QMimeData>
+#include <QPdfWriter>
+#include <QStyleOptionGraphicsItem>
+#include <QSvgGenerator>
+#include <QToolBar>
+#include <QWheelEvent>
+
+// #include <Eigen/Dense>
+
+
+namespace GUI {
+
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+{
+    qDebug() <<  Q_FUNC_INFO;
+
+    setWindowIcon( QIcon( QPixmap( ":/icons/Tango/preferences-desktop-peripherals.svg" )));
+
+
+    // createPenTool()
+    penTool = std::make_unique<FormatTool>("Properties", this);
+
+    setAttribute( Qt::WA_StaticContents);
+    setAttribute( Qt::WA_AcceptTouchEvents);
+
+    setSizePolicy( QSizePolicy::Expanding,
+                   QSizePolicy::Expanding);
+
+    // create undo stack .............................................
+    m_undoStack = std::make_unique<QUndoStack>(this);
+    m_undoStack->setUndoLimit( UndoLimit );
+
+    // curr_state = std::make_unique<State>();
+    // curr_state = new State();
+    m_pixmap = nullptr; // background
+
+    double alpha = 0.1;
+    State::setAlphaRecognition( alpha );
+    State::setAlphaSnapping(    alpha );
+
+    createSceneAndView();
+    // createUndoView();
+    createActions();
+    createMenus();
+    createBoxes();
+    establishConnections();
+    createToolBars();
+    createStatusBar();
+
+    setCurrentFileName( QString());
+
+    QConstraint::QConstraintBase::setDefaultPenReq(
+                QPen( Qt::blue, 2, Qt::SolidLine, Qt::RoundCap, Qt::MiterJoin)
+                );
+
+    QConstraint::QConstraintBase::setDefaultPenRed(
+                QPen( Qt::blue, 2, Qt::DotLine,  Qt::RoundCap, Qt::RoundJoin)
+                );
+
+    QConstraint::QConstraintBase::setPenSelected(
+                QPen(  Qt::black,2, Qt::DashLine,  Qt::RoundCap, Qt::RoundJoin)
+                );
+
+    QEntity::QConstrained::setPenDefault(
+                QPen( Qt::black,  2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin )
+                );
+
+    QEntity::QUnconstrained::setPenDefault(
+                QPen( Qt::lightGray, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin )
+                );
+
+    QEntity::QStroke::setPenDefault(
+                QPen( Qt::darkRed, 2, Qt::SolidLine, Qt::RoundCap)
+                );
+}
+
+MainWindow::~MainWindow()
+{
+    // qDebug() << Q_FUNC_INFO;
+
+    m_undoStack->clear();
+    curr_state.clearAll();
+
+    if ( m_pixmap!=nullptr ) {
+        m_scene->removeItem( m_pixmap.get() );
+    }
+
+    qDebug() << "Bye bye.";
+}
+
+void MainWindow::createSceneAndView()
+{
+    m_scene = std::make_unique<MainScene>( this );
+    Cmd::Undo::setScene( m_scene.get());
+
+    m_view  = std::make_unique<MainView>( m_scene.get(), this );
+    setCentralWidget( m_view.get() );
+    showMaximized();     // after 'setCentralWidget'
+}
+
+void MainWindow::slotToggleShowUnconstrained()
+{
+    // qDebug() << Q_FUNC_INFO;
+    QEntity::QUnconstrained::toggleShow();
+    curr_state.toggleVisibilityUnconstrained();
+    m_scene->update();
+}
+
+void MainWindow::slotToggleShowConstrained()
+{
+    // qDebug() << Q_FUNC_INFO;
+    QEntity::QConstrained::toggleShow();
+    curr_state.toggleVisibilityConstrained();
+    m_scene->update();
+}
+
+
+
+void MainWindow::closeEvent( QCloseEvent * event)
+{
+    Q_UNUSED( event )
+    // qDebug() << Q_FUNC_INFO;
+    // TODO(meijoc)  event->setAccepted( maybeSave() ); //? true : false);
+    /* if ( maybeSave() ) {
+        // writeSettings();
+        event->accept();
+    } else {
+        event->ignore();
+    }*/
+}
+
+void MainWindow::createActions()
+{
+    actionUndo = std::unique_ptr<QAction>( m_undoStack->createUndoAction( this, "Undo") );
+    actionUndo->setShortcuts( QKeySequence::Undo );
+    actionUndo->setIcon( style()->standardIcon( QStyle::SP_ArrowBack) );
+
+    actionRedo = std::unique_ptr<QAction>( m_undoStack->createRedoAction( this, "Redo") );
+    actionRedo->setShortcuts( QKeySequence::Redo );
+    actionRedo->setIcon( style()->standardIcon( QStyle::SP_ArrowForward) );
+
+    actionExit = std::make_unique<QAction>( "Exit" );
+    actionExit->setShortcut( QKeySequence( "Ctrl+Q" ) );
+    actionExit->setIcon( style()->standardIcon( QStyle::SP_BrowserStop));
+
+    actionTabulaRasa = std::make_unique<QAction>( "Delete all" );
+    actionTabulaRasa->setToolTip(  "Make a clean sweep (blank state)");
+    actionTabulaRasa->setIcon( QPixmap(":/icons/Tango/Edit-clear.svg" ) );
+    actionTabulaRasa->setIcon( style()->standardIcon( QStyle::SP_DialogResetButton ) );
+
+    actionDeleteSelection = std::make_unique<QAction>( "Delete selected items" );
+    actionDeleteSelection->setShortcut( QKeySequence::Delete );
+    actionDeleteSelection->setEnabled( false );
+    actionDeleteSelection->setIcon( style()->standardIcon( QStyle::SP_DialogCancelButton) );
+
+    actionToggleSelection = std::make_unique<QAction>( "Select all" );
+    actionToggleSelection->setToolTip(  "Select all visible items" );
+    actionToggleSelection->setShortcut( QKeySequence::SelectAll);
+
+    actionDeselectAll = std::make_unique<QAction>( "Deselect all" );
+    actionDeselectAll->setToolTip(  "Deselect all items" );
+    actionDeselectAll->setShortcut( QKeySequence( "Ctrl+Shift+A") );
+
+    actionBackgroundImageLoad = std::make_unique<QAction>( "Load background image..." );
+    actionBackgroundImageLoad->setToolTip( "Load background image from file" );
+    actionBackgroundImageLoad->setIcon( QIcon( QPixmap( ":/icons/Tango/Image-x-generic.svg" )));
+
+    actionBackgroundImageRemove = std::make_unique<QAction>( "Remove background image");
+    actionBackgroundImageRemove->setToolTip(  "Remove loaded background image" );
+    actionBackgroundImageRemove->setDisabled( true );
+    actionBackgroundImageRemove->setIcon( style()->standardIcon( QStyle::SP_DialogCancelButton ) );
+
+    actionBackgroundImageToggleShow = std::make_unique<QAction>( "Show background image");
+    actionBackgroundImageToggleShow->setToolTip(   "Show/hide loaded background image" );
+    actionBackgroundImageToggleShow->setIcon(      QPixmap( ":/icons/Tango/Image-x-generic.svg" ));
+    actionBackgroundImageToggleShow->setCheckable( true );
+    actionBackgroundImageToggleShow->setDisabled(  true );
+    actionBackgroundImageToggleShow->setChecked(   false );
+    actionBackgroundImageToggleShow->setIconVisibleInMenu( false );
+
+    actionToggleShowStrokes = std::make_unique<QAction>( "Show strokes" );
+    actionToggleShowStrokes->setToolTip(   "Show pen strokes (mouse tracks)" );
+    actionToggleShowStrokes->setCheckable( true );
+    actionToggleShowStrokes->setIcon(      QPixmap( ":/icons/show_strokes.svg") );
+    actionToggleShowStrokes->setChecked(   QEntity::QStroke::show() );
+    actionToggleShowStrokes->setIconVisibleInMenu( false );
+
+    actionToggleShowUnconstrained = std::make_unique<QAction>( "Show unconstrained segments" );
+    actionToggleShowUnconstrained->setToolTip(   "Show unconstrained segments" );
+    actionToggleShowUnconstrained->setCheckable( true );
+    actionToggleShowUnconstrained->setChecked(   QEntity::QUnconstrained::show() );
+    actionToggleShowUnconstrained->setIcon(      QPixmap(":/icons/show_unconstrained.svg") );
+    actionToggleShowUnconstrained->setIconVisibleInMenu( false );
+
+    actionToggleShowConstrained = std::make_unique<QAction>( "Show constrained segments" );
+    actionToggleShowConstrained->setToolTip(   "Show constrained segments" );
+    actionToggleShowConstrained->setCheckable( true );
+    actionToggleShowConstrained->setChecked(   QEntity::QConstrained::show() );
+    actionToggleShowConstrained->setIcon(      QPixmap(":/icons/show_constrained.svg"));
+    actionToggleShowConstrained->setIconVisibleInMenu( false );
+
+    actionToggleShowUncertainty = std::make_unique<QAction>( "Show uncertainty" );
+    actionToggleShowUncertainty->setShortcut(  QKeySequence( "Ctrl+U") );
+    actionToggleShowUncertainty->setToolTip(   "Show confidence regions" );
+    actionToggleShowUncertainty->setCheckable( true );
+    actionToggleShowUncertainty->setChecked(   QEntity::QSegment::showUncertainty() );
+    actionToggleShowUncertainty->setIcon(      QPixmap( ":/icons/show_uncertain.svg" ));
+    actionToggleShowUncertainty->setIconVisibleInMenu(false);
+
+    actionToggleShowConstraints = std::make_unique<QAction>( "Show constraints" );
+    actionToggleShowConstraints->setToolTip(   "Show constraints" );
+    actionToggleShowConstraints->setCheckable( true );
+    actionToggleShowConstraints->setChecked(   QConstraint::QConstraintBase::show() );
+    actionToggleShowConstraints->setIcon(      QPixmap( ":/icons/show_constraints.svg" ));
+    actionToggleShowConstraints->setIconVisibleInMenu( false );
+
+    actionToggleShowColoration = std::make_unique<QAction>( "Colorize connected components" );
+    actionToggleShowColoration->setToolTip(   "Colorize connected components, i.e., subtasks" );
+    actionToggleShowColoration->setCheckable( true );
+    actionToggleShowColoration->setChecked(   QEntity::QConstrained::showColor() );
+    actionToggleShowColoration->setIcon(      QPixmap( ":/icons/show_cc.svg" ));
+    actionToggleShowColoration->setIconVisibleInMenu( false );
+
+    actionExportSaveAs = std::make_unique<QAction>( "Export as..." );
+    actionExportSaveAs->setDisabled( false );
+    actionExportSaveAs->setToolTip(  "Export entire scene as SVG or in PDF." );
+    actionExportSaveAs->setIcon(     style()->standardIcon( QStyle::SP_FileIcon) );
+
+    actionBinaryRead = std::make_unique<QAction>( "Open..." );
+    actionBinaryRead->setShortcut( QKeySequence::Open );
+    actionBinaryRead->setToolTip(  "load file content");
+    actionBinaryRead->setIcon(     style()->standardIcon( QStyle::SP_DialogOpenButton) );
+    actionBinaryRead->setDisabled( false);
+
+    actionBinarySave = std::make_unique<QAction>( "Save" );
+    actionBinarySave->setDisabled( true );
+    actionBinarySave->setIcon( style()->standardIcon( QStyle::SP_DialogSaveButton) );
+    actionBinarySave->setShortcut( QKeySequence("Ctrl+S") );
+
+    actionFitInView = std::make_unique<QAction>( "Fit in view" );
+    // actionFitInView->setIcon( QIcon(QPixmap( ":/icons/fit_in_view.svg" )));
+    actionFitInView->setIcon( QIcon(QPixmap( ":/icons/Tango/view-fullscreen.svg")));
+    actionFitInView->setIconVisibleInMenu(   true );
+    actionFitInView->setToolTip(             "Scale scene to fit in view" );
+
+    actionAbout = std::make_unique<QAction>( "About" );
+    actionAbout->setIcon( style()->standardIcon( QStyle::SP_FileDialogInfoView) );
+
+    actionAboutQt = std::make_unique<QAction>( "About Qt" );
+    actionAboutQt->setIcon( style()->standardIcon( QStyle::SP_TitleBarMenuButton) );
+
+    actionToggleConsiderOrthogonal = std::make_unique<QAction>( "Consider orthogonallity" );
+    actionToggleConsiderOrthogonal->setToolTip(   "Consider orthogonallity" );
+    actionToggleConsiderOrthogonal->setCheckable( true );
+    actionToggleConsiderOrthogonal->setChecked(   State::considerOrthogonality() );
+    actionToggleConsiderOrthogonal->setIconVisibleInMenu( false );
+    actionToggleConsiderOrthogonal->setIcon( QPixmap( ":/icons/consider_orthogonality.svg" ));
+
+    actionToggleConsiderParallel = std::make_unique<QAction>( "Consider parallelism" );
+    actionToggleConsiderParallel->setToolTip(   "Consider parallelism" );
+    actionToggleConsiderParallel->setCheckable( true );
+    actionToggleConsiderParallel->setChecked(   State::considerParallelism() );
+    actionToggleConsiderParallel->setIconVisibleInMenu( false );
+    actionToggleConsiderParallel->setIcon( QPixmap( ":/icons/consider_parallelism.svg" ));
+
+    actionToggleConsiderConcurrent = std::make_unique<QAction>( "Consider concurrence" );
+    actionToggleConsiderConcurrent->setToolTip( "Consider concurrence (copunctual)" );
+    actionToggleConsiderConcurrent->setCheckable( true );
+    actionToggleConsiderConcurrent->setChecked( State::considerConcurrence() );
+    actionToggleConsiderConcurrent->setIconVisibleInMenu( false );
+    actionToggleConsiderConcurrent->setIcon( QPixmap( ":/icons/consider_concurrence.svg" ));
+
+
+    actionChangeFormat = std::make_unique<QAction>( "Format selected entities", this);
+    actionChangeFormat->setToolTip( "Format selected entities (Ctrl+F)" );
+    actionChangeFormat->setShortcut( QKeySequence("Ctrl+F"));
+
+}
+
+void MainWindow::createBoxes()
+{
+    qDebug() << Q_FUNC_INFO;
+
+    spinBoxAlphaRecognition = std::make_unique<QDoubleSpinBox>( this );
+    spinBoxAlphaRecognition->setRange(      alphaBox.min,alphaBox.max);
+    spinBoxAlphaRecognition->setSingleStep( alphaBox.step);
+    spinBoxAlphaRecognition->setDecimals(   alphaBox.decimals);
+    spinBoxAlphaRecognition->setValue(      alphaBox.default_val);
+    spinBoxAlphaRecognition->setPrefix(  QString::fromUtf8("α="));
+    spinBoxAlphaRecognition->setSuffix(  " ");
+    spinBoxAlphaRecognition->setToolTip( "significance level" );
+
+    QFont font = spinBoxAlphaRecognition->font();
+    font.setPointSize( font.pointSize()+1 );
+    spinBoxAlphaRecognition->setFont(font);
+
+    spinBoxAlphaSnap = std::make_unique<QDoubleSpinBox>( this );
+    spinBoxAlphaSnap->setRange(      alphaBox.min,alphaBox.max);
+    spinBoxAlphaSnap->setSingleStep( alphaBox.step);
+    spinBoxAlphaSnap->setDecimals(   alphaBox.decimals);
+    spinBoxAlphaSnap->setValue(      alphaBox.default_val);
+    spinBoxAlphaSnap->setPrefix(     QString::fromUtf8("α=") );
+    spinBoxAlphaSnap->setSuffix(     " " );
+    spinBoxAlphaSnap->setToolTip(    "significance level" );
+    spinBoxAlphaSnap->setFont( font );
+
+    /*spinBoxVizu = new QDoubleSpinBox(this);
+    spinBoxVizu->setRange(confBox.min,confBox.max);
+    spinBoxVizu->setSingleStep(confBox.step);
+    spinBoxVizu->setDecimals(confBox.decimals);
+    spinBoxVizu->setValue(confBox.default_val);
+    spinBoxVizu->setPrefix(QStringLiteral("P="));
+    spinBoxVizu->setSuffix(QStringLiteral(" "));
+    spinBoxVizu->setToolTip(QStringLiteral("visualization confidence region"));
+*/
+    spinBoxOpacity = std::make_unique<QDoubleSpinBox>( this );
+    spinBoxOpacity->setRange(       opacityBox.min, opacityBox.max);
+    spinBoxOpacity->setSingleStep(  opacityBox.step);
+    spinBoxOpacity->setDecimals(    opacityBox.decimals);
+    spinBoxOpacity->setValue(       opacityBox.default_val);
+    spinBoxOpacity->setToolTip(     "Opacity of background image");
+    spinBoxOpacity->setDisabled(    true );
+    spinBoxOpacity->setFont( font);
+}
+
+
+
+void MainWindow::createMenus()
+{
+    // qDebug() << Q_FUNC_INFO;
+
+    // set font size ................................................
+    //QFont f = this->font();
+    // f.setPointSize(FONT_SIZE_IN_PT);
+    //this->setFont(f);
+
+    menuFile = std::make_unique<QMenu>( tr("File") );
+    menuFile->addAction( actionBinaryRead.get()   );
+    menuFile->addAction( actionBinarySave.get() );
+    menuFile->addAction( "Save As...", this, &MainWindow::fileSaveAs,
+                         QKeySequence("Ctrl+Shift+S"));
+    menuFile->addAction( actionExportSaveAs.get() );
+
+    menuFile->addSeparator();
+    menuFile->addAction( actionBackgroundImageLoad.get() );
+    menuFile->addSeparator();  // .............................................
+    menuFile->addAction( actionExit.get() );
+    //menuFile->setFont(f);
+    menuBar()->addMenu( menuFile.get() );
+
+    // edit ....................................................................
+    menuEdit = std::make_unique<QMenu>( tr("&Edit") );
+    menuEdit->addAction( actionUndo.get());
+    menuEdit->addAction( actionRedo.get());
+    menuEdit->addSeparator();
+    menuEdit->addAction( actionTabulaRasa.get() );
+    menuEdit->addAction( actionDeleteSelection.get() );
+    menuEdit->addAction( m_view->actionCopySvgToClipboard.get() );
+    menuEdit->addAction( m_view->actionCopyPdfToClipboard.get() );
+    menuEdit->addAction( m_view->actionCopyScreenshotToClipboard.get() );
+    /*menuEdit->addSeparator();  // ..............................................
+    menuEdit->addAction( actionBringToFront.get() );
+    menuEdit->addAction( actionSendBack.get() );*/
+    menuEdit->addAction( actionBackgroundImageRemove.get() );
+    menuEdit->addAction( actionFitInView.get() );
+    menuEdit->addSeparator();
+    menuEdit->addAction( actionToggleSelection.get() );
+    menuEdit->addAction( actionDeselectAll.get() );
+    /*menuEdit->addAction( actionSelectAllConstraints.get() );
+    menuEdit->addAction( actionSelectAllRedundantConstraints.get() );
+    menuEdit->addAction( actionSelectAllSegments.get() );
+    menuEdit->addSeparator();  */ // ..............................................
+    menuEdit->addAction( actionChangeFormat.get() );
+    //menuEdit->setFont(f);
+    menuBar()->addMenu( menuEdit.get() );
+
+
+    menuConstr = std::make_unique<QMenu>( tr("&Constraints") );
+    menuConstr->addAction( actionToggleConsiderOrthogonal.get() );
+    menuConstr->addAction( actionToggleConsiderParallel.get()   );
+    menuConstr->addAction( actionToggleConsiderConcurrent.get() );
+    menuBar()->addMenu (menuConstr.get());
+
+    menuShow = std::make_unique<QMenu>( tr("Display") );
+    menuShow->addAction( actionToggleShowConstrained.get()   );
+    menuShow->addAction( actionToggleShowUnconstrained.get() );
+    menuShow->addAction( actionToggleShowStrokes.get()       );
+    menuShow->addAction( actionToggleShowConstraints.get()   );
+    menuShow->addAction( actionToggleShowUncertainty.get()   );
+    menuShow->addAction( actionToggleShowColoration.get()    );
+    menuShow->addAction( m_view->actionToggleShowBackgroundTiles.get() );
+    menuShow->addAction( actionBackgroundImageToggleShow.get() );
+    menuBar()->addMenu( menuShow.get());
+
+    // help .........................................................
+    menuHelp = std::make_unique<QMenu>( tr("Help") );
+    menuHelp->addAction( actionAbout.get()  );
+    menuHelp->addAction( actionAboutQt.get());
+    menuBar()->addMenu( menuHelp.get() );
+}
+
+void MainWindow::createStatusBar()
+{
+    // status bar: font style and initial message
+    statusBar()->setStyleSheet( "Color: black; font-weight: bold; font-size: 30px" );
+    statusBar()->showMessage(
+                QString("Ready. Max. %1 commands on stack. Add a single pen stroke...")
+                .arg( m_undoStack->undoLimit()), 0);
+}
+
+
+void MainWindow::createToolBars()
+{
+    qDebug() << Q_FUNC_INFO;
+
+    barEdit = std::make_unique<QToolBar>( "Edit", this);
+    barEdit->addAction( actionTabulaRasa.get() );
+    barEdit->addAction( actionDeleteSelection.get() );
+    barEdit->addAction( actionUndo.get() );
+    barEdit->addAction( actionRedo.get() );
+    addToolBar( barEdit.get());
+
+    barNavigation = std::make_unique<QToolBar>( "Navigation", this);
+    barNavigation->addAction( m_view->actionZoomIn.get()  );
+    barNavigation->addAction( m_view->actionZoomOut.get() );
+    barNavigation->addAction( actionFitInView.get() );
+    // barNavigation->setToolButtonStyle(Qt::ToolButtonFollowStyle);
+    addToolBar( barNavigation.get());
+
+    barConstr = std::make_unique<QToolBar>( "Constraints to consider" );
+    barConstr->addAction( actionToggleConsiderOrthogonal.get() );
+    barConstr->addAction( actionToggleConsiderParallel.get()   );
+    barConstr->addAction( actionToggleConsiderConcurrent.get() );
+    barConstr->setHidden( true );
+    addToolBar( barConstr.get() );
+    //barConstraints->setToolButtonStyle(Qt::ToolButtonFollowStyle);
+
+    barShow = std::make_unique<QToolBar>( "Show" );
+    barShow->addAction( actionToggleShowConstraints.get()   );
+    barShow->addAction( actionToggleShowStrokes.get()       );
+    barShow->addAction( actionToggleShowConstrained.get()   );
+    barShow->addAction( actionToggleShowUnconstrained.get() );
+    barShow->addAction( actionToggleShowUncertainty.get()   );
+    barShow->addAction( m_view->actionToggleShowBackgroundTiles.get() );
+    barShow->addAction( actionToggleShowColoration.get()      );
+    barShow->addAction( actionBackgroundImageToggleShow.get() );
+    addToolBar( barShow.get() );
+
+    addToolBarBreak( Qt::TopToolBarArea );
+
+
+    labelBoxAlphaRecogn = std::make_unique<QLabel>( " Recognition ");
+    QFont font = labelBoxAlphaRecogn->font();
+    font.setPointSize( font.pointSize()+1);
+    labelBoxAlphaRecogn->setFont(font);
+
+    labelBoxAlphaSnap   = std::make_unique<QLabel>( " Snap " );
+    labelBoxAlphaSnap->setFont(font);
+
+    labelBoxOpacity  = std::make_unique<QLabel>( " Opacity " );
+    labelBoxOpacity->setFont(font);
+
+    barTesting = std::make_unique<QToolBar>( "Testing" );
+    barTesting->addWidget( labelBoxAlphaRecogn.get());
+    barTesting->addWidget( spinBoxAlphaRecognition.get() );
+    barTesting->addWidget( labelBoxAlphaSnap.get() );
+    barTesting->addWidget( spinBoxAlphaSnap.get() );
+    addToolBar( barTesting.get() );
+
+    barBackground = std::make_unique<QToolBar>( "Background");
+    barBackground->addWidget( labelBoxOpacity.get() );
+    barBackground->addWidget( spinBoxOpacity.get() );
+    barBackground->setToolTip( "Background");
+    barBackground->setEnabled( true );
+    addToolBar( barBackground.get() );
+}
+
+void MainWindow::establishConnections()
+{
+    connect( m_undoStack.get(), &QUndoStack::indexChanged,
+             this,               &MainWindow::slotStackIndexChanged);
+
+    // edit ............................................................
+    connect( m_scene.get(),   &MainScene::signalCmdAddStroke,
+             this,             &MainWindow::slotCmdAddStroke);
+    connect( m_scene.get(),   &MainScene::signalCmdDeleteSelection,    // pressed key [del] via emit signal
+             this,             &MainWindow::slotCmdDeleteSelection);
+    connect( actionDeleteSelection.get(), &QAction::triggered,          // select menu item
+             this,                        &MainWindow::slotCmdDeleteSelection);
+    connect( actionTabulaRasa.get(),  &QAction::triggered,
+             this,                    &MainWindow::slotCmdTabulaRasa);
+    connect( actionToggleSelection.get(),  &QAction::triggered,
+             this,                   &MainWindow::slotToggleSelection);
+    connect( actionDeselectAll.get(),  &QAction::triggered,
+             this,                     &MainWindow::slotDeselectAll);
+
+
+    connect( penTool.get(), &GUI::FormatTool::signalMarkerSizeChanged,
+             this,          &MainWindow::slotUpdateMarkerSize);
+    connect( penTool.get(), &GUI::FormatTool::signalLineWidthChanged,
+             this,          &MainWindow::slotUpdateLineWidth);
+    connect( penTool.get(), &GUI::FormatTool::signalColorChanged,
+             this,          &MainWindow::slotUpdateColor);
+    connect( penTool.get(), &GUI::FormatTool::signalLineStyleChanged,
+             this,          &MainWindow::slotUpdateLineStyle);
+
+
+    connect( actionChangeFormat.get(), &QAction::triggered,
+             penTool.get(),            &FormatTool::show);
+
+
+    // If necessary, enable/disable the menu entry "delete selection"
+    connect( m_scene.get(), &MainScene::selectionChanged,
+             this,           &MainWindow::slotSelectionChanged);
+
+    connect( m_scene.get(), &MainScene::signalUndoLastAction,
+             this,           &MainWindow::slotUndoLastAction);
+
+    // background
+    connect( actionBackgroundImageLoad.get(),   &QAction::triggered,
+             this,                              &MainWindow::slotBackgroundImageLoad);
+    connect( actionBackgroundImageRemove.get(), &QAction::triggered,
+             this,                              &MainWindow::slotBackgroundImageRemove);
+
+    // search, consider
+    connect( actionToggleConsiderOrthogonal.get(),  &QAction::triggered,
+             this,                                &MainWindow::slotToggleConsiderOrthogonal);
+    connect( actionToggleConsiderParallel.get(),    &QAction::triggered,
+             this,                                &MainWindow::slotToggleConsiderParallel);
+    connect( actionToggleConsiderConcurrent.get(),  &QAction::triggered,
+             this,                                &MainWindow::slotToggleConsiderConcurrent);
+
+    // show/display
+    connect( actionBackgroundImageToggleShow.get(), &QAction::triggered,
+             this,                                  &MainWindow::slotToggleShowBackgroundImage);
+    connect( actionToggleShowStrokes.get(),    &QAction::triggered,
+             this,                             &MainWindow::slotToggleShowStrokes);
+    connect( actionToggleShowUncertainty.get(),    &QAction::triggered,
+             this,                                 &MainWindow::slotToggleShowUncertainty);
+    connect( actionToggleShowConstrained.get(),    &QAction::triggered,
+             this,                                 &MainWindow::slotToggleShowConstrained);
+    connect( actionToggleShowUnconstrained.get(),   &QAction::triggered,
+             this,                                  &MainWindow::slotToggleShowUnconstrained);
+    connect( actionToggleShowConstraints.get(),  &QAction::triggered,
+             this,                               &MainWindow::slotToggleShowConstraints);
+    connect( actionToggleShowColoration.get(),   &QAction::triggered,
+             this,                               &MainWindow::slotToggleShowColored);
+
+
+
+    connect( actionBinaryRead.get(),   &QAction::triggered,
+             this,                     &MainWindow::slotFileOpen);
+//    connect( this,                     &MainWindow::isWindowModified,
+//             actionBinarySave.get(),   &QAction::setEnabled );
+    connect( actionBinarySave.get(),   &QAction::triggered,
+             this,                     &MainWindow::fileSave);
+
+
+    connect( actionExportSaveAs.get(), &QAction::triggered,
+             this,                     &MainWindow::slotExportSaveAs);
+
+
+    connect( actionExit.get(),       &QAction::triggered,
+             this,                   &MainWindow::close);
+
+
+    // help
+    connect( actionAboutQt.get(),  &QAction::triggered,
+             this,                 &MainWindow::slotAboutQt);
+    connect( actionAbout.get(),  &QAction::triggered,
+             this,               &MainWindow::slotAbout);
+    /*connect( actionShortcuts.get(),       &QAction::triggered,
+             this,                        &MainWindow::slotShortcuts);*/
+
+
+    // view
+    connect( actionFitInView.get(),  &QAction::triggered,
+             this,                   &MainWindow::slotFitInView);
+
+    /*connect( actionSelectAllConstraints.get(), &QAction::triggered,
+             this, &MainWindow::slotSelectAllConstraints);
+    connect( actionSelectAllRedundantConstraints.get(), &QAction::triggered,
+             this,                                      &MainWindow::slotSelectAllRedundantConstraints);
+    connect( actionSelectAllSegments.get(),    &QAction::triggered,
+             this,                             &MainWindow::slotSelectAllSegments);
+    connect( actionBringToFront.get(), &QAction::triggered,
+             this,                     &MainWindow::slotItemBringToFront);
+    connect( actionSendBack.get(),     &QAction::triggered,
+             this,                     &MainWindow::slotItemSendToBack);*/
+
+    connect( spinBoxAlphaRecognition.get(), QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+             this,                          &MainWindow::slotValueChangedAlphaRecognition);
+    connect( spinBoxAlphaSnap.get(), QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+             this,                   &MainWindow::slotValueChangedAlphaSnap);
+
+
+
+    connect( spinBoxOpacity.get(), QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+             this,                 &MainWindow::slotValueChangedOpacity);
+
+    connect ( m_view.get(), &MainView::signalShowStatus,
+              this,          &MainWindow::slotShowStatus );
+
+}
+
+bool MainWindow::maybeSave()
+{
+    // qDebug() <<  Q_FUNC_INFO;
+
+    if ( !isWindowModified() ) {
+        return true;
+    }
+
+    const QMessageBox::StandardButton ret
+            = QMessageBox::warning( this, QCoreApplication::applicationName(),
+                                    tr("The sketch has been modified.\n"
+                                       "Do you want to save your changes?"),
+                                    QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+
+    switch ( int(ret)) {
+    case QMessageBox::Save:
+        return fileSaveAs();
+    case QMessageBox::Cancel:
+        qDebug() << "termination canceled.";
+        return false;
+    default:
+        break;
+    }
+    return true;
+
+}
+
+bool MainWindow::openImageFile(const QString &fileName)
+{
+    // qDebug() << Q_FUNC_INFO;
+
+    QImage loadedImage;
+    if ( !loadedImage.load(fileName) ) {
+        return false;
+    }
+
+    if ( actionBackgroundImageRemove->isEnabled() ) {
+        slotBackgroundImageRemove();
+    }
+
+    // set ....................................................................
+    m_pixmap = std::make_unique<QGraphicsPixmapItem>( QPixmap::fromImage(loadedImage) );
+    m_pixmap->setOpacity( spinBoxOpacity->value() );
+    m_pixmap->setZValue(0);
+    m_scene->addItem( m_pixmap.get() );
+    // spinBoxOpacity->setEnabled(true);
+
+    m_view->setSceneRect( m_scene->itemsBoundingRect());
+
+    actionBackgroundImageRemove->setEnabled(true);
+    actionBackgroundImageToggleShow->setEnabled(true);
+    actionBackgroundImageToggleShow->setChecked(true);
+
+    statusBar()->showMessage( QStringLiteral("<%1> loaded.").arg(fileName) );
+
+    return true;
+}
+
+
+
+void MainWindow::readBinaryFile( const QString & fileName)
+{
+    // qDebug() << Q_FUNC_INFO;
+    QFile file( fileName );
+    if ( !file.open(QFile::ReadOnly) )
+    {
+        QMessageBox::warning(
+                    this, tr("QDataStream"),
+                    tr("Cannot open file %1:\n%2.").arg( QDir::toNativeSeparators(fileName),
+                                                         file.errorString()) );
+        return;
+    }
+
+    QDataStream in( &file );    // read the data serialized from the file
+    State newState;
+    if ( !newState.deserialize( &in ) )
+    {
+        file.close();
+        statusBar()->showMessage( "Data import failed." );
+        QMessageBox::warning(  this, "Data import", "Data import failed." );
+        return;
+    }
+
+    file.close();
+    QFileInfo fileInfo( file.fileName() );
+
+
+    std::unique_ptr<State> next_state
+            =  std::make_unique<State>(newState);
+
+    std::unique_ptr<State> prev_state
+            = std::make_unique<State>(curr_state);  // copy
+
+    m_undoStack->push(
+                new Cmd::ReplaceStateWithFileContent (
+                    fileInfo.fileName(),
+                    &curr_state,
+                    prev_state,
+                    next_state)
+                );
+
+    // setWindowModified( false );
+    setCurrentFileName( fileName);
+    actionBinarySave->setEnabled( true);
+}
+
+void MainWindow::slotCmdTabulaRasa()
+{
+    m_undoStack->push(
+                new Cmd::TabulaRasa( &curr_state )
+                );
+
+    setWindowModified( true );
+}
+
+// invoked by MainScene:signalCmdAddStroke:
+void MainWindow::slotCmdAddStroke( QPainterPath *path)
+{
+    qDebug() << Q_FUNC_INFO;
+
+    // convert path to polyline
+    QPolygonF poly( path->elementCount()) ;
+    for ( int i=0; i<path->elementCount(); i++ ) {
+        poly[i] = path->elementAt(i);
+    }
+    /* qDebug() << cyan <<  QString("tracking (%1,%2) ...(%3,%4)")
+                .arg( poly.first().x())
+                .arg( poly.first().y())
+                .arg( poly.last().x() )
+                .arg( poly.last().y() ); */
+
+
+    // try...
+    std::unique_ptr<State> next_state_
+            = std::make_unique<State>( curr_state);
+    if ( next_state_->augment( poly ) )
+    {
+        std::unique_ptr<State> prev_state_
+                = std::make_unique<State>(curr_state);
+        m_undoStack->push(
+                    new Cmd::AddStroke( &curr_state,
+                                        prev_state_,
+                                        next_state_)
+                    );
+        setWindowModified( true );
+    }
+}
+
+void MainWindow::slotCmdDeleteSelection()
+{
+    // qDebug() << Q_FUNC_INFO;
+
+    if ( m_scene->selectedItems().isEmpty() ) {
+        return;
+    }
+
+    std::unique_ptr<State> next_state_
+            = std::make_unique<State>(curr_state);
+    if ( next_state_->reduce() )
+    {
+        std::unique_ptr<State> prev_state_
+                = std::make_unique<State>(curr_state); // copy
+
+        m_undoStack->push(
+                    new Cmd::DeleteSelection( &curr_state,
+                                              prev_state_,
+                                              next_state_)
+                    );
+        setWindowModified( true );
+    }
+}
+
+
+bool MainWindow::slotExportSaveAs()
+{
+    qDebug() << Q_FUNC_INFO;
+
+    QString filter = "all formats (*.pdf *.svg);;"
+            "scalable vector graphics (*.svg);;"
+            "portable document format (*.pdf)";
+
+    QString fileName = QFileDialog::getSaveFileName(
+                this,
+                "Export drawing",
+                QDir::currentPath() + "/" + "untitled",
+                filter );
+
+    if ( fileName.isEmpty() ) {
+        return false;
+    }
+
+    // check if already opened
+    QFile openFile( fileName );
+    if( !openFile.open( QFile::ReadWrite) ){
+        QMessageBox::critical( this, "Can't Open file",
+                               "Can't access to the file.");
+        return false;
+    }
+    openFile.close();
+
+    if ( fileName.endsWith( ".pdf", Qt::CaseInsensitive)) {
+        m_scene->export_view_as_pdf( fileName );
+        return true;
+    }
+
+    if ( fileName.endsWith( ".svg", Qt::CaseInsensitive)) {
+        m_scene->export_view_as_svg( fileName );
+        return true;
+    }
+
+    return false;
+}
+
+
+void MainWindow::slotToggleSelection()
+{
+    // qDebug() << Q_FUNC_INFO;
+
+    for ( auto & item : m_scene->items() ) {
+        if ( item->isVisible() ) {
+            // item->setSelected( true ); // select all
+            item->setSelected( !item->isSelected() ); // toggle selection
+        }
+    }
+    m_scene->update();
+}
+
+void MainWindow::slotDeselectAll()
+{
+    // qDebug() << Q_FUNC_INFO;
+
+    for ( auto & item : m_scene->items() ) {
+        item->setSelected( false );
+    }
+    m_scene->update();
+}
+
+void MainWindow::slotAboutQt()
+{
+    QMessageBox::aboutQt( this );
+}
+
+
+void MainWindow::slotBackgroundImageLoad()
+{
+    // qDebug() << Q_FUNC_INFO;
+
+    QString filter = "Image files (";
+    const QList<QByteArray> barray ( QImageReader::supportedImageFormats() );
+    for ( auto & item : barray) {
+        filter += QString( "*.%1 ").arg( item.data() );
+    }
+    filter += QString(")");
+    for ( auto & item : barray) {
+        filter += QString(";; *.%1").arg( item.data() );
+    }
+
+
+    QString fileName = QFileDialog::getOpenFileName( this,   "Open Image File",
+                                                     QDir::currentPath(), filter);
+    if ( !fileName.isEmpty() ) {
+        if ( openImageFile( fileName ) ) {
+            m_pixmap->setZValue( -1 );
+            spinBoxOpacity->setEnabled( true);
+        }
+        else {
+            QMessageBox::warning( this,   "image import",
+                                  QString("%1: Image import failed").arg(fileName) );
+        }
+
+    }
+}
+
+void MainWindow::slotBackgroundImageRemove()
+{
+    // qDebug() << Q_FUNC_INFO;
+    m_scene->removeItem( m_pixmap.get() );
+    m_pixmap = nullptr;
+
+    actionBackgroundImageRemove->setDisabled( true );
+    actionBackgroundImageToggleShow->setDisabled( true );
+    spinBoxOpacity->setDisabled( true );
+}
+
+void MainWindow::slotFitInView()
+{
+    m_view->fitInView( m_scene->itemsBoundingRect(),
+                        Qt::KeepAspectRatio);
+}
+
+void MainWindow::slotFileOpen()
+{
+    // qDebug() << Q_FUNC_INFO;
+    if ( maybeSave() ) {
+        QString fileName = QFileDialog::getOpenFileName(
+                    this,                 "GReasePad file",
+                    QDir::currentPath(),  "GReasePad files (*.grp)" );
+
+        if ( fileName.isEmpty() ) {
+            return;
+        }
+        readBinaryFile( fileName);
+    }
+}
+
+bool MainWindow::fileSaveAs()
+{
+    // qDebug() << Q_FUNC_INFO;
+    QString fileName = QFileDialog::getSaveFileName(
+                this,                 "Save file",
+                QDir::currentPath(),  "GReasePad files (*.grp)");
+
+    if ( fileName.isEmpty() ) {
+        return false;
+    }
+
+    setCurrentFileName( fileName );
+    actionBinarySave->setEnabled( true );
+
+    return fileSave();
+}
+
+
+bool MainWindow::fileSave()
+{
+    // qDebug() << Q_FUNC_INFO;
+    if ( fileName_.isEmpty() ) {
+        return fileSaveAs();
+    }
+
+    QFile file( fileName_ );
+    if ( !file.open(QFile::WriteOnly) ) {
+        QMessageBox::warning( this, tr("QDataStream"),
+                              tr("Cannot write file %1:\n%2.").arg( QDir::toNativeSeparators(fileName_),
+                                                                    file.errorString()));
+        return false;
+    }
+
+    QDataStream out( &file );
+    curr_state.serialize( &out );
+    file.close();
+
+    statusBar()->showMessage( "File <"+ fileName_ + "> saved.");
+    setWindowModified( false);
+
+    return true;
+}
+
+
+void MainWindow::slotSelectionChanged()
+{
+    // enable 'delete' if one or more items are selected.
+   actionDeleteSelection->setEnabled( m_scene->selectedItems().count()>0 );
+}
+
+void MainWindow::slotToggleShowBackgroundImage()
+{
+    m_pixmap->setVisible( !m_pixmap->isVisible() );
+    barBackground->setEnabled( !barBackground->isEnabled() );
+}
+
+void MainWindow::slotToggleShowConstraints()
+{
+    // qDebug() << Q_FUNC_INFO;
+    QConstraint::QConstraintBase::toggleShow();
+    curr_state.toggleVisibilityConstraints( );
+    m_scene->update();
+}
+
+void MainWindow::slotToggleShowStrokes()
+{
+    // qDebug() << Q_FUNC_INFO;
+    QEntity::QStroke::toggleShow();
+    curr_state.toggleVisibilityStrokes( );
+    m_scene->update();
+}
+
+void MainWindow::slotToggleShowUncertainty()
+{
+    // qDebug() << Q_FUNC_INFO;
+    QEntity::QSegment::toggleShowUncertainty();
+    m_scene->update();
+}
+
+
+
+
+void MainWindow::slotToggleShowColored()
+{
+    qDebug() << Q_FUNC_INFO;
+    QEntity::QConstrained::toogleShowColor();
+    QConstraint::QConstraintBase::toggleShowColor();
+    m_scene->update();
+}
+
+void MainWindow::slotUndoLastAction()
+{
+    qDebug() << Q_FUNC_INFO;
+    if ( m_undoStack->index() == m_undoStack->count() ) {
+        m_undoStack->undo();
+    }
+    else {
+        m_undoStack->redo();
+    }
+}
+
+void MainWindow::slotValueChangedOpacity( const double v)
+{
+    qDebug() << Q_FUNC_INFO;
+    if ( m_pixmap!=nullptr ) {
+        m_pixmap->setOpacity( v );
+    }
+}
+
+void MainWindow::slotValueChangedAlphaRecognition( const double alpha_val)
+{
+    qDebug() << Q_FUNC_INFO;
+    State::setAlphaRecognition(alpha_val);
+}
+
+void MainWindow::slotValueChangedAlphaSnap( const double alpha_val)
+{
+    qDebug() << Q_FUNC_INFO;
+    State::setAlphaSnapping(alpha_val);
+}
+
+void MainWindow::slotAbout()
+{
+    QMessageBox msgBox;
+    msgBox.setTextFormat( Qt::RichText );
+    msgBox.setText( QStringLiteral(
+                        "<b>%1 %2: Freehand Drawing guided by Geometric Reasoning</b><br><br>"
+                        "<b>Copyright.</b> \xa9 2022 <a href=\"mailto:jochen.meidow@iosb.fraunhofer.de\">Jochen Meidow</a>, <a href=\"https://www.iosb.fraunhofer.de/en.html\">%3</a>, Germany.<br><br>"
+                        "<b>Licensing.</b> Distributed under the <a href=\"https://www.gnu.org/licenses/gpl-3.0.en.html\">GNU General Public Licence</a>, Version 3.<br /><br />"
+                        "<b>Dependencies.</b> This software uses the C++ template library <a href=\"https://eigen.tuxfamily.org\">Eigen</a>, version %4.%5.%6, "
+                        "and the <a href=\"https://www.qt.io\">Qt</a> widget toolkit, version %7.<br /><br />"
+                        "<b>Credits.</b> The author thanks Wolfgang F\xF6rstner and Horst Hammer for their inspiring collaboration.<br /><br />"
+                        "<b>References</b>. Details of the implemented methods can be found in the following papers:"
+                        "<ol>"
+                        "<li>J. Meidow and L. Lucks (2019) Draw and Order - Modeless Interactive Acquisition of Outlines, ISPRS - Annals of Photogrammetry, Remote Sensing and Spatial Information Sciences, vol. IV-2/W7, pp. 103-110.</li>"
+                        "<li>J. Meidow, H. Hammer and L. Lucks (2020) Delineation and Construction of 2D Geometries by Freehand Drawing and Geometric Reasoning, ISPRS - Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences, vol. V-5-2020, pp. 77-84.</li>"
+                        "</ol>"
+                        "Please cite these papers when using %1 or parts of it in an academic publication.")
+                    .arg( QApplication::applicationName() )
+                    .arg( QApplication::applicationVersion())
+                    .arg( QApplication::organizationName())
+                    .arg( EIGEN_WORLD_VERSION )
+                    .arg( EIGEN_MAJOR_VERSION )
+                    .arg( EIGEN_MINOR_VERSION )
+                    .arg( QT_VERSION_STR )
+                    );
+    msgBox.setStandardButtons( QMessageBox::Ok );
+    // msgBox.setIcon(); TODO(meijoc)
+    // ?? msgBox.setIcon( windowIcon() );
+    msgBox.exec();
+}
+
+
+
+void MainWindow::setCurrentFileName( const QString &fileName )
+{
+    fileName_ = fileName;
+
+    QString shownName;
+    if (fileName.isEmpty()) {
+        shownName = "untitled.grp";
+    }
+    else {
+        shownName = QFileInfo(fileName).fileName();
+    }
+    setWindowTitle( QString("[*]%1 - %2 %3")
+                    .arg( shownName, QCoreApplication::applicationName(), QCoreApplication::applicationVersion())
+                    );
+    setWindowModified( false );
+}
+
+
+void MainWindow::slotUpdateLineStyle( const int s)
+{
+    // qDebug() << Q_FUNC_INFO;
+    for ( auto & item : m_scene->selectedItems() )
+    {
+        if ( item->type()==QConstraint::QConstraintBase::Type ) {
+            auto *a = qgraphicsitem_cast<QConstraint::QConstraintBase*>(item);
+            a->setLineStyle( s );
+        }
+        if ( item->type()==QEntity::QSegment::Type ) {
+            auto *c = qgraphicsitem_cast<QEntity::QSegment*>(item);
+            c->setLineStyle( s );
+        }
+        m_scene->update();
+    }
+}
+
+void MainWindow::slotUpdateColor( const QColor & col)
+{
+    // qDebug() << Q_FUNC_INFO << col;
+    for ( auto & item : m_scene->selectedItems() )
+    {
+        if ( item->type()==QConstraint::QConstraintBase::Type ) {
+            auto *i = qgraphicsitem_cast<QConstraint::QConstraintBase*>(item);
+            i->setColor( col );
+            continue;
+        }
+        if ( item->type()==QGraphicsPolygonItem::Type ) {
+            auto *i = qgraphicsitem_cast<QEntity::QStroke*>(item);
+            i->setColor( col );
+            continue;
+        }
+        if ( item->type()==QEntity::QSegment::Type ) {
+            auto *i = qgraphicsitem_cast<QEntity::QSegment*>(item);
+            i->setColor( col );
+        }
+    }
+    m_scene->update();
+}
+
+
+void MainWindow::slotUpdateLineWidth( const int w)
+{
+    // qDebug() << Q_FUNC_INFO;
+    for ( auto & item : m_scene->selectedItems() )
+    {
+        if ( item->type()==QConstraint::QConstraintBase::Type ) {
+            auto *a = qgraphicsitem_cast<QConstraint::QConstraintBase*>(item);
+            a->setLineWidth( w );
+        }
+        if ( item->type()==QGraphicsPolygonItem::Type ) {
+            auto *b = qgraphicsitem_cast<QEntity::QStroke*>(item);
+            b->setLineWidth( w );
+        }
+        if ( item->type()==QEntity::QSegment::Type ) {
+            auto *c = qgraphicsitem_cast<QEntity::QSegment*>(item);
+            c->setLineWidth( w );
+        }
+    }
+    m_scene->update();
+}
+
+void MainWindow::slotUpdateMarkerSize( const int sz)
+{
+   // qDebug() << Q_FUNC_INFO;
+   for ( auto & item : m_scene->selectedItems() ) {
+       //       auto *g = qgraphicsitem_cast<QConstraint::QConstraintBase*>(item);
+       //       if ( g != nullptr ) {
+       //           g->setMarkerSize( sz );
+       //       }
+       if ( item->type()==QConstraint::QConstraintBase::Type ) {
+           auto *g = qgraphicsitem_cast<QConstraint::QConstraintBase*>(item);
+           g->setMarkerSize( sz );
+       }
+   }
+   m_scene->update();
+}
+
+} // namespace GUI

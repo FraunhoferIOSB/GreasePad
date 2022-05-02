@@ -1,0 +1,263 @@
+/*
+ * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
+ * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#include "upoint.h"
+#include "ustraightline.h"
+
+#include <QDebug>
+
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
+using Eigen::Matrix3d;
+using Eigen::Vector3d;
+
+
+namespace Uncertain {
+
+//! Diag([1,1,0])
+Matrix3d uStraightLine::CC()
+{
+    const static Matrix3d tmp = (Matrix3d() << 1,0,0,0,1,0,0,0,0).finished();
+    return tmp;
+}
+
+//! skew([1,0,0])
+Matrix3d uStraightLine::S3()
+{
+  const static Matrix3d tmp = (Matrix3d() << 0,-1,0,1,0,0,0,0,0).finished();
+  return tmp;
+}
+
+
+//! Uncertain straight line, defined by a 3-vector and its covariance matrix
+uStraightLine::uStraightLine( const Vector3d & l,
+                              const Matrix3d & Cov_ll)
+    : BasicEntity2D( l, Cov_ll )
+{
+    // TODO(meijoc)  check: null(Cov) = l ?
+    assert( l.size()==Cov_ll.cols() );
+    // assert( isCovMat( Cov_ll) );
+}
+
+
+//! Uncertain straight line approximating the point set {x_i,y_i}
+uStraightLine::uStraightLine( const VectorXd & xi,
+                              const VectorXd & yi)
+{
+    qDebug() << Q_FUNC_INFO;
+
+    // centroid ............................................
+    double x0 = xi.mean();
+    double y0 = yi.mean();    // qDebug() << "mean = (" << x0 << "," << y0 << ")";
+
+    // 2nd moments .........................................
+    Eigen::Index I = xi.rows();  //qDebug() << "I = " << I;
+    Eigen::Matrix2d MM;
+    MM(0,0) = xi.dot(xi)  -I*x0*x0;
+    MM(0,1) = xi.dot(yi)  -I*x0*y0;
+    MM(1,1) = yi.dot(yi)  -I*y0*y0;
+    MM(1,0) = MM(0,1);
+
+    // SVD .....................................................
+    Eigen::JacobiSVD<Eigen::Matrix2d> svd( MM, Eigen::ComputeFullU );//| ComputeThinV);
+    Eigen::Vector2d sv = svd.singularValues();
+    Eigen::Matrix2d UU = svd.matrixU();
+    Eigen::Vector2d n  = UU.col(1);
+
+    // straight line  l = [n; -n'*x0];  .........................
+    m_val = (Vector3d() << n(0), n(1), -n(0)*x0 -n(1)*y0).finished();
+
+    // check: point-line incidence, x'l = 0
+    Q_ASSERT( std::fabs(x0*m_val(0) +y0*m_val(1) +m_val(2) ) < 1e-7);
+
+    // estimated variance factor (10.167) .........................
+    Q_ASSERT( sv(0)>sv(1) );
+    double evar0 = sv(1)/double(I-2);
+    // qDebug() << "estd_0 = " << sqrt(evar0);
+
+    // cov. mat. for l = [0 1 0], (10.166) ........................
+    // Cov_ll = diag( [1/lambda(2), 0, 1/(I*wq)]);
+
+    Vector3d t = (Vector3d() << 1./sv(0), 0, 1./I).finished();
+    Matrix3d Cov_ll  = I*t.asDiagonal(); // TODO(meijoc)
+
+    // variance propagation .......................................
+    Matrix3d HH = Matrix3d::Identity(3,3);
+    HH.topLeftCorner(2,2) = UU;
+    HH(0,2) = x0;
+    HH(1,2) = y0;      //  HH = [UU, x0; 0 0 1]
+    m_cov = evar0*(HH.inverse()).transpose()*Cov_ll* HH.inverse();
+
+    // TODO(meijoc): warning
+    Q_ASSERT_X( isCovMat(m_cov), Q_FUNC_INFO, "invalid covariance matrix");
+    assert( isCovMat(m_cov) );
+}
+
+//! Project the uncertain point 'ux' onto uncertain straight line 'this'
+uPoint uStraightLine::project( const uPoint & ux) const
+{
+    Vector3d l = v();
+    Vector3d x = ux.v();
+    Vector3d z = skew(l)*skew(x)*CC()*l;
+
+    // Jacobians
+    Matrix3d AA = -skew(l)*skew(CC()*l);
+    Matrix3d BB =  skew(l)*skew(x)*CC() +skew( skew(CC()*l)*x );
+
+    Matrix3d Cov_zz = AA * ux.Cov() *AA.transpose()
+            +BB*Cov()*BB.transpose();
+
+    return { z, Cov_zz};
+}
+
+//! Uncertain straight line connecting two uncorrelated uncertain points
+uStraightLine::uStraightLine( const uPoint & ux,
+                              const uPoint & uy)
+{
+    qDebug() << Q_FUNC_INFO;
+
+    Matrix3d Sx = skew( ux.v() );
+    Matrix3d Sy = skew( uy.v() );
+    m_val = Sx*uy.v();         // cross(x,y)
+
+    Q_ASSERT_X( m_val.norm()>0, Q_FUNC_INFO, "identical points");
+    m_cov = -Sy*ux.Cov()*Sy -Sx*uy.Cov()*Sx;  // S' = -S
+}
+
+
+//! Get Euclidean normalized version of this uncertain straight line
+uStraightLine uStraightLine::euclidean() const
+{
+    Eigen::Vector2d lh = m_val.head(2);
+    double   l0 = m_val(2);
+    Matrix3d JJ = Matrix3d::Identity();
+    double n = lh.norm();
+
+    Q_ASSERT_X( n>0, Q_FUNC_INFO, "normal is 0-vector");
+    JJ.topLeftCorner(2,2)   -=  lh*lh.adjoint()/(n*n);
+    JJ.bottomLeftCorner(1,2) = -l0*lh.adjoint()/(n*n);
+    JJ /= n;
+
+    Matrix3d Cov = JJ*m_cov*JJ.adjoint();
+    return { m_val/n,  Cov };
+}
+
+
+//! Get spherically normalized version of this uncertain straight line.
+uStraightLine uStraightLine::sphericalNormalized() const
+{
+    uStraightLine p{*this};
+    p.normalizeSpherical();
+    return {p};
+}
+
+//! Check if uncertain straight line 'um' is orthogonal to this.
+bool uStraightLine::isOrthogonalTo( const uStraightLine & um,
+                                    const double T_q) const
+{
+    RowVector6d JJ;
+    JJ.leftCols(3)  = um.v().adjoint()*CC();
+    JJ.rightCols(3) =   m_val.adjoint()*CC();
+
+    Matrix6d Cov_lm = Matrix6d::Zero();
+    Cov_lm.topLeftCorner(3,3) = m_cov;
+    Cov_lm.bottomRightCorner(3,3) = um.Cov();
+
+    double d = m_val.adjoint()*CC()*um.v();
+    double var_d = JJ*Cov_lm*JJ.adjoint();
+    double T_d  = d*d/var_d;
+
+    return T_d <  T_q;
+}
+
+//! Check if the three uncertain straight lines 'um', 'un', and 'this' are copunctual.
+bool uStraightLine::isCopunctualWith( const uStraightLine & um,
+                                      const uStraightLine & un,
+                                      const double T_d) const
+{
+    Matrix3d MM = (Matrix3d() << m_val, um.v(), un.v()).finished();
+
+    double d = MM.determinant();            // distance, dof = 1
+    Eigen::Matrix<double,9,9> Cov_lmn;
+    Cov_lmn.fill(0);
+    Cov_lmn.block(0,0,3,3) = m_cov;
+    Cov_lmn.block(3,3,3,3) = um.Cov();
+    Cov_lmn.bottomRightCorner(3,3) = un.Cov();
+
+    Matrix3d cofMM = cof3( MM);
+    Eigen::Matrix<double,1,9> JJ;
+    JJ.segment( 0, 3) = cofMM.col(0);
+    JJ.segment( 3, 3) = cofMM.col(1);
+    JJ.segment( 6, 3) = cofMM.col(2);
+    double var_d = JJ*Cov_lmn*JJ.adjoint();  // error propagation
+
+    return d*d/var_d < T_d;                  // test statistic T
+}
+
+
+//! Check if the uncertain straight line 'um' is parallel to 'this'.
+bool uStraightLine::isParallelTo( const uStraightLine & um,
+                                  const double T) const
+{
+    double d = -m_val.adjoint()*S3()*um.v();  // (7.24)
+
+    RowVector6d JJ;
+    JJ.leftCols(3) = -um.v().adjoint()*S3().adjoint();
+    JJ.rightCols(3) =  -m_val.adjoint()*S3();
+
+    Matrix6d Cov_lm = Matrix6d::Zero();
+    Cov_lm.topLeftCorner(3,3)     = m_cov;
+    Cov_lm.bottomRightCorner(3,3) = um.Cov();
+
+    double var_d = JJ*Cov_lm*JJ.adjoint();
+
+    return d*d/var_d < T;
+}
+
+
+//! Coefficent matrix of 3x3 Matrix MM, i.e., transposed adjugate of MM
+Matrix3d uStraightLine::cof3( const Matrix3d & MM) const
+{
+    Matrix3d Cof;
+    Cof(0,0) = +MM(1,1)*MM(2,2) -MM(2,1)*MM(1,2);
+    Cof(0,1) = -MM(1,0)*MM(2,2) +MM(2,0)*MM(1,2);
+    Cof(0,2) = +MM(1,0)*MM(2,1) -MM(2,0)*MM(1,1);
+
+    Cof(1,0) = -MM(0,1)*MM(2,2) +MM(2,1)*MM(0,2);
+    Cof(1,1) = +MM(0,0)*MM(2,2) -MM(2,0)*MM(0,2);
+    Cof(1,2) = -MM(0,0)*MM(2,1) +MM(2,0)*MM(0,1);
+
+    Cof(2,0) = +MM(0,1)*MM(1,2) -MM(1,1)*MM(0,2);
+    Cof(2,1) = -MM(0,0)*MM(1,2) +MM(1,0)*MM(0,2);
+    Cof(2,2) = +MM(0,0)*MM(1,1) -MM(1,0)*MM(0,1);
+
+    return Cof;
+}
+
+//! Intersection point of uncertain straight lines 'um' and 'this' (not required)
+uPoint uStraightLine::cross( const uStraightLine & um) const
+{
+    Matrix3d JJl = -skew( um.v() );
+    Matrix3d JJm =  skew( v() );
+
+    // 'this' and 'um' uncorrelated:
+    return { JJm*um.v(),
+             JJl*Cov()*JJl.adjoint() + JJm*um.Cov()*JJm.adjoint() };
+}
+
+} // namespace Uncertain

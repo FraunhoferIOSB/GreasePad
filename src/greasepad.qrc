@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/Tango/List-add.svg</file>
+        <file>icons/Tango/List-remove.svg</file>
+        <file>icons/show_strokes.svg</file>
+        <file>icons/Tango/Edit-clear.svg</file>
+        <file>icons/show_checker.svg</file>
+        <file>icons/Tango/Image-x-generic.svg</file>
+        <file>icons/show_uncertain.svg</file>
+        <file>icons/show_unconstrained.svg</file>
+        <file>icons/show_constrained.svg</file>
+        <file>icons/show_cc.svg</file>
+        <file>icons/show_constraints.svg</file>
+        <file>icons/fit_in_view.svg</file>
+        <file>icons/Tango/view-fullscreen.svg</file>
+        <file>icons/Tango/preferences-desktop-peripherals.svg</file>
+        <file>icons/consider_concurrence.svg</file>
+        <file>icons/consider_orthogonality.svg</file>
+        <file>icons/consider_parallelism.svg</file>
+    </qresource>
+</RCC>
