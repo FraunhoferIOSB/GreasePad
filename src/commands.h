@@ -42,7 +42,7 @@ public:
     Undo & operator= (Undo && other) = delete;
 
 protected:
-    Undo();
+    Undo(QUndoCommand *parent=nullptr);
     ~Undo() override = default;
 
     State *current_state_{};
@@ -61,9 +61,10 @@ private:
 class AddStroke : public Undo
 {
 public:
-    AddStroke( State *curr,
+    AddStroke(State *curr,
                std::unique_ptr<State> & p,
-               std::unique_ptr<State> & n);
+               std::unique_ptr<State> & n,
+              QUndoCommand *parent=nullptr);
     AddStroke( const AddStroke &) = delete;
     AddStroke( AddStroke &&) = delete;
     AddStroke operator= (const AddStroke &) = delete;
@@ -78,9 +79,10 @@ private:
 class DeleteSelection : public Undo
 {
 public:
-    DeleteSelection( State *st,
+    DeleteSelection(State *st,
                      std::unique_ptr<State> &p,
-                     std::unique_ptr<State> &n);
+                     std::unique_ptr<State> &n,
+                    QUndoCommand *parent=nullptr);
 
 private:
     void redo() override;
@@ -91,7 +93,8 @@ private:
 class TabulaRasa : public Undo
 {
 public:
-    TabulaRasa( State *st);
+    TabulaRasa( State *st,
+                QUndoCommand *parent=nullptr);
 private:
     void redo() override;
     void undo() override;
@@ -103,7 +106,8 @@ public:
     ReplaceStateWithFileContent( const QString &fileName,
                                  State *curr,
                                  std::unique_ptr<State> &p,
-                                 std::unique_ptr<State> &n);
+                                 std::unique_ptr<State> &n,
+                                 QUndoCommand *parent=nullptr);
 private:
     void redo() override;
     void undo() override;

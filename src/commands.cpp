@@ -20,7 +20,7 @@
 #include "global.h"
 #include "mainscene.h"
 #include "mainwindow.h"
-#include "uncertain.h"
+// #include "uncertain.h"
 
 #include <QDebug>
 #include <QGraphicsItem>
@@ -29,7 +29,7 @@ namespace Cmd {
 
 GUI::MainScene * Cmd::Undo::s_scene = nullptr;
 
-Undo::Undo()
+Undo::Undo( QUndoCommand *parent) : QUndoCommand(parent)
 {
     qDebug() << Q_FUNC_INFO;
 }
@@ -37,7 +37,8 @@ Undo::Undo()
 
 AddStroke::AddStroke( State *curr,
                       std::unique_ptr<State> &p,
-                      std::unique_ptr<State> &n)
+                      std::unique_ptr<State> &n,
+                      QUndoCommand *parent) : Undo(parent)
 {
     qDebug() << Q_FUNC_INFO;
     setText( "add stroke" );
@@ -65,7 +66,8 @@ void AddStroke::undo()
 
 DeleteSelection::DeleteSelection( State *st,
                                   std::unique_ptr<State> & p,
-                                  std::unique_ptr<State> & n)
+                                  std::unique_ptr<State> & n,
+                                  QUndoCommand *parent) : Undo(parent)
 {
     setText( QString("delete selected item%1")
              .arg( scene()->selectedItems().size()==1 ? "" : "s") );
@@ -90,7 +92,7 @@ void DeleteSelection::undo()
 }
 
 
-TabulaRasa::TabulaRasa( State *st )
+TabulaRasa::TabulaRasa( State *st, QUndoCommand *parent ) : Undo(parent)
 {
     qDebug() << Q_FUNC_INFO ;
     setText( "clear all" );
@@ -119,7 +121,9 @@ void TabulaRasa::undo()
 ReplaceStateWithFileContent::ReplaceStateWithFileContent( const QString & fileName,
                                                           State *curr,
                                                           std::unique_ptr<State> & p,
-                                                          std::unique_ptr<State> & n)
+                                                          std::unique_ptr<State> & n,
+                                                          QUndoCommand *parent)
+    : Undo(parent)
 {
     qDebug() << Q_FUNC_INFO;
     setText( fileName );
