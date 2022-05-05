@@ -21,15 +21,17 @@
 
 #include <Eigen/Dense>
 
-
+//! Uncertain geometric entities
 namespace Uncertain {
 
 using Eigen::Matrix3d;
 using Eigen::Vector3d;
 
+//! Check if matrix is covariance matrix
 bool isCovMat( const Eigen::MatrixXd &MM);
 
 
+//! Uncertain distance
 class uDistance
 {
 public:
@@ -54,7 +56,7 @@ private:
 };
 
 
-
+//! Base class for uncertain geometric entities, represented by 3-vectors
 class BasicEntity2D
 {
 protected:
@@ -90,6 +92,8 @@ private:
 };
 
 class uPoint;
+
+//! Estimation of two points delimiting an uncertain straight line segment
 std::pair<uPoint,uPoint> uEndPoints( const Eigen::VectorXd &,
                                      const Eigen::VectorXd &);
 

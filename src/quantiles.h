@@ -22,15 +22,19 @@
 #include "statistics.h"
 
 
+//! Quantiles for recognition and snapping
 namespace Quantiles {
 
-
-struct Snapping         // Quantiles for snapping of end-points
+//! Quantiles for snapping of end-points
+struct Snapping
 {
 public:
+    //! Get quantile of standard normal distribution
     double quantile_stdNormDistr() const { return quantile_snd_; }
+
+    //! Get quantile of chi-square distribution with two degeree of freedom
     double quantile_chi2_1dof() const { return quantile_chi2_1_; }
-    void setAlpha( double alpha );
+    void setAlpha( double alpha );  //!< Set significande level alpha
 
 private:
     double quantile_snd_{};     // Quantile of standard normal distribution N(0,1)
@@ -40,13 +44,16 @@ private:
     const Stats::StandardNormal distr_snd_{};
 };
 
-
-struct Recognition  // Quantiles for recognition of constraints
+//! Quantiles for reconition of geometric relations
+struct Recognition
 {
 public:
+    //! Get quantile of chi-square distribution with one degeree of freedom
     double quantile_chi2_1dof() const { return quantile_chi2_1dof_; }
+
+    //! Get quantile of chi-square distribution with two degeree of freedom
     double quantile_chi2_2dof() const { return quantile_chi2_2dof_; }
-    void setAlpha( double alpha );
+    void setAlpha( double alpha );  //!< Set significance level alpha
 
 private:
     double quantile_chi2_1dof_{};

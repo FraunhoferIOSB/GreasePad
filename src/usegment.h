@@ -37,6 +37,7 @@ using Eigen::Matrix3d;
 using Eigen::Vector2d;
 using Eigen::Vector3d;
 
+//! Uncertain straight line segment
 class uStraightLineSegment
 {
 private:

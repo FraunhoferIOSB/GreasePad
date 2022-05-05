@@ -22,8 +22,10 @@
 #include <limits>
 #include <cassert>
 
+//! Parametric probability distributions
 namespace Stats {
 
+//! Base class for parametric probability distributions
 class Distribution
 {
 public:
@@ -44,6 +46,7 @@ protected:
 };
 
 
+//! Standard normal distribution
 class StandardNormal : private Distribution
 {
 public:
@@ -63,7 +66,7 @@ private:
 };
 
 
-
+//! Gamma distribution
 class Gamma : private Distribution
 {
 public:
@@ -92,6 +95,7 @@ private:
 };
 
 
+//! Chi-squared distribution
 class ChiSquared : private Distribution
 {
 public:
@@ -118,12 +122,7 @@ private:
 };
 
 
-
-
-
-
-
-
+//! Exponential distribution
 class Exponential : private Distribution
 {
 public:

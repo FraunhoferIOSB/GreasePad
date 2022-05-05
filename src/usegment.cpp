@@ -34,10 +34,6 @@ namespace Uncertain {
 
 class uPoint;
 
-//Matrix3d skew( const Vector3d &x)
-//{
-//    return (Matrix3d() << 0.,-x(2),x(1), x(2),0.,-x(0), -x(1),x(0),0.).finished();
-//}
 
 Matrix3d uStraightLineSegment::CC()
 {
@@ -323,6 +319,8 @@ VectorXi uStraightLineSegment::indices_of_sorting( const VectorXd &v)
 
 
 QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,1> & v);
+
+//! Overloaded >>operator for 9-vectors
 QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,1> & v)
 {
     for ( int i=0; i<9; i++) {  in >> v[i]; }
@@ -330,6 +328,8 @@ QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,1> & v)
 }
 
 QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,9> & MM);
+
+//! Overloaded >>operator for 9x9 matrices
 QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,9> & MM)
 {
     for ( int i=0; i<9; i++) {
@@ -352,6 +352,8 @@ QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,9> & MM)
 //}
 
 QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,1> &v);
+
+//! Overloaded <<operator for 9-vectors
 QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,1> &v)
 {
     //qDebug() << Q_FUNC_INFO;
@@ -359,6 +361,8 @@ QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,1> &v
     return out;
 }
 QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,9> &MM);
+
+//! Overloaded <<operator for 9x9 matrices
 QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,9> &MM)
 {
     qDebug() << Q_FUNC_INFO;
@@ -371,6 +375,8 @@ QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,9> &M
 }
 
 QDataStream & operator<< ( QDataStream & out, const aabb & box);
+
+//! Overloaded <<operator for axis-aligned bounding box
 QDataStream & operator<< ( QDataStream & out, const aabb & bbox)
 {
     qDebug() << Q_FUNC_INFO;

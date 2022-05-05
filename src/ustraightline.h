@@ -31,6 +31,7 @@ class uPoint;
 
 Matrix3d skew( const Vector3d & x);
 
+//! Uncertain straight line
 class uStraightLine : public BasicEntity2D
 {
 public:

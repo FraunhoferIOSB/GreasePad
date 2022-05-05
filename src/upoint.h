@@ -28,6 +28,7 @@ namespace Uncertain {
 class uStraightLine;
 
 
+//! Uncertain point
 class uPoint : public BasicEntity2D
 {
 public:
