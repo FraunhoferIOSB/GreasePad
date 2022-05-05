@@ -61,10 +61,10 @@ private:
 class AddStroke : public Undo
 {
 public:
-    AddStroke(State *curr,
+    AddStroke( State *curr,
                std::unique_ptr<State> & p,
                std::unique_ptr<State> & n,
-              QUndoCommand *parent=nullptr);
+               QUndoCommand *parent=nullptr);
     AddStroke( const AddStroke &) = delete;
     AddStroke( AddStroke &&) = delete;
     AddStroke operator= (const AddStroke &) = delete;
@@ -79,10 +79,10 @@ private:
 class DeleteSelection : public Undo
 {
 public:
-    DeleteSelection(State *st,
+    DeleteSelection( State *st,
                      std::unique_ptr<State> &p,
                      std::unique_ptr<State> &n,
-                    QUndoCommand *parent=nullptr);
+                     QUndoCommand *parent=nullptr);
 
 private:
     void redo() override;
