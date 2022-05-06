@@ -31,50 +31,55 @@ class uPoint;
 }
 
 
-
+//! Graphics: Strokes and straight line segments
 namespace QEntity {
 
 using Uncertain::uPoint;
 
-class
-        QSegment : public QGraphicsItem
+//! Graphics: Base class for straight line segments
+class QSegment : public QGraphicsItem
 {
 public:
     QSegment( const uPoint & ux,
-              const uPoint & uy);
-    QSegment( const QSegment & other) = delete;
+              const uPoint & uy);               //!< Value constructor (two uncorrelated uncertain points)
+    QSegment( const QSegment & other) = delete; //!< Copy constructor
 
-    enum {Type = UserType +164};
-    int type() const override { return Type; }
+    enum {Type = UserType +164};                //!< Definition graphics type (id)
+    int type() const override { return Type; }  //!< get graphics type (id)
 
-    void setColor( const QColor & c) { pen_.setColor(c); }
-    void setLineWidth( const int w)  { pen_.setWidth(w); }
-    void setLineStyle( const int s)  { pen_.setStyle( Qt::PenStyle(s)); }
+    void setColor( const QColor & c) { pen_.setColor(c); }  //!< Set color
+    void setLineWidth( const int w)  { pen_.setWidth(w); }  //!< Set line width
+    void setLineStyle( const int s)  { pen_.setStyle( Qt::PenStyle(s)); } //!< Set line style
 
 protected:
     QSegment();
     ~QSegment() override = default;
 
-    QPainterPath shape() const override;
-    void mousePressEvent( QGraphicsSceneMouseEvent * /* event */) override;
+    QPainterPath shape() const override;       //!< Get bounding shape
+    void mousePressEvent( QGraphicsSceneMouseEvent * /* event */) override; //!< Handle mouse press event
 
-    QPen pen() const { return pen_;}
-    void setPen( const QPen & p) { pen_ = p;}
+    QPen pen() const { return pen_;}           //!< Get pen
+    void setPen( const QPen & p) { pen_ = p;}  //!< Set pen
 
 public:
    // QSegment & operator= ( const QSegment & other );
 
-    virtual void serialize( QDataStream & out ) const;
-    bool deserialize( QDataStream &in );
+    virtual void serialize( QDataStream & out ) const; //!< serialization
+    bool deserialize( QDataStream &in );               //!< deserialization
 
+    //! Toggle visibility confidence regions
     static void toggleShowUncertainty()  { s_showUncertainty = !s_showUncertainty; }
+
+    //! Get status visibility confidence regions
     static bool showUncertainty() { return s_showUncertainty; }
 
 protected:
-    QRectF boundingRect() const override;
+    QRectF boundingRect() const override; //!< Get axis-aligned bounding box
+
+    //! Plot uncertain straight line segment (base class)
     void paint( QPainter *painter,
                 const QStyleOptionGraphicsItem *option,
-                QWidget *widget) override; //!< plot tracked positions
+                QWidget *widget) override;
 
 private:
     void createSelectionPolygon( qreal halfWidth );
@@ -96,30 +101,30 @@ private:
 };
 
 
+//! Graphics: Constrained straight line segment
 class QConstrained : public QSegment
 {
 public:
     QConstrained();
     QConstrained( const uPoint & ux,
-                  const uPoint & uy);
+                  const uPoint & uy);  //!< Value constructor
 
     // using QSegment::operator=;
 
-    void setAltColor( const QColor &);
+    void setAltColor( const QColor &); //!< Set color for automatic colorization (subtasks)
 
-    static bool show() { return s_show; }
-    static void toggleShow() { s_show = !s_show; }
-
-    static bool showColor() { return s_showColor; }
-    static void toogleShowColor() { s_showColor = !s_showColor;}
-
-    static void setPenDefault( const QPen & p) { s_defaultPen = p; }
-    static QPen defaultPen() { return s_defaultPen; }
+    static bool show() { return s_show; }              //!< Get status of visibility
+    static void toggleShow() { s_show = !s_show; }     //!< Toggle visibility
+    static bool showColor() { return s_showColor; }    //!< Get status colorization
+    static void toogleShowColor() { s_showColor = !s_showColor;}      //!< Toggle colorization / no colorization
+    static void setPenDefault( const QPen & p) { s_defaultPen = p; }  //!< Set default pen
+    static QPen defaultPen() { return s_defaultPen; }   //!< Get current default pen
 
 protected:
+    //! Plot uncertain constrained straight line segment
     void paint( QPainter *painter,
                 const QStyleOptionGraphicsItem *option,
-                QWidget *widget) override; //!< plot tracked positions
+                QWidget *widget) override;
 
 private:
     QColor altColor;
@@ -129,25 +134,28 @@ private:
     static QPen s_defaultPen;
 };
 
+
+//! Graphics: Unconstrained straight line segment
 class QUnconstrained : public QSegment
 {
 public:
-    QUnconstrained();
+    QUnconstrained();  //!< Standard Constructor
     QUnconstrained( const uPoint & ux,
-                    const uPoint & uy);
+                    const uPoint & uy);  //!< Value constructor (two uncorrelated uncertain points)
 
     // using QSegment::operator=;
 
-    static void toggleShow() { s_show = !s_show; }
-    static bool show() { return s_show; }
+    static void toggleShow() { s_show = !s_show; }  //!< Toggle visibility
+    static bool show() { return s_show; }           //!< Get status visibility
 
-    static void setPenDefault( const QPen &p) { s_defaultPen = p; }
-    static QPen defaultPen() { return s_defaultPen; }
+    static void setPenDefault( const QPen &p) { s_defaultPen = p; }  //!< Set default pen
+    static QPen defaultPen() { return s_defaultPen; }  //!< Get current default pen
 protected:
    // QRectF boundingRect() const override { return QSegment::boundingRect(); }
+    //! Plot unconstrained uncertain straight line segment
     void paint( QPainter *painter,
                 const QStyleOptionGraphicsItem *option,
-                QWidget *widget) override; //!< plot tracked positions
+                QWidget *widget) override;
 
 private:
     static bool s_show;

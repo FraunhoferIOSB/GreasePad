@@ -38,9 +38,10 @@ bool QUnconstrained::s_show = false;
 bool QSegment::s_showUncertainty = false;
 
 QPen & myQPen();
+
+//! Initialized pen upon first call to the function
 QPen & myQPen()
 {
-    // Initialized upon first call to the function
     static QPen p;
     return p;
 }

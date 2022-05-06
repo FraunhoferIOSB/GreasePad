@@ -27,32 +27,33 @@
 
 namespace QEntity {
 
+//! Graphics: Strokes as point sequence
 class QStroke :  public QGraphicsPolygonItem
 {
 public:
     QStroke();
-    QStroke( const QPolygonF & p);
+    QStroke( const QPolygonF & p);  //!< Copy constructor
     ~QStroke() override = default;
 
     // enum {Type = UserType +264};
     // int type() const override { return Type; }
 
-    void serialize( QDataStream & out ) const;
-    bool deserialize( QDataStream &in );
+    void serialize( QDataStream & out ) const;  //!< serialization
+    bool deserialize( QDataStream &in );        //!< deserialization
 
-    void setColor( const QColor & col) {  m_pen.setColor(col); }
-    void setLineWidth( const int w ) {    m_pen.setWidth(w); }
+    void setColor( const QColor & col) {  m_pen.setColor(col); } //!< Set color
+    void setLineWidth( const int w ) {    m_pen.setWidth(w); }   //!< Set line width, i.e, point size
 
-    static void toggleShow() { s_show = !s_show; }
-    static bool show()  { return s_show; }
-    static void setPenDefault( const QPen & p) {  s_defaultPen = p; }
-    static QPen defaultPen() {  return s_defaultPen; }
+    static void toggleShow() { s_show = !s_show; }  //!< Toggle visibility
+    static bool show()  { return s_show; }          //!< Get status visibility
+    static void setPenDefault( const QPen & p) {  s_defaultPen = p; } //!< Set default pen
+    static QPen defaultPen() {  return s_defaultPen; }                //!< Get current default pen
 
 protected:
-    void mousePressEvent( QGraphicsSceneMouseEvent *event) override;
+    void mousePressEvent( QGraphicsSceneMouseEvent *event) override; //!< Handle mouse press event
     void paint( QPainter *painter,
                 const QStyleOptionGraphicsItem *option,
-                QWidget *widget) override; //!< plot tracked positions
+                QWidget *widget) override;  //!< Plot point sequence
 private:
     QPen m_pen;
 
