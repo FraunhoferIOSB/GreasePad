@@ -106,6 +106,21 @@ bool QConstraintBase::deserialize( QDataStream &in )
     return true;
 }
 
+void QConstraintBase::setColor( const QColor & col) {
+    m_pen_req.setColor(col);
+    m_pen_red.setColor(col);
+}
+
+void QConstraintBase::setLineWidth( const int w) {
+    m_pen_req.setWidth(w);
+    m_pen_red.setWidth(w);
+}
+
+
+void QConstraintBase::setLineStyle( const int s) {
+    m_pen_req.setStyle( Qt::PenStyle(s) );
+    m_pen_red.setStyle( Qt::PenStyle(s) );
+}
 
 
 QRectF QOrthogonal::boundingRect() const

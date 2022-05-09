@@ -21,6 +21,7 @@
 
 #include <Eigen/Sparse>
 
+//! Sparse incidence matrix and connected components
 namespace Graph {
 
 using Eigen::SparseMatrix;
@@ -30,17 +31,19 @@ using Eigen::Matrix;
 using Eigen::Dynamic;
 using Eigen::VectorXi;
 
+//! Connected components (vector with indices/labels)
 class ConnComp
 {
 public:
-    ConnComp( const SparseMatrix<int, ColMajor> & BB);
+    ConnComp( const SparseMatrix<int, ColMajor> & BB);  //!< Value constructor with sparse matrix
 
-    VectorXi mapHead( int cc, int n) const;
-    VectorXi mapTail( int cc, int n) const;
-    int label(Index i) const;
-    VectorXi head( int n) const;
-    VectorXi tail( int n) const;
+    VectorXi mapHead( int cc, int n) const;  //!< Get linear indices of the elements in 1...n with label 'cc'.
+    VectorXi mapTail( int cc, int n) const;  //!< Get linear indices of the elements in n-1...end with label 'cc'.
+    int label( Index i) const;     //!< Get label/index) of i-th element
+    VectorXi head( int n) const;   //!< Get labels/indices of first n elements
+    VectorXi tail( int n) const;   //!< Get labels/indices of last n elements
 
+    //! Get number of connected components
     int number() const {  return m_comp.size()>0 ? m_comp.maxCoeff()+1 : 0; }
 
 private:

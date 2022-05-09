@@ -31,7 +31,7 @@ class QGraphicsPixmapItem;
 class QDoubleSpinBox;
 class QLabel;
 
-
+//! Graphical user interface
 namespace GUI {
 
 class FormatTool;
@@ -43,14 +43,14 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow( QWidget *parent = nullptr);
+    MainWindow( QWidget *parent = nullptr); //!< standard constructor
     ~MainWindow() override;
 
     // Where required, read binary file as program argument, see main.cpp
-    void readBinaryFile( const QString &fileName);
+    void readBinaryFile( const QString & fileName);  //!< Read binary file
 
 protected:
-    void closeEvent( QCloseEvent *) override;
+    void closeEvent( QCloseEvent *) override; //!< Handle close event
 
 private:
     State curr_state;
