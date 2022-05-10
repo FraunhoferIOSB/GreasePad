@@ -33,27 +33,30 @@ class State;
 
 namespace GUI {
 
+//! Graphics scene
 class MainScene : public QGraphicsScene
 {
     Q_OBJECT
 
 public:
-    MainScene( QObject *parent );
+    MainScene( QObject *parent );  //!< Value constructor
     ~MainScene() override = default; //{ qDebug() << Q_FUNC_INFO; }
 
-    void mousePressEvent(   QGraphicsSceneMouseEvent *event) override;
-    void mouseMoveEvent(    QGraphicsSceneMouseEvent *event) override;
-    void mouseReleaseEvent( QGraphicsSceneMouseEvent *event) override;
-    void keyPressEvent(     QKeyEvent *event) override;
+protected:
+    void mousePressEvent(   QGraphicsSceneMouseEvent *event) override; //!< Handle mouse press event
+    void mouseMoveEvent(    QGraphicsSceneMouseEvent *event) override; //!< Handle mouse moce event
+    void mouseReleaseEvent( QGraphicsSceneMouseEvent *event) override; //!< Handle mouse release event
+    void keyPressEvent(     QKeyEvent *event) override; //!< Handle key press event
 
-    void removeAllItems();
-    void addGraphicItems( const State *s);
+public:
+    void removeAllItems();       //!< Remove all graphics from the scene but not an optional background imge
+    void addGraphicItems( const State *s);  //!< Add graphics from state to scene
 
-    void export_view_as_svg( QString &fileName);
-    void export_view_as_pdf( QString &fileName);
+    void export_view_as_svg( QString &fileName);  //!< Export the current view as scalabel vector graphics
+    void export_view_as_pdf( QString &fileName);  //!< Export the current view in portable document format
 
-    static QPen scribblePen() { return s_scribblePen; }
-    static void setScribblePen( const QPen & p) { s_scribblePen = p; }
+    static QPen scribblePen() { return s_scribblePen; }                 //!< Get the scribble pen
+    static void setScribblePen( const QPen & p) { s_scribblePen = p; }  //!< Set the scribble pen
 
 private:
     std::unique_ptr<QAction>   actionExportSaveAs;
@@ -70,9 +73,9 @@ private:
     static QPen s_scribblePen;
 
 Q_SIGNALS:
-    void signalCmdAddStroke( QPainterPath * );
-    void signalCmdDeleteSelection();
-    void signalUndoLastAction();
+    void signalCmdAddStroke( QPainterPath * ); //!< Command: add a stroke, reasoning, and adjustment
+    void signalCmdDeleteSelection();           //!< Command: delete selected items and reasoning
+    void signalUndoLastAction();               //!< Command: und last action
 };
 
 } // namespace GUI

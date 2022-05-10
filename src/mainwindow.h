@@ -38,6 +38,7 @@ class FormatTool;
 class MainView;
 
 
+//! Main window
 class MainWindow : public QMainWindow
 {
     Q_OBJECT

@@ -50,7 +50,7 @@ MainView::MainView( QGraphicsScene *scene, QWidget *parent ) : QGraphicsView (pa
 }
 
 
-//! zoom in or out via mouse wheel
+
 void MainView::wheelEvent( QWheelEvent *event )
 {
     // restricted zooming [0.1, 10]

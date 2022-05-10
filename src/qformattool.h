@@ -35,14 +35,15 @@ class QSpinBox;
 
 namespace GUI {
 
+//! Format tool
 class FormatTool : public QDialog {
 
     Q_OBJECT
 
 public:
-    FormatTool( const QString &title, QWidget *);
-    FormatTool( const FormatTool &) = delete;
-    FormatTool & operator= ( FormatTool ) = delete;
+    FormatTool( const QString &title, QWidget *);    //!< Value constructor
+    FormatTool( const FormatTool &) = delete;        //!< Copy constructor
+    FormatTool & operator= ( FormatTool ) = delete;  //!< Copy assignment constructor
     ~FormatTool() override;
 
 private:
@@ -67,20 +68,20 @@ private:
     std::unique_ptr<QDialogButtonBox> m_buttonBox;
 
 Q_SIGNALS:
-    void signalColorChanged( const QColor &);
-    void signalMarkerSizeChanged( int);
-    void signalLineWidthChanged( int);
-    void signalLineStyleChanged( int);
+    void signalColorChanged( const QColor &);  //!< Color changed
+    void signalMarkerSizeChanged( int);        //!< Marker size changed
+    void signalLineWidthChanged( int);         //!< Line width changed
+    void signalLineStyleChanged( int);         //!< Line style changed
 
 public Q_SLOTS:
-    void showColorDialog();
-    void slotUpdateColor( const QColor & col);
-    void updateLineWidth( int w) {  Q_EMIT signalLineWidthChanged(w);  }
-    void updateLineStyle( int s) {  Q_EMIT signalLineStyleChanged(s);  }
-    void updateMarkerSize( int s) { Q_EMIT signalMarkerSizeChanged(s); }
+    void showColorDialog();    //!< Show color dialog
+    void slotUpdateColor( const QColor & col);  //!< Update color
+    void updateLineWidth( int w) {  Q_EMIT signalLineWidthChanged(w);  } //!< Update line widt
+    void updateLineStyle( int s) {  Q_EMIT signalLineStyleChanged(s);  } //!< Update line style
+    void updateMarkerSize( int s) { Q_EMIT signalMarkerSizeChanged(s); } //!< Update marker size
 
-    void slotDiscard()  {   } // TODO
-    void slotApply();
+    void slotDiscard()  {   } //!< slot discard dialog
+    void slotApply();         //!< alot apply selection
 };
 
 } // namespace GUI

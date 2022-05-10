@@ -22,7 +22,7 @@
 #include <QAction>
 #include <QGraphicsView>
 #include <QDebug>
-#include <QStatusBar>
+// #include <QStatusBar>
 
 #include <memory>
 
@@ -30,26 +30,26 @@
 
 namespace GUI {
 
+//! Graphics view
 class MainView :public QGraphicsView
 {
     Q_OBJECT
 
 public:
-     MainView( QGraphicsScene *scene, QWidget *parent);
+     MainView( QGraphicsScene *scene, QWidget *parent); //!< Value constructor
      ~MainView() override { //qDebug() << Q_FUNC_INFO;
      }
 
-     std::unique_ptr<QAction> actionCopyScreenshotToClipboard{};
-     std::unique_ptr<QAction> actionCopySvgToClipboard{};
-     std::unique_ptr<QAction> actionCopyPdfToClipboard{};
-     std::unique_ptr<QAction> actionToggleShowBackgroundTiles;
-     std::unique_ptr<QAction> actionZoomIn;
-     std::unique_ptr<QAction> actionZoomOut;
+     std::unique_ptr<QAction> actionCopyScreenshotToClipboard{}; //!< Copy screenshot to clipboard
+     std::unique_ptr<QAction> actionCopySvgToClipboard{};        //!< Copy scalable vector graphics to clipboard
+     std::unique_ptr<QAction> actionCopyPdfToClipboard{};        //!< Copy portable document format to clipboard
+     std::unique_ptr<QAction> actionToggleShowBackgroundTiles;   //!< Toggle visibility of background tiles
+     std::unique_ptr<QAction> actionZoomIn;                      //!< Zoom in  [+]
+     std::unique_ptr<QAction> actionZoomOut;                     //!< Zoom out [-]
 
 protected:
-     void wheelEvent( QWheelEvent *event) override;
-     void drawForeground( QPainter *painter, const QRectF &) override;
-     // void paintEvent( QPaintEvent *event) override {}
+     void wheelEvent( QWheelEvent *event) override;                    //!< Zoom via mouse wheel
+     void drawForeground( QPainter *painter, const QRectF &) override; //!< Plot the organization name
 
 private:
     const double lod_max = 100.0;
@@ -70,7 +70,7 @@ private:
     static bool s_showBackgroundTiles;
 
 Q_SIGNALS:
-    void signalShowStatus( const QString & s);
+    void signalShowStatus( const QString & s); //!< Send message to status bar
 };
 
 } // namespace GUI
