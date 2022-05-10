@@ -577,7 +577,7 @@ void impl::find_adjacencies_of_latest_segment( const Quantiles::Snapping & snap 
     for ( int i=0; i<N-1; i++)
     {
         // pre-check (culling) via axis-aligned bounding boxes
-        if ( !segm_.at(i)->bounding_box().intersects(
+        if ( !segm_.at(i)->bounding_box().overlaps(
                  segm_.last()->bounding_box()) ) {
             continue;
         }

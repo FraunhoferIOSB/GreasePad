@@ -37,7 +37,7 @@ uPoint::uPoint( const Vector3d &x,
 
 
 //! Get axis-aligned bounding box
-aabb uPoint::bbox() const
+Aabb uPoint::bbox() const
 {
     double u = m_val(0);
     double v = m_val(1);
@@ -56,7 +56,7 @@ aabb uPoint::bbox() const
     double y_min = y -sqrt(Cov_xx(1,1));
     double y_max = y +sqrt(Cov_xx(1,1));
 
-    return aabb{ x_min, x_max, y_min, y_max} ;
+    return Aabb{ x_min, x_max, y_min, y_max} ;
 }
 
 //! Get Euclidean distance to uncertain straight line 'ul'

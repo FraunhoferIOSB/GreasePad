@@ -19,34 +19,26 @@
 #ifndef AABB_H
 #define AABB_H
 
-#include <QDataStream>
-
-class aabb {
+//! Axis-aligned bounding box
+class Aabb {
 
 public:
-    // aabb() = default;
-    // ~aabb() = default;
-    aabb( double x_min=0, double x_max=0,
-          double y_min=0, double y_max=0 );
+    Aabb( double x_min=0, double x_max=0,
+          double y_min=0, double y_max=0 );  //!< Value constructor
 
-    void serialize(   QDataStream & out ) const;
-    bool deserialize( QDataStream & in  );
+    double x_min() const { return m_x_min; } //!< Get minimum x-value
+    double x_max() const { return m_x_max; } //!< Get maximum x-value
+    double y_min() const { return m_y_min; } //!< Get minimum y-value
+    double y_max() const { return m_y_max; } //!< Get maximum y-value
 
-    // aabb & operator= (const aabb & rhs) = default;
-
-    double x_min() const { return x_min_; }
-    double x_max() const { return x_max_; }
-    double y_min() const { return y_min_; }
-    double y_max() const { return y_max_; }
-
-    bool intersects( const aabb & other) const;
-    /* nodiscard */ aabb united( const aabb & other) const;
+    bool overlaps( const Aabb & other) const;    //!< Check if the other box overlaps
+    /* nodiscard */ Aabb united( const Aabb & other) const;  //!< Get united box of this and the other box
 
 private:
-    double x_min_;
-    double x_max_;
-    double y_min_;
-    double y_max_;
+    double m_x_min;
+    double m_x_max;
+    double m_y_min;
+    double m_y_max;
 };
 
 #endif // AABB_H

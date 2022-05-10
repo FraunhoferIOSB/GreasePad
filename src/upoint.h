@@ -21,7 +21,7 @@
 
 #include "uncertain.h"
 
-class aabb;    // axis-aligned bounding box
+class Aabb;    // axis-aligned bounding box
 
 namespace Uncertain {
 
@@ -38,7 +38,7 @@ public:
     // uPoint( const uPoint &ux ) = default;
     ~uPoint() override = default;
 
-    aabb bbox() const;
+    Aabb bbox() const;
     /* nodiscard */ uPoint euclidean() const;
     /* nodiscard */ uPoint sphericalNormalized() const;
     /* nodiscard */ uPoint transformed( const Matrix3d & TT) const;

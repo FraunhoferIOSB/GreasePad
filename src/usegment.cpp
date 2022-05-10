@@ -46,7 +46,7 @@ Matrix3d uStraightLineSegment::CC()
 uPoint uStraightLineSegment::ux() const
 {
     Matrix<double, 3,6> JJ;
-    Matrix<double, 6,6> Cov = Cov_tt_.topLeftCorner(6,6);
+    Matrix<double, 6,6> Cov = m_Cov_tt.topLeftCorner(6,6);
     Matrix3d Sl = skew( hl() );
 
     JJ.leftCols(3) = -skew( hm() );
@@ -73,7 +73,7 @@ uPoint uStraightLineSegment::uy() const
 //! Construction of an uncertain straight line segment via two uncorrelated endpoints
 uStraightLineSegment::uStraightLineSegment( const uPoint & ux,
                                             const uPoint & uy)
-    : bounding_box_( ux.bbox().united( uy.bbox()) )
+    : m_bounding_box( ux.bbox().united( uy.bbox()) )
 {
     // (1) 9-parameter vector t = [l; m; n];
     const Matrix3d Sx = skew( ux.v() );
@@ -88,9 +88,9 @@ uStraightLineSegment::uStraightLineSegment( const uPoint & ux,
     double xh = ux.v()(2);
     double yh = uy.v()(2);
     // Vector9d t;
-    t_.segment( 0, 3) = l;
-    t_.segment( 3, 3) = +sign(yh)*UUx*uy.v();
-    t_.segment( 6, 3) = -sign(xh)*UUy*ux.v();
+    m_t.segment( 0, 3) = l;
+    m_t.segment( 3, 3) = +sign(yh)*UUx*uy.v();
+    m_t.segment( 6, 3) = -sign(xh)*UUy*ux.v();
 
     // (2) 9x9 covariance matrix
     //Matrix3d JJlx = -Sy;
@@ -120,7 +120,7 @@ uStraightLineSegment::uStraightLineSegment( const uPoint & ux,
     Cov_pp.block(0,0,3,3) = ux.Cov();
     Cov_pp.block(3,3,3,3) = uy.Cov();
 
-    Cov_tt_ = JJ*Cov_pp*JJ.transpose();
+    m_Cov_tt = JJ*Cov_pp*JJ.transpose();
     // return { t,  JJ*Cov_pp*JJ.transpose()};
 }
 
@@ -186,32 +186,32 @@ bool uStraightLineSegment::touchedBy( const uPoint & ux,
 //! Get the endpoints connecting uncertain straight line l = S(x)*y
 uStraightLine uStraightLineSegment::ul() const
 {
-    Matrix3d Cov_ll = Cov_tt_.topLeftCorner(3,3);
-    return { t_.head(3), Cov_ll };
+    Matrix3d Cov_ll = m_Cov_tt.topLeftCorner(3,3);
+    return { m_t.head(3), Cov_ll };
 }
 
 
 //! Get the delimiting uncertain straight line m in homogeneous coordinates.
 uStraightLine uStraightLineSegment::um() const
 {
-  Matrix3d Cov_mm = Cov_tt_.block(3,3,3,3);
-  return { t_.segment(3,3), Cov_mm};
+  Matrix3d Cov_mm = m_Cov_tt.block(3,3,3,3);
+  return { m_t.segment(3,3), Cov_mm};
 }
 
 
 //! Get the delimiting uncertain straight line n in homogeneous coordinates.
 uStraightLine uStraightLineSegment::un() const
 {
-    Matrix3d Cov_nn = Cov_tt_.bottomRightCorner(3,3);
-    return { t_.tail(3), Cov_nn};
+    Matrix3d Cov_nn = m_Cov_tt.bottomRightCorner(3,3);
+    return { m_t.tail(3), Cov_nn};
 }
 
 
 //! Get the endpoint x in homogeneous coordinates
 Vector3d uStraightLineSegment::hx() const
 {
-    Vector3d l = t_.head(3);
-    Vector3d m = t_.segment(3,3);
+    Vector3d l = m_t.head(3);
+    Vector3d m = m_t.segment(3,3);
     return skew( l )*m;
 }
 
@@ -219,8 +219,8 @@ Vector3d uStraightLineSegment::hx() const
 //! Get the endpoint y in homogeneous coordinates
 Vector3d uStraightLineSegment::hy() const
 {
-    Vector3d l = t_.head(3);
-    Vector3d n = t_.tail(3);
+    Vector3d l = m_t.head(3);
+    Vector3d n = m_t.tail(3);
     return skew( l )*n;
 }
 
@@ -294,8 +294,8 @@ bool uStraightLineSegment::isCopunctualWith( const uStraightLineSegment & us,
 //! Transform uncertain straight line segment via 9x9 transformation matrix for t = [l',m',n']'.
 void uStraightLineSegment::transform( const Matrix9d & TT)
 {
-         t_ = TT*t_;
-    Cov_tt_ = TT*Cov_tt_*TT.adjoint();
+         m_t = TT*m_t;
+    m_Cov_tt = TT*m_Cov_tt*TT.adjoint();
 }
 
 /* Matlab:  [~,idx] = sort(x);
@@ -316,6 +316,26 @@ VectorXi uStraightLineSegment::indices_of_sorting( const VectorXd &v)
     std::sort( idx.begin(), idx.end(), comparator);
     return idx;
 }*/
+
+
+QDataStream & operator<< (QDataStream & out, const Aabb & bbox)
+{
+    out << bbox.x_min() << bbox.x_max()
+        << bbox.y_min() << bbox.y_max();
+    return out;
+}
+
+QDataStream & operator>> (QDataStream & in, Aabb & bbox)
+{
+    double x_min;
+    double x_max;
+    double y_min;
+    double y_max;
+    in >> x_min >> x_max >> y_min >> y_max;
+    bbox = Aabb( x_min, x_max, y_min, y_max);
+
+    return in;
+}
 
 
 QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,1> & v);
@@ -374,38 +394,29 @@ QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,9> &M
     return out;
 }
 
-QDataStream & operator<< ( QDataStream & out, const aabb & box);
-
-//! Overloaded <<operator for axis-aligned bounding box
-QDataStream & operator<< ( QDataStream & out, const aabb & bbox)
-{
-    qDebug() << Q_FUNC_INFO;
-    out << bbox.x_min() << bbox.x_max() << bbox.y_min() << bbox.y_max();
-    return out;
-}
-
 
 //! Serialization of the uncertain straight line segment t=[l',m',n']' and its bounding box
 void uStraightLineSegment::serialize( QDataStream & out ) const
 {
     qDebug() << Q_FUNC_INFO;
-    out << t_;
-    out << Cov_tt_;
-    bounding_box_.serialize( out);
+    out << m_t;
+    out << m_Cov_tt;
+    out << m_bounding_box;
 }
 
 //! Deserialization of uncertain straight line segment and its bounding box
 bool uStraightLineSegment::deserialize( QDataStream & in )
 {
     qDebug() << Q_FUNC_INFO;
-    in >> t_;
-    in >> Cov_tt_;
-    if ( in.status()!=0 ) {
+    in >> m_t;
+    in >> m_Cov_tt;
+    //    if ( in.status()!=0 ) {
+    //        return false;
+    //    }
+    in >> m_bounding_box;
+    /* if ( !bounding_box_.deserialize( in) ) {
         return false;
-    }
-    if ( !bounding_box_.deserialize( in) ) {
-        return false;
-    }
+    } */
     return in.status()==0;
 }
 

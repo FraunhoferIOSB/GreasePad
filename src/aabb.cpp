@@ -19,49 +19,27 @@
 #include "aabb.h"
 
 #include <Eigen/Dense>  // Eigen
-#include <QDataStream>  // Qt
 
-aabb::aabb( const double x_min,
-            const double x_max,
-            const double y_min,
-            const double y_max)
-: x_min_(x_min)
+Aabb::Aabb( const double x_min,  const double x_max,
+            const double y_min,  const double y_max)
+: m_x_min(x_min), m_x_max(x_max), m_y_min(y_min), m_y_max(y_max)
 {
-   x_max_ = x_max;
-   y_min_ = y_min;
-   y_max_ = y_max;
-
-   assert( x_min_ <= x_max_ );  // option: swap
-   assert( y_min_ <= y_max_ );
+   assert( m_x_min <= m_x_max );  // option: swap
+   assert( m_y_min <= m_y_max );
 }
 
 
-bool aabb::intersects( const aabb & other) const
+bool Aabb::overlaps( const Aabb & other) const
 {
-    return (    ( std::fmin( x_max_, other.x_max_) > std::fmax( x_min_, other.x_min_) )
-             && ( std::fmin( y_max_, other.y_max_) > std::fmax( y_min_, other.y_min_) )
+    return (    ( std::fmin( m_x_max, other.m_x_max) > std::fmax( m_x_min, other.m_x_min) )
+             && ( std::fmin( m_y_max, other.m_y_max) > std::fmax( m_y_min, other.m_y_min) )
            );
 }
 
-aabb aabb::united( const aabb & other) const
+Aabb Aabb::united( const Aabb & other) const
 {
-   return { std::fmin( x_min_, other.x_min_),
-            std::fmax( x_max_, other.x_max_),
-            std::fmin( y_min_, other.y_min_),
-            std::fmax( y_max_, other.y_max_)};
+   return { std::fmin( m_x_min, other.m_x_min),
+            std::fmax( m_x_max, other.m_x_max),
+            std::fmin( m_y_min, other.m_y_min),
+            std::fmax( m_y_max, other.m_y_max) };
 }
-
-
-void aabb::serialize( QDataStream &out ) const
-{
-    // qDebug() << Q_FUNC_INFO;
-    out << x_min_ << x_max_ << y_min_ << y_max_;
-}
-
-bool aabb::deserialize( QDataStream &in )
-{
-    // qDebug() << Q_FUNC_INFO;
-    in >> x_min_ >> x_max_ >> y_min_ >> y_max_;
-    return in.status()==0;
-}
-
