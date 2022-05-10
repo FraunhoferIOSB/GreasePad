@@ -37,18 +37,19 @@ namespace QConstraint {
 
 using Uncertain::uStraightLineSegment;
 
-//! Graphics: Base class for marker depicting constraints
+//! Graphics: Base class for markers depicting constraints
 class QConstraintBase : public QGraphicsItem
 {
 protected:
     QConstraintBase();
-public:
+
     //! Copy constructor
-    QConstraintBase( const QConstraintBase & other) = delete;
+    QConstraintBase( const QConstraintBase & other);
 
     //! Copy assignment constructor
     QConstraintBase & operator= (const QConstraintBase&) = delete ;
 
+public:
     // T qgraphicsitem_cast(QGraphicsItem *item)
     // To make this function work correctly with custom items, reimplement the type() function for each custom QGraphicsItem subclass.
     enum {Type = UserType +364};
@@ -59,7 +60,7 @@ public:
     void serialize(   QDataStream &out );  //!< serialization
     bool deserialize( QDataStream &);      //!< deserialization
 
-    virtual std::shared_ptr<QConstraintBase> create() const = 0; //!< Creation
+    virtual std::shared_ptr<QConstraintBase> clone() const = 0; //!< Clone this constraint
 
     void setColor( const QColor & col);    //!< Set color
     void setLineWidth( const int w);       //!< Set line width
@@ -97,9 +98,6 @@ protected:
 
     void mousePressEvent(QGraphicsSceneMouseEvent *) override; //!< Handle mouse press event
 
-    bool m_is_required = true;    //!< Is required? (for painting)
-    bool m_is_enforced = false;   //!< Is enforced? (for painting)
-
     static bool showColor() { return s_showColor; } //!< Get status automatic colorization (on/off)
 
     static  int s_defaultMarkerSize;  //!< Default marker size
@@ -112,6 +110,9 @@ protected:
     QPen m_pen_req;           //!< Pen for required constraint
     QPen m_pen_red;           //!< Pen for redundant constraint
 
+    bool m_is_required = true;    //!< Constraint is required? (for painting)
+    bool m_is_enforced = false;   //!< Constraint is enforced? (for painting)
+
 private:
     static bool s_showColor;
     static bool s_show;
@@ -122,7 +123,7 @@ class QCopunctual : public QConstraintBase,
         public QGraphicsEllipseItem
 {
 public:
-    QCopunctual();
+    static std::shared_ptr<QConstraintBase> create();  //!< Create copunctual constraint
 
     void setGeometry( const uStraightLineSegment &s,
                       const uStraightLineSegment &t) override;
@@ -130,13 +131,16 @@ public:
     qreal markerSize() const override;
 
 protected:
+    QCopunctual();
+    QCopunctual( const QCopunctual & other);    //!< Copy constructor
+
     QRectF boundingRect() const override; //!< Get axis-aligned bounding box
     void paint( QPainter *painter,
                 const QStyleOptionGraphicsItem *option,
                 QWidget *widget) override; //!< Plot the circle
 
 private:
-    std::shared_ptr<QConstraintBase> create() const override;
+    std::shared_ptr<QConstraintBase> clone() const override;
 };
 
 
@@ -145,21 +149,23 @@ class QOrthogonal : public QConstraintBase,
         public QGraphicsRectItem
 {
 public:
-    QOrthogonal();
+    static std::shared_ptr<QConstraintBase> create();  //!< Create orthogonallity constraint
 
-public:
     void setGeometry( const uStraightLineSegment &s,
                       const uStraightLineSegment &t) override;
     void setMarkerSize ( qreal s) override;
     qreal markerSize() const override;
 
 protected:
-    QRectF boundingRect() const override;   //!< get axis-aligned bounding box
+    QOrthogonal();
+    QOrthogonal( const QOrthogonal & other); //!< Copy constructor
+
+    QRectF boundingRect() const override;   //!< Get axis-aligned bounding box
     void paint( QPainter *painter,
                 const QStyleOptionGraphicsItem *option,
                 QWidget *widget) override;  //!< Plot square
 private:
-    std::shared_ptr<QConstraintBase> create() const override;
+    std::shared_ptr<QConstraintBase> clone() const override;
 };
 
 //! Graphics: Marker for indentity
@@ -167,7 +173,7 @@ class QIdentical : public QConstraintBase,
         public QGraphicsPolygonItem
 {
 public:
-    QIdentical();
+    static std::shared_ptr<QConstraintBase> create();  //!< Create identity constraint
 
     void setMarkerSize ( qreal s) override;
     qreal markerSize() const override;
@@ -175,21 +181,24 @@ public:
                       const uStraightLineSegment &t) override;
 
 protected:
+    QIdentical();
+    QIdentical( const QIdentical & other);  //!< Copy constructor
+
     QRectF boundingRect() const override; //!< Get axis-aligned bounding box
     void paint( QPainter *painter,
                 const QStyleOptionGraphicsItem *option,
                 QWidget *widget) override; //!< Plot marker
 
 private:
-    std::shared_ptr<QConstraintBase> create() const override;
+    std::shared_ptr<QConstraintBase> clone() const override;
 };
 
 
-//! Graphics: Marke for parallelism
+//! Graphics: Marker for parallelism
 class QParallel : public QConstraintBase
 {
 public:
-    QParallel();
+    static std::shared_ptr<QConstraintBase> create();  //!< Create parallelism constraint
 
     void setGeometry( const uStraightLineSegment &s,
                       const uStraightLineSegment &t) override;
@@ -197,18 +206,20 @@ public:
     qreal markerSize() const override;
 
 protected:
+    QParallel();
+    QParallel( const QParallel & other);  //!< Copy constructor
+
     QRectF boundingRect() const override;   //!< Get axis-aligned bounding box
     void paint( QPainter *painter,
                 const QStyleOptionGraphicsItem *option,
                 QWidget *widget) override;  //!< Plot marker
 private:
-    std::shared_ptr<QConstraintBase> create() const override;
+    std::shared_ptr<QConstraintBase> clone() const override;
 
     QGraphicsLineItem a;
     QGraphicsLineItem b;
     static constexpr double s_sc    = 0.2;
     static constexpr double s_shear = 0.1;
-
 };
 
 } // namespace QConstraint

@@ -414,21 +414,21 @@ bool impl::deserialize( QDataStream *in )
     for ( const auto & con : qAsConst( constr_)) {
 
         if ( con->is<Orthogonal>() ) {
-            auto q = std::make_shared<QConstraint::QOrthogonal>();
+            auto q = QConstraint::QOrthogonal::create();
             if ( !q->deserialize( *in ) ) {
                 return false;
             }
             qConstraint.append( q);
         }
         if ( con->is<Parallel>() ) {
-            auto q = std::make_shared<QConstraint::QParallel>();
+            auto q = QConstraint::QParallel::create();
             if ( !q->deserialize( *in ) ) {
                 return false;
             }
             qConstraint.append( q);
         }
         if ( con->is<Copunctual>() ) {
-            auto q = std::make_shared<QConstraint::QCopunctual>();
+            auto q = QConstraint::QCopunctual::create();
             if ( !q->deserialize( *in ) ) {
                 return false;
             }
@@ -991,7 +991,7 @@ void impl::establish_parallelism( const int a,
     PP.set( a,b);
     PP.set( b,a);
 
-    qConstraint.append( std::make_shared<QConstraint::QParallel>() );
+    qConstraint.append( QConstraint::QParallel::create() );
     constr_.append( std::make_shared<Parallel>() );
 
     Bi.conservativeResize( Bi.rows(),
@@ -1004,7 +1004,7 @@ void impl::establish_parallelism( const int a,
 void impl::establish_orthogonality( const int a,
                                     const int b)
 {
-    qConstraint.append( std::make_shared<QConstraint::QOrthogonal>());
+    qConstraint.append( QConstraint::QOrthogonal::create());
     constr_.append( std::make_shared<Orthogonal>() );
 
     Bi.conservativeResize( Bi.rows(),
@@ -1018,7 +1018,7 @@ void impl::establish_convergence( const int a,
                                   const int b,
                                   const int c)
 {
-    qConstraint.append( std::make_shared<QConstraint::QCopunctual>() );
+    qConstraint.append( QConstraint::QCopunctual::create() );
     constr_.append( std::make_shared<Copunctual>() );
 
     Bi.conservativeResize( Bi.rows(), Bi.cols()+1) ; // append a column
@@ -1030,7 +1030,7 @@ void impl::establish_convergence( const int a,
 
 void impl::establish_identity( const int a,  const int b)
 {
-    qConstraint.append( std::make_shared<QConstraint::QIdentical>() );
+    qConstraint.append( QConstraint::QIdentical::create() );
     constr_.append( std::make_shared<Identical>() );
 
     Bi.conservativeResize( Bi.rows(), Bi.cols()+1 ); // append column
@@ -1347,7 +1347,7 @@ void impl::replaceGraphics() {
         }
 
         if ( modified ) {
-            auto q = qConstraint.at(c)->create();
+            auto q = qConstraint.at(c)->clone();
             Q_ASSERT( idxx.size()>1 && idxx.size()<4 ); // {2,3}-ary
             q->setStatus(   constr_.at(c)->required(),
                             constr_.at(c)->enforced() );

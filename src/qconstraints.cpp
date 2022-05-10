@@ -39,10 +39,9 @@ QPen QConstraintBase::s_defaultPenRed = QPen();
 QPen QConstraintBase::s_penSelected   = QPen();
 
 
-
 QConstraintBase::QConstraintBase()
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     setVisible( s_show);
 
     m_pen_req = s_defaultPenReq;
@@ -55,6 +54,23 @@ QConstraintBase::QConstraintBase()
     setFlag( ItemIsSelectable, true);
     setFlag( ItemIsMovable,            false);
     setFlag( ItemSendsGeometryChanges, false);
+}
+
+QConstraintBase::QConstraintBase( const QConstraintBase & other)
+{
+    // qDebug() << Q_FUNC_INFO << m_sc;
+    setVisible( s_show);
+
+    setFlag( ItemIsSelectable, true);
+    setFlag( ItemIsMovable,            false);
+    setFlag( ItemSendsGeometryChanges, false);
+
+    m_altColor = other.m_altColor;
+    m_pen_req = other.m_pen_req;
+    m_pen_red = other.m_pen_red;
+
+    m_is_required = other.m_is_required;
+    m_is_enforced = other.m_is_enforced ;
 }
 
 void QConstraintBase::mousePressEvent( QGraphicsSceneMouseEvent * event )
@@ -76,7 +92,6 @@ void QConstraintBase::serialize( QDataStream &out )
     out << m_pen_red;
     out << m_altColor;
 
-    // out << m_markerSize;
     out << markerSize();
     out << pos();
     out << rotation();
@@ -106,18 +121,21 @@ bool QConstraintBase::deserialize( QDataStream &in )
     return true;
 }
 
-void QConstraintBase::setColor( const QColor & col) {
+void QConstraintBase::setColor( const QColor & col)
+{
     m_pen_req.setColor(col);
     m_pen_red.setColor(col);
 }
 
-void QConstraintBase::setLineWidth( const int w) {
+void QConstraintBase::setLineWidth( const int w)
+{
     m_pen_req.setWidth(w);
     m_pen_red.setWidth(w);
 }
 
 
-void QConstraintBase::setLineStyle( const int s) {
+void QConstraintBase::setLineStyle( const int s)
+{
     m_pen_req.setStyle( Qt::PenStyle(s) );
     m_pen_red.setStyle( Qt::PenStyle(s) );
 }
@@ -137,7 +155,6 @@ void QOrthogonal::paint( QPainter *painter,
                          const QStyleOptionGraphicsItem * option,
                          QWidget * widget)
 {
-
     QPen pen = QPen( m_is_required ? m_pen_req : m_pen_red);
     if ( !enforced() ) {
         pen.setColor( Qt::cyan );
@@ -147,11 +164,10 @@ void QOrthogonal::paint( QPainter *painter,
         pen.setColor( m_altColor);
     }
 
-    painter->setPen(pen);
-    painter->drawRect( /*square.*/rect() );
+    painter->setPen( pen );
+    painter->drawRect( rect() );
 
     QConstraintBase::paint( painter, option, widget);
-
 }
 
 QOrthogonal::QOrthogonal()
@@ -162,13 +178,13 @@ QOrthogonal::QOrthogonal()
 
 void QOrthogonal::setMarkerSize ( const qreal s)
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     setRect( -s, -s, 2*s, 2*s );
 }
 
 qreal QOrthogonal::markerSize() const
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     return -rect().x();
 }
 
@@ -176,32 +192,85 @@ qreal QOrthogonal::markerSize() const
 void QOrthogonal::setGeometry( const uStraightLineSegment &s,
                                const uStraightLineSegment &t)
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     Vector3d xh = s.hl().cross( t.hl() );
 
     QConstraintBase::setPos( m_sc*xh(0)/xh(2),  m_sc*xh(1)/xh(2));
-    //qDebug() << pos();
     QConstraintBase::setRotation( s.phi_deg() );
     QConstraintBase::update();
 }
 
 QCopunctual::QCopunctual()
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     const int s = s_defaultMarkerSize;
     setRect( -s, -s, 2*s, 2*s );
 }
 
+QCopunctual::QCopunctual( const QCopunctual & other)
+    : QConstraintBase( other )
+{
+    // qDebug() << Q_FUNC_INFO;
+}
+
+QOrthogonal::QOrthogonal( const QOrthogonal & other)
+    : QConstraintBase( other)
+{
+    // qDebug() << Q_FUNC_INFO;
+}
+
+QParallel::QParallel( const QParallel & other)
+    : QConstraintBase( other )
+{
+    // qDebug() << Q_FUNC_INFO;
+}
+
+QIdentical::QIdentical( const QIdentical & other)
+    : QConstraintBase(other)
+{
+    // qDebug() << Q_FUNC_INFO;
+}
+
+
 void QCopunctual::setMarkerSize ( const qreal s)
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     setRect( -s, -s, 2*s, 2*s );
 }
 
 qreal QCopunctual::markerSize() const
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     return -rect().x();
+}
+
+
+std::shared_ptr<QConstraintBase> QParallel::clone() const
+{
+    auto T = std::shared_ptr<QParallel>( new QParallel(*this) );
+    T->setMarkerSize( this->markerSize() );
+    return std::move(T);
+}
+
+std::shared_ptr<QConstraintBase> QOrthogonal::clone() const
+{
+    auto T = std::shared_ptr<QOrthogonal>( new QOrthogonal(*this));
+    T->setMarkerSize( this->markerSize() );
+    return std::move(T);
+}
+
+std::shared_ptr<QConstraintBase> QIdentical::clone() const
+{
+    auto T = std::shared_ptr<QIdentical>( new QIdentical(*this) );
+    T->setMarkerSize( this->markerSize() );
+    return std::move(T);
+}
+
+std::shared_ptr<QConstraintBase> QCopunctual::clone() const
+{
+    auto T = std::shared_ptr<QCopunctual>( new QCopunctual(*this) );
+    T->setMarkerSize( this->markerSize() );
+    return std::move(T);
 }
 
 
@@ -240,7 +309,6 @@ void QCopunctual::paint( QPainter *painter,
                          const QStyleOptionGraphicsItem * option,
                          QWidget * widget)
 {
-
     QPen pen = QPen( m_is_required ? m_pen_req : m_pen_red);
 
     if ( showColor()) {
@@ -265,7 +333,7 @@ void QCopunctual::paint( QPainter *painter,
 void QCopunctual::setGeometry( const uStraightLineSegment &s,
                                const uStraightLineSegment &t)
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     Vector3d xh = s.hl().cross( t.hl() );
     QConstraintBase::setPos( m_sc*xh(0)/xh(2), m_sc*xh(1)/xh(2) );
 }
@@ -280,14 +348,14 @@ QParallel::QParallel()
 
 void QParallel::setMarkerSize ( const qreal s)
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     a.setLine( +s_sc*s, -s*(1-s_shear),  +s_sc*s, s*(1+s_shear));
     b.setLine( -s_sc*s, -s*(1+s_shear),  -s_sc*s, s*(1-s_shear));
 }
 
 qreal QParallel::markerSize() const
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     return a.line().x1()/s_sc;
 }
 
@@ -317,7 +385,6 @@ void QParallel::paint( QPainter *painter,
                        const QStyleOptionGraphicsItem * option,
                        QWidget * widget)
 {
-
     QPen pen = QPen( m_is_required ? m_pen_req : m_pen_red);
 
     if ( showColor() ) {
@@ -346,7 +413,7 @@ QIdentical::QIdentical()
 
 void QIdentical::setMarkerSize ( const qreal s)
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     setPolygon( QPolygonF() << QPointF(-s, -s)
                 << QPointF(+s, +s)
                 << QPointF(+s, -s)
@@ -356,7 +423,7 @@ void QIdentical::setMarkerSize ( const qreal s)
 
 qreal QIdentical::markerSize() const
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     // return -polygon().first().x();
     return -polygon().at(0).x();
 }
@@ -404,25 +471,24 @@ void QIdentical::paint( QPainter *painter,
 
 }
 
-std::shared_ptr<QConstraintBase> QCopunctual::create() const
+std::shared_ptr<QConstraintBase> QCopunctual::create()
 {
-    return std::make_shared<QCopunctual>();
+    return std::shared_ptr<QCopunctual>( new QCopunctual() );
 }
 
-std::shared_ptr<QConstraintBase> QParallel::create() const
+std::shared_ptr<QConstraintBase> QParallel::create()
 {
-    return std::make_shared<QParallel>();
+    return std::shared_ptr<QParallel>( new QParallel() );
 }
 
-std::shared_ptr<QConstraintBase> QOrthogonal::create() const
+std::shared_ptr<QConstraintBase> QOrthogonal::create()
 {
-    std::shared_ptr<QOrthogonal> p = std::make_shared<QOrthogonal>();
-    return std::move(p);
+    return std::shared_ptr<QOrthogonal>( new QOrthogonal());
 }
 
-std::shared_ptr<QConstraintBase> QIdentical::create() const
+std::shared_ptr<QConstraintBase> QIdentical::create()
 {
-    return std::make_shared<QIdentical>();
+    return std::shared_ptr<QIdentical>( new QIdentical() );
 }
 
 
