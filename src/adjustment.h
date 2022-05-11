@@ -21,10 +21,12 @@
 
 #include "matrix.h"
 
-#include <Eigen/Sparse>
+#include <Eigen/Sparse>  // Eigen
 #include <Eigen/Dense>
 
-#include <memory>
+#include <memory>        // C++
+
+#include <QList>         // Qt
 
 namespace Constraint {
 class ConstraintBase;

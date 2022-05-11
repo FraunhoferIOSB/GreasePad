@@ -126,12 +126,13 @@ private:
     inline bool sameSign( T a, T b ) const {  return a*b >= 0.; }   // for debugging and assertion
 };
 
+/*
 //! serialization axis-aligned bounding box
 QDataStream & operator<< ( QDataStream & out, const Aabb & bbox);
 
 //! deserialization axis-aligned bounding box
 QDataStream & operator>> ( QDataStream &  in,       Aabb & bbox);
-
+*/
 } // namespace Uncertain
 
 #endif // USEGMENT_H

@@ -78,9 +78,13 @@ public:
     template<typename T>
     bool is()  { return ( dynamic_cast<T*>(this) != nullptr);    }
 
-    virtual std::shared_ptr<ConstraintBase> clone() const = 0;    // virtual constructor (copying)
+    // virtual std::shared_ptr<ConstraintBase> clone() const = 0;
+    // nonvirtual interface pattern
+    std::shared_ptr<ConstraintBase> clone() const;
 
 private:
+    virtual std::shared_ptr<ConstraintBase> doClone() const = 0;
+
     Status m_status;    // { UNEVAL=0 | REQUIRED | OBSOLETE };
     bool   m_enforced;
 };
@@ -101,7 +105,7 @@ protected:
     const char* type_name() const override { return "copunctual"; }
 
 private:
-    std::shared_ptr<ConstraintBase> clone() const override;
+    std::shared_ptr<ConstraintBase> doClone() const override;
     Matrix3d cof3( const Matrix3d &MM ) const;   //!< 3x3 cofactor matrix
     static const int s_dof   = 1;
     static const int s_arity = 3;
@@ -126,7 +130,7 @@ public:
 
 private:
     const char* type_name() const override { return "parallel"; }
-    std::shared_ptr<ConstraintBase> clone() const override;
+    std::shared_ptr<ConstraintBase> doClone() const override;
 
     static Eigen::Matrix3d S3();
     static const int s_dof   = 1;
@@ -146,7 +150,7 @@ public:
     }
 private:
     const char* type_name() const override { return "orthogonal"; }
-    std::shared_ptr<ConstraintBase> clone() const override;
+    std::shared_ptr<ConstraintBase> doClone() const override;
 
     static Matrix3d CC();
     static const int s_dof = 1;
@@ -163,7 +167,7 @@ public:
 
 private:
     const char* type_name() const override {return "identical";}
-    std::shared_ptr<ConstraintBase> clone() const override;
+    std::shared_ptr<ConstraintBase> doClone() const override;
 
     static const int s_dof   = 2;
     static const int s_arity = 2;

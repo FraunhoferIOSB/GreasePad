@@ -724,7 +724,7 @@ void MainWindow::readBinaryFile( const QString & fileName)
 
     QDataStream in( &file );    // read the data serialized from the file
     State newState;
-    if ( !newState.deserialize( &in ) )
+    if ( !newState.deserialize( in ) )
     {
         file.close();
         statusBar()->showMessage( "Data import failed." );
@@ -988,7 +988,7 @@ bool MainWindow::fileSave()
     }
 
     QDataStream out( &file );
-    curr_state.serialize( &out );
+    curr_state.serialize( out );
     file.close();
 
     statusBar()->showMessage( "File <"+ fileName_ + "> saved.");

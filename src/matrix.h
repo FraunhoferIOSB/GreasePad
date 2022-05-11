@@ -19,10 +19,7 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
-#include <QDataStream>
-
 #include <Eigen/Sparse>
-
 
 namespace Graph {
 
@@ -40,9 +37,6 @@ public:
         this->Eigen::SparseMatrix<int, ColMajor,int>::operator=(other);
         return *this;
     }
-
-    void serialize ( QDataStream &out ) const;
-    bool deserialize( QDataStream &in );
 
     VectorXi findInColumn( int c ) const;  // Matlab: find(A(:,c))
     bool isSet( Index r, Index c) const;

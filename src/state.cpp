@@ -62,6 +62,8 @@ Quantiles::Recognition State::recogn_;
 Quantiles::Snapping    State::snap_;
 
 
+QDataStream & operator<< (QDataStream & out, const IncidenceMatrix & AA);
+QDataStream & operator>> (QDataStream & in,  IncidenceMatrix & AA);
 
 /*QDebug operator << (QDebug d, const Eigen::VectorXi &v);
 QDebug operator << (QDebug d, const Eigen::VectorXi &v)
@@ -96,8 +98,8 @@ QDebug operator << (QDebug d, const SparseMatrix<int,ColMajor> &MM)
 class impl {
 
 public:
-    bool deserialize( QDataStream * in  );
-    void serialize(   QDataStream * out ) const;
+    bool deserialize( QDataStream & in  );
+    void serialize(   QDataStream & out ) const;
 
     QString StatusMsg() const;
 
@@ -365,7 +367,7 @@ QDataStream & operator>> ( QDataStream & in, IncidenceMatrix & AA )
     return in;
 }*/
 
-bool impl::deserialize( QDataStream *in )
+bool impl::deserialize( QDataStream &in )
 {
     // qDebug() <<  Q_FUNC_INFO;
 
@@ -373,35 +375,40 @@ bool impl::deserialize( QDataStream *in )
 
 
     qDebug() << "(1) reading topology...";
-    if ( !Adj.deserialize( *in ) ) {
-        return false;
-    }
-    if ( !Bi.deserialize( *in ) ) {
-        return false;
-    }
-    if ( !x_touches_l.deserialize( *in ) ) {
-        return false;
-    }
-    if ( !y_touches_l.deserialize( *in ) ) {
-        return false;
-    }
-    if ( !PP.deserialize( *in ) ) {
-        return false;
-    }
+    in >> Adj;
+    in >> Bi;
+    in >> x_touches_l;
+    in >> y_touches_l;
+    in >> PP;
+    //    if ( !Adj.deserialize( in ) ) {
+    //        return false;
+    //    }
+    //    if ( !Bi.deserialize( in ) ) {
+    //        return false;
+    //    }
+    //    if ( !x_touches_l.deserialize( in ) ) {
+    //        return false;
+    //    }
+    //    if ( !y_touches_l.deserialize( in ) ) {
+    //        return false;
+    //    }
+    //    if ( !PP.deserialize( in ) ) {
+    //        return false;
+    //    }
 
 
     qDebug() << "(2) reading geometry...";
     for ( Index s=0; s<Bi.rows(); s++ ) {
         // auto seg = std::make_shared<uStraightLineSegment>();
         auto seg = uStraightLineSegment::create();
-        if ( !seg->deserialize( *in ) ) {
+        if ( !seg->deserialize( in ) ) {
             return false;
         }
         segm_.append( seg );
     }
 
     for ( Index i=0; i<Bi.cols(); i++ ) {
-        auto c = ConstraintBase::deserialize(*in);  // calls 'create'
+        auto c = ConstraintBase::deserialize(in);  // calls 'create'
         if ( c==nullptr ) {
             return false;
         }
@@ -415,21 +422,21 @@ bool impl::deserialize( QDataStream *in )
 
         if ( con->is<Orthogonal>() ) {
             auto q = QConstraint::QOrthogonal::create();
-            if ( !q->deserialize( *in ) ) {
+            if ( !q->deserialize( in ) ) {
                 return false;
             }
             qConstraint.append( q);
         }
         if ( con->is<Parallel>() ) {
             auto q = QConstraint::QParallel::create();
-            if ( !q->deserialize( *in ) ) {
+            if ( !q->deserialize( in ) ) {
                 return false;
             }
             qConstraint.append( q);
         }
         if ( con->is<Copunctual>() ) {
             auto q = QConstraint::QCopunctual::create();
-            if ( !q->deserialize( *in ) ) {
+            if ( !q->deserialize( in ) ) {
                 return false;
             }
             qConstraint.append( q);
@@ -439,7 +446,7 @@ bool impl::deserialize( QDataStream *in )
     qDebug() << "    strokes ...";
     for ( Index i=0; i<Bi.rows(); i++) {
         auto q = std::make_shared<QEntity::QStroke>();
-        if( !q->deserialize(*in) ) {
+        if( !q->deserialize(in) ) {
             return false;
         }
         qStroke.append( q);
@@ -448,7 +455,7 @@ bool impl::deserialize( QDataStream *in )
     qDebug() << "   unconstrained segments...";
     for ( Index i=0; i<Bi.rows(); i++) {
         auto q = std::make_shared<QEntity::QUnconstrained>();
-        if( !q->deserialize(*in) ) {
+        if( !q->deserialize(in) ) {
             return false;
         }
         qUnconstrained.append( q);
@@ -457,7 +464,7 @@ bool impl::deserialize( QDataStream *in )
     qDebug() << "   constrained segments...";
     for ( Index i=0; i<Bi.rows(); i++) {
         auto q = std::make_shared<QEntity::QConstrained>();
-        if( !q->deserialize(*in) ) {
+        if( !q->deserialize(in) ) {
             return false;
         }
         qConstrained.append( q);
@@ -527,42 +534,47 @@ QDataStream & operator<< (QDataStream & out, const IncidenceMatrix & AA)
     return out;
 }*/
 
-void State::serialize( QDataStream *out ) const
+void State::serialize( QDataStream  & out ) const
 {
     pImpl()->serialize( out );
 }
 
-void impl::serialize( QDataStream *out ) const
+void impl::serialize( QDataStream &out ) const
 {
     // qDebug() <<  Q_FUNC_INFO;
 
     // (1) topology
-    Adj.serialize( *out );
-    Bi.serialize(  *out );
-    x_touches_l.serialize( *out );
-    y_touches_l.serialize( *out );
-    PP.serialize( *out );
+    out << Adj;
+    out << Bi;
+    out << x_touches_l;
+    out << y_touches_l;
+    out << PP;
+    //    Adj.serialize( out );
+    //    Bi.serialize(  out );
+    //    x_touches_l.serialize( out );
+    //    y_touches_l.serialize( out );
+    //    PP.serialize( out );
 
     // (2) geometry
     for ( const auto & item : segm_) {
-        item->serialize( *out );
+        item->serialize( out );
     }
     for ( const auto & item : constr_) {
-        item->serialize( *out );
+        item->serialize( out );
     }
 
     // (3) graphics
     for ( auto & item : qConstraint) {
-        item->serialize( *out );
+        item->serialize( out );
     }
     for ( const auto & item : qStroke) {
-        item->serialize( *out );
+        item->serialize( out );
     }
     for ( const auto & item : qUnconstrained) {
-        item->serialize( *out );
+        item->serialize( out );
     }
     for ( const auto & item : qConstrained) {
-        item->serialize( *out );
+        item->serialize( out );
     }
 
     qDebug() << "Export finished.";
@@ -1307,6 +1319,7 @@ void impl::remove_elements()
     }
 }
 
+//! Replace graphics because of adjustment and/or snapping
 void impl::replaceGraphics() {
 
     // qDebug() << Q_FUNC_INFO;
@@ -1318,11 +1331,10 @@ void impl::replaceGraphics() {
     // Then the corresponding graphics have to be replaced.
     for ( int s=0; s<qConstrained.length(); s++ ) {
         if ( segm_.at(s).use_count()==1 ) {
-
             auto q =  std::make_shared<QEntity::QConstrained>(
                         segm_.at(s)->ux(),
                         segm_.at(s)->uy() );
-            //q->setShape(  segm_.at(s)->ux(), segm_.at(s)->uy()   );
+            q->setPen( qConstrained.at(s)->pen() );
             qConstrained.replace( s, q);
         }
     }
@@ -1423,7 +1435,7 @@ void impl::setAltColors() const
     }
 }
 
-bool State::deserialize( QDataStream * in)
+bool State::deserialize( QDataStream & in)
 {
     return pImpl()->deserialize( in);
 }
@@ -1508,4 +1520,48 @@ std::pair<VectorXd,VectorXd> impl::trackCoords( const QPolygonF & poly ) const
     xi /= 1000;
     yi /= 1000;
     return {xi, yi};
+}
+
+
+QDataStream & operator<< (QDataStream & out, const IncidenceMatrix & AA)
+{
+    qDebug() << Q_FUNC_INFO;
+
+    out <<  uint( AA.rows() );
+    out <<  uint( AA.cols() );
+    out <<  uint( AA.nonZeros() );
+
+    for( Index c=0; c<AA.outerSize(); ++c) {
+        SparseMatrix<int,ColMajor>::InnerIterator it( AA, c);
+        for( ; it; ++it) {
+            out << int(it.row()) << int(it.col());
+        }
+    }
+    return out;
+}
+
+
+QDataStream & operator>> (QDataStream & in,  IncidenceMatrix & AA)
+{
+    qDebug() << Q_FUNC_INFO;
+
+    uint nrows;
+    uint ncols;
+    uint nnz;
+    in >> nrows >> ncols >> nnz;
+
+    std::vector< Eigen::Triplet<int> > tripletList;
+    tripletList.reserve( nnz );
+    int r;
+    int c;
+    for ( uint i=0; i<nnz; i++ ) {
+        in >> r >> c;
+        tripletList.emplace_back( Eigen::Triplet<int>(r, c, 1) );
+    }
+
+    AA.resize( int(nrows), int(ncols) );
+    AA.setFromTriplets( tripletList.begin(),
+                        tripletList.end() );
+
+    return in;
 }

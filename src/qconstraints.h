@@ -46,10 +46,18 @@ protected:
     //! Copy constructor
     QConstraintBase( const QConstraintBase & other);
 
-    //! Copy assignment constructor
-    QConstraintBase & operator= (const QConstraintBase&) = delete ;
+    //! Copy assignment operator
+    QConstraintBase & operator= ( const QConstraintBase &) = delete ;
+
+    //! Move assignment operator
+    QConstraintBase & operator= ( QConstraintBase &&) = delete;
 
 public:
+    // virtual std::shared_ptr<QConstraintBase> clone() const = 0; //!< Clone this constraint
+
+    //! Clone this constraint via nonvirtual interface pattern
+    std::shared_ptr<QConstraintBase> clone() const;
+
     // T qgraphicsitem_cast(QGraphicsItem *item)
     // To make this function work correctly with custom items, reimplement the type() function for each custom QGraphicsItem subclass.
     enum {Type = UserType +364};
@@ -60,7 +68,6 @@ public:
     void serialize(   QDataStream &out );  //!< serialization
     bool deserialize( QDataStream &);      //!< deserialization
 
-    virtual std::shared_ptr<QConstraintBase> clone() const = 0; //!< Clone this constraint
 
     void setColor( const QColor & col);    //!< Set color
     void setLineWidth( const int w);       //!< Set line width
@@ -114,6 +121,8 @@ protected:
     bool m_is_enforced = false;   //!< Constraint is enforced? (for painting)
 
 private:
+    virtual std::shared_ptr<QConstraintBase> doClone() const = 0;
+
     static bool s_showColor;
     static bool s_show;
 };
@@ -140,7 +149,8 @@ protected:
                 QWidget *widget) override; //!< Plot the circle
 
 private:
-    std::shared_ptr<QConstraintBase> clone() const override;
+    // std::shared_ptr<QConstraintBase> clone() const override;
+    std::shared_ptr<QConstraintBase> doClone() const override;
 };
 
 
@@ -165,7 +175,8 @@ protected:
                 const QStyleOptionGraphicsItem *option,
                 QWidget *widget) override;  //!< Plot square
 private:
-    std::shared_ptr<QConstraintBase> clone() const override;
+    // std::shared_ptr<QConstraintBase> clone() const override;
+    std::shared_ptr<QConstraintBase> doClone() const override;
 };
 
 //! Graphics: Marker for indentity
@@ -190,7 +201,8 @@ protected:
                 QWidget *widget) override; //!< Plot marker
 
 private:
-    std::shared_ptr<QConstraintBase> clone() const override;
+    // std::shared_ptr<QConstraintBase> clone() const override;
+    std::shared_ptr<QConstraintBase> doClone() const override;
 };
 
 
@@ -214,7 +226,8 @@ protected:
                 const QStyleOptionGraphicsItem *option,
                 QWidget *widget) override;  //!< Plot marker
 private:
-    std::shared_ptr<QConstraintBase> clone() const override;
+    // std::shared_ptr<QConstraintBase> clone() const override;
+    std::shared_ptr<QConstraintBase> doClone() const override;
 
     QGraphicsLineItem a;
     QGraphicsLineItem b;

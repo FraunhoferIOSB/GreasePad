@@ -41,31 +41,21 @@ class QSegment : public QGraphicsItem
 {
 public:
     QSegment( const uPoint & ux,
-              const uPoint & uy);               //!< Value constructor (two uncorrelated uncertain points)
-    QSegment( const QSegment & other) = delete; //!< Copy constructor
+              const uPoint & uy);         //!< Value constructor (two uncorrelated uncertain points)
+    QSegment( const QSegment & other) = delete;               //!< Copy constructor
+    QSegment & operator= ( const QSegment & other ) = delete; //!< Copy assignment constructor
 
     enum {Type = UserType +164};                //!< Definition graphics type (id)
-    int type() const override { return Type; }  //!< get graphics type (id)
+    int type() const override { return Type; }  //!< Get graphics type (id)
+    QPen pen() const { return pen_;}            //!< Get pen
 
+    void setPen( const QPen & p) { pen_ = p;}   //!< Set pen
     void setColor( const QColor & c) { pen_.setColor(c); }  //!< Set color
     void setLineWidth( const int w)  { pen_.setWidth(w); }  //!< Set line width
     void setLineStyle( const int s)  { pen_.setStyle( Qt::PenStyle(s)); } //!< Set line style
 
-protected:
-    QSegment();
-    ~QSegment() override = default;
-
-    QPainterPath shape() const override;       //!< Get bounding shape
-    void mousePressEvent( QGraphicsSceneMouseEvent * /* event */) override; //!< Handle mouse press event
-
-    QPen pen() const { return pen_;}           //!< Get pen
-    void setPen( const QPen & p) { pen_ = p;}  //!< Set pen
-
-public:
-   // QSegment & operator= ( const QSegment & other );
-
-    virtual void serialize( QDataStream & out ) const; //!< serialization
-    bool deserialize( QDataStream &in );               //!< deserialization
+    virtual void serialize( QDataStream & out ) const; //!< Serialization
+    bool deserialize( QDataStream &in );               //!< Deserialization
 
     //! Toggle visibility confidence regions
     static void toggleShowUncertainty()  { s_showUncertainty = !s_showUncertainty; }
@@ -74,7 +64,13 @@ public:
     static bool showUncertainty() { return s_showUncertainty; }
 
 protected:
-    QRectF boundingRect() const override; //!< Get axis-aligned bounding box
+    //! Standard constructor
+    QSegment( QGraphicsItem *parent= nullptr );
+    ~QSegment() override = default;
+
+    QPainterPath shape() const override;    //!< Get bounding shape
+    void mousePressEvent( QGraphicsSceneMouseEvent * /* event */) override; //!< Handle mouse press event
+    QRectF boundingRect() const override;   //!< Get axis-aligned bounding box
 
     //! Plot uncertain straight line segment (base class)
     void paint( QPainter *painter,
@@ -91,7 +87,7 @@ private:
     QLineF line() const { return line_;}
     QPolygonF toPoly( std::pair<Eigen::VectorXd, Eigen::VectorXd> p);
 
-    QLineF   line_;                             // straight line segment
+    QLineF line_;                               // straight line segment
     std::pair<QPolygonF, QPolygonF>  branch_;   // hyperbola branches
     std::pair<QPolygonF, QPolygonF>  ellipse_;  // ellipses of end-points
     QPen pen_;
@@ -139,7 +135,7 @@ private:
 class QUnconstrained : public QSegment
 {
 public:
-    QUnconstrained();  //!< Standard Constructor
+    QUnconstrained( QGraphicsItem *parent=nullptr);  //!< Standard Constructor
     QUnconstrained( const uPoint & ux,
                     const uPoint & uy);  //!< Value constructor (two uncorrelated uncertain points)
 

@@ -45,8 +45,8 @@ private:
     std::unique_ptr<impl> m_pImpl;
 
 public:
-    void serialize(   QDataStream *out ) const;
-    bool deserialize( QDataStream *in);
+    void serialize(   QDataStream & out ) const;
+    bool deserialize( QDataStream & in);
     QString StatusMsg() const;
 
     bool augment( const QPolygonF &track);

@@ -141,6 +141,17 @@ void QConstraintBase::setLineStyle( const int s)
 }
 
 
+std::shared_ptr<QConstraintBase> QConstraintBase::clone() const
+{
+   // qDebug() << Q_FUNC_INFO;
+   std::shared_ptr<QConstraintBase> ptr = doClone();
+   auto & r = *ptr.get();
+   assert( typeid( r ) == typeid(*this)
+           && "QConstraintBase: doClone() incorrectly overridden" );
+   return ptr;
+}
+
+
 QRectF QOrthogonal::boundingRect() const
 {
     return rect().adjusted(-2*m_pen_req.widthF(),
@@ -245,28 +256,29 @@ qreal QCopunctual::markerSize() const
 }
 
 
-std::shared_ptr<QConstraintBase> QParallel::clone() const
+std::shared_ptr<QConstraintBase> QParallel::doClone() const
 {
     auto T = std::shared_ptr<QParallel>( new QParallel(*this) );
     T->setMarkerSize( this->markerSize() );
     return std::move(T);
 }
 
-std::shared_ptr<QConstraintBase> QOrthogonal::clone() const
+std::shared_ptr<QConstraintBase> QOrthogonal::doClone() const
 {
+    qDebug() << Q_FUNC_INFO;
     auto T = std::shared_ptr<QOrthogonal>( new QOrthogonal(*this));
     T->setMarkerSize( this->markerSize() );
     return std::move(T);
 }
 
-std::shared_ptr<QConstraintBase> QIdentical::clone() const
+std::shared_ptr<QConstraintBase> QIdentical::doClone() const
 {
     auto T = std::shared_ptr<QIdentical>( new QIdentical(*this) );
     T->setMarkerSize( this->markerSize() );
     return std::move(T);
 }
 
-std::shared_ptr<QConstraintBase> QCopunctual::clone() const
+std::shared_ptr<QConstraintBase> QCopunctual::doClone() const
 {
     auto T = std::shared_ptr<QCopunctual>( new QCopunctual(*this) );
     T->setMarkerSize( this->markerSize() );

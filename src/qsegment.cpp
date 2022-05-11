@@ -51,7 +51,9 @@ QPen   QConstrained::s_defaultPen = QPen();
 
 static const double T_ZERO = 1e-7;
 
-QSegment::QSegment() {
+QSegment::QSegment( QGraphicsItem * parent )
+    : QGraphicsItem(parent)
+{
     // qDebug() << Q_FUNC_INFO;
 
     setFlag( ItemIsSelectable,         true);
@@ -291,7 +293,7 @@ void QSegment::setShape( const uPoint &ux,
     // transformation branches (motion) ..........................
     QTransform t;
     t.translate( x0(0)/x0(2), x0(1)/x0(2) );
-    t.rotate( hyp.angle_deg() );
+    t.rotate( hyp.angle_deg(), Qt::ZAxis );
 
     // first branch of hyperbola .................................
     Eigen::VectorXd xi = Eigen::VectorXd::LinSpaced( 64, d(0),d(1) );
@@ -332,7 +334,7 @@ void QConstrained::paint( QPainter *painter,
 }
 
 
-QUnconstrained::QUnconstrained()
+QUnconstrained::QUnconstrained( QGraphicsItem * /* parent */ )
 {
     // qDebug() << Q_FUNC_INFO;
     setVisible( QUnconstrained::show() );

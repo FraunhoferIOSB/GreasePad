@@ -31,7 +31,8 @@ using Eigen::Index;
 // const IOFormat IncidenceMatrix::fmt = IOFormat( 4, DontAlignCols, ", ", "\n", "| ", "|", "", ".\n");
 
 
-void IncidenceMatrix::serialize( QDataStream &out ) const
+
+ /* void IncidenceMatrix::serialize( QDataStream &out ) const
 {
     // qDebug() << Q_FUNC_INFO
 
@@ -78,7 +79,7 @@ bool IncidenceMatrix::deserialize( QDataStream &in )
                      tripletList.end() );
 
     return true;
-}
+}*/
 
 
 bool IncidenceMatrix::isSet( const Index r, const Index c) const

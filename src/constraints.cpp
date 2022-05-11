@@ -337,8 +337,18 @@ ConstraintBase::deserialize( QDataStream &in )
     return c;
 }
 
+std::shared_ptr<ConstraintBase> ConstraintBase::clone() const
+{
+   // qDebug() << Q_FUNC_INFO;
+   std::shared_ptr<ConstraintBase> ptr = doClone();
+   auto & r = *ptr.get();
+   assert( typeid(r) == typeid(*this)
+           && "ConstraintBase: doClone() incorrectly overridden" );
+   return ptr;
+}
 
-std::shared_ptr<ConstraintBase> Parallel::clone() const
+
+std::shared_ptr<ConstraintBase> Parallel::doClone() const
 {
     auto T = std::make_shared<Parallel>();
     T->setStatus(   this->status()  );
@@ -346,7 +356,7 @@ std::shared_ptr<ConstraintBase> Parallel::clone() const
     return std::move(T);
 }
 
-std::shared_ptr<ConstraintBase> Identical::clone() const
+std::shared_ptr<ConstraintBase> Identical::doClone() const
 {
     auto T = std::make_shared<Identical>();
     T->setStatus(   this->status()  );
@@ -354,7 +364,7 @@ std::shared_ptr<ConstraintBase> Identical::clone() const
     return std::move(T);
 }
 
-std::shared_ptr<ConstraintBase> Copunctual::clone() const
+std::shared_ptr<ConstraintBase> Copunctual::doClone() const
 {
     auto T = std::make_shared<Copunctual>();
     T->setStatus(   this->status()   );
@@ -363,7 +373,7 @@ std::shared_ptr<ConstraintBase> Copunctual::clone() const
 }
 
 
-std::shared_ptr<ConstraintBase> Orthogonal::clone() const
+std::shared_ptr<ConstraintBase> Orthogonal::doClone() const
 {
     auto T = std::make_shared<Orthogonal>();
     T->setStatus( this->status() );

@@ -30,9 +30,17 @@ using Eigen::VectorXd;
 static const double T_ZERO = 1e-7;
 
 
+
 namespace Uncertain {
 
 class uPoint;
+
+
+//! Input operator
+QDataStream & operator<< (QDataStream & out, const Aabb & bbox);
+
+//! Output operator
+QDataStream & operator>> (QDataStream & in, Aabb & bbox);
 
 
 Matrix3d uStraightLineSegment::CC()
@@ -410,13 +418,8 @@ bool uStraightLineSegment::deserialize( QDataStream & in )
     qDebug() << Q_FUNC_INFO;
     in >> m_t;
     in >> m_Cov_tt;
-    //    if ( in.status()!=0 ) {
-    //        return false;
-    //    }
     in >> m_bounding_box;
-    /* if ( !bounding_box_.deserialize( in) ) {
-        return false;
-    } */
+
     return in.status()==0;
 }
 
