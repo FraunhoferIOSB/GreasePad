@@ -35,51 +35,57 @@ using Eigen::VectorXi;
 using Eigen::ColMajor;
 
 
+//! Geometric constraints (relations)
 namespace Constraint {
 
-
+//! Base class for constraints
 class ConstraintBase
 {
 public:
-    ConstraintBase & operator= (ConstraintBase &&) = delete;
+    ConstraintBase & operator= ( ConstraintBase &&) = delete;
     ConstraintBase( ConstraintBase &&) = delete;
     ConstraintBase (const ConstraintBase & other) = delete;
-    ConstraintBase & operator= (const ConstraintBase & other) = delete;
+    ConstraintBase & operator= ( const ConstraintBase & other) = delete;
 
 protected:
     ConstraintBase();
     virtual ~ConstraintBase() = default;
 
-    static MatrixXd null( const VectorXd &xs );
+    static MatrixXd null( const VectorXd &xs );  //!< Nullspace of row vector
     static MatrixXd Rot_ab( const VectorXd &a,
-                            const VectorXd &b);
+                            const VectorXd &b);  //!< Minimal rotation between two vectors as rotation matrix
 public:
+    //! Status: unevaluated, required, obsolete (redundant)
     enum Status { UNEVAL=0, REQUIRED, OBSOLETE };
 
-    virtual void serialize( QDataStream &out) const;  //  = 0
-    static std::shared_ptr<ConstraintBase> deserialize( QDataStream &in );
+    virtual void serialize( QDataStream &out) const;  //!< Serialize (Qt)
+    static std::shared_ptr<ConstraintBase> deserialize( QDataStream &in ); //!< Deserialization (Qt)
 
-    virtual const char *type_name() const = 0;
-    virtual int dof()   const = 0;
-    virtual int arity() const = 0;
+    virtual const char *type_name() const = 0;  //!< Get type name of constraint
+    virtual int dof()   const = 0;   //!< Get degrees of freedom for this constraint
+    virtual int arity() const = 0;   //!< Get number of involved entities, i.e., straight lines
 
-    Status status() const    { return m_status;   }   //  serialzation
-    bool enforced() const    { return m_enforced; }
-    bool required() const    { return m_status==REQUIRED; }
-    bool obsolete() const    { return m_status==OBSOLETE; }
-    bool unevaluated() const { return m_status==UNEVAL;   }
+    Status status() const    { return m_status;   }         //!< Get status (required, obsolete, unevaluated)
+    bool enforced() const    { return m_enforced; }         //!< Constraint is enforced?
+    bool required() const    { return m_status==REQUIRED; } //!< Constraint is required?
+    bool obsolete() const    { return m_status==OBSOLETE; } //!< Constraint is obsolete (redundant)?
+    bool unevaluated() const { return m_status==UNEVAL;   } //!< Constraint is unevaluated?
 
-    void setStatus( const Status s) { m_status = s;   }
-    void setEnforced( const bool b) { m_enforced = b; }
+    void setStatus( const Status s) { m_status = s;   }     //!< Set status (required, obsolete, unevaluated)
+    void setEnforced( const bool b) { m_enforced = b; }     //!< Set status success of enforcement
 
-    virtual MatrixXd Jacobian(   const VectorXi &idxx, const VectorXd &l0,  const VectorXd &l) const = 0;
-    virtual VectorXd contradict( const VectorXi &idxx, const VectorXd &l0 ) const = 0;
+    //! Compute Jacobian w.r.t. observations
+    virtual MatrixXd Jacobian(   const VectorXi &idxx,
+                                 const VectorXd &l0,  const VectorXd &l) const = 0;
+    //! Compute contradictions with adjusted observations
+    virtual VectorXd contradict( const VectorXi &idxx,
+                                 const VectorXd &l0 ) const = 0;
 
+    //! Check if constraint is of a certain, specified type
     template<typename T>
     bool is()  { return ( dynamic_cast<T*>(this) != nullptr);    }
 
-    // virtual std::shared_ptr<ConstraintBase> clone() const = 0;
-    // nonvirtual interface pattern
+    //! Clone constrints via nonvirtual interface pattern
     std::shared_ptr<ConstraintBase> clone() const;
 
 private:
@@ -90,9 +96,7 @@ private:
 };
 
 
-
-
-
+//! Concurrence constraint (three copunctual straight lines)
 class Copunctual : public ConstraintBase
 {
 public:
@@ -110,12 +114,13 @@ private:
     static const int s_dof   = 1;
     static const int s_arity = 3;
 public:
+    //! Create concurrence constraint
     static std::shared_ptr<ConstraintBase> create() {
         return std::make_shared<Copunctual>();
     }
 };
 
-
+//! Parallelism constraint
 class Parallel : public ConstraintBase
 {
 public:
@@ -124,6 +129,7 @@ public:
     int dof() const override   { return s_dof;   }
     int arity() const override { return s_arity; }
 
+    //! Create parallelism constraint
     static std::shared_ptr<ConstraintBase> create() {
         return std::make_shared<Parallel>();
     }
@@ -137,6 +143,7 @@ private:
     static const int s_arity = 2;
 };
 
+//! Orthogonallity constraint
 class Orthogonal : public ConstraintBase
 {
 public:
@@ -145,6 +152,7 @@ public:
     int dof() const override   { return s_dof;   }
     int arity() const override { return s_arity; }
 
+    //! Create orthogonallity constraint
     static std::shared_ptr<ConstraintBase> create() {
         return std::make_shared<Orthogonal>();
     }
@@ -157,6 +165,7 @@ private:
     static const int s_arity = 2;
 };
 
+//! Identity constraint
 class Identical : public ConstraintBase
 {
 public:
