@@ -19,7 +19,7 @@
 #ifndef CONSTRAINTS_H
 #define CONSTRAINTS_H
 
-#include <QDataStream>
+// #include <QDataStream>
 #include <QDebug>
 
 #include <Eigen/Dense>
@@ -58,8 +58,8 @@ public:
     //! Status: unevaluated, required, obsolete (redundant)
     enum Status { UNEVAL=0, REQUIRED, OBSOLETE };
 
-    virtual void serialize( QDataStream &out) const;  //!< Serialize (Qt)
-    static std::shared_ptr<ConstraintBase> deserialize( QDataStream &in ); //!< Deserialization (Qt)
+    // virtual void serialize( QDataStream &out) const;  //!< Serialize (Qt)
+    // static std::shared_ptr<ConstraintBase> deserialize( QDataStream &in ); //!< Deserialization (Qt)
 
     virtual const char *type_name() const = 0;  //!< Get type name of constraint
     virtual int dof()   const = 0;   //!< Get degrees of freedom for this constraint
@@ -85,7 +85,7 @@ public:
     template<typename T>
     bool is()  { return ( dynamic_cast<T*>(this) != nullptr);    }
 
-    //! Clone constrints via nonvirtual interface pattern
+    //! Clone constraints via nonvirtual interface pattern
     std::shared_ptr<ConstraintBase> clone() const;
 
 private:

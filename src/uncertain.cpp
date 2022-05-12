@@ -80,8 +80,8 @@ void BasicEntity2D::transform( const Matrix3d & TT )
 //! Check if matrix MM is a proper covariance matrix
 bool isCovMat( const MatrixXd & MM )
 {
-    qDebug() << Q_FUNC_INFO;
-    Eigen::SelfAdjointEigenSolver<MatrixXd> eig(MM);
+    // qDebug() << Q_FUNC_INFO;
+    Eigen::SelfAdjointEigenSolver<MatrixXd> eig( MM, Eigen::ComputeEigenvectors);
     Eigen::VectorXcd ev = eig.eigenvalues();
 
 //#ifdef Q_DEBUG

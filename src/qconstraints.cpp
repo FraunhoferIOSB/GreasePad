@@ -145,7 +145,7 @@ std::shared_ptr<QConstraintBase> QConstraintBase::clone() const
 {
    // qDebug() << Q_FUNC_INFO;
    std::shared_ptr<QConstraintBase> ptr = doClone();
-   auto & r = *ptr.get();
+   auto & r = *ptr; // .get();
    assert( typeid( r ) == typeid(*this)
            && "QConstraintBase: doClone() incorrectly overridden" );
    return ptr;

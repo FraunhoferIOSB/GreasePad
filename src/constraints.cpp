@@ -27,16 +27,14 @@ using Eigen::Vector3d;
 using Eigen::Vector2cd;
 using Eigen::Matrix;
 
+#ifdef QT_DEBUG
 static const double T_ZERO = 1e-5;
-
-
-
-
+#endif
 
 MatrixXd ConstraintBase::Rot_ab( const VectorXd &a,
                                  const VectorXd &b)
 {
-    Q_ASSERT( a.size()==b.size());
+    Q_ASSERT( a.size()==b.size() );
     Q_ASSERT( std::fabs( a.norm()-1.) < T_ZERO );
     Q_ASSERT( std::fabs( b.norm()-1.) < T_ZERO );
 
@@ -295,53 +293,11 @@ Matrix3d Copunctual::cof3( const Matrix3d & MM ) const
 }
 
 
-void ConstraintBase::serialize( QDataStream & out) const
-{
-    // qDebug() <<  Q_FUNC_INFO << type_name();
-    out << type_name();
-    out << status();    // { UNEVAL=0 | REQUIRED | OBSOLETE };
-    out << enforced();
-}
-
-std::shared_ptr<ConstraintBase>
-ConstraintBase::deserialize( QDataStream &in )
-{
-    char* type_name;
-    in >> type_name;
-    // qDebug() << Q_FUNC_INFO << type_name;
-    if ( in.status()!=0) {
-        return nullptr;
-    }
-
-    std::shared_ptr<ConstraintBase> c;
-    if ( std::strcmp( type_name, "orthogonal")==0 ){
-        c = Orthogonal::create();
-    }
-    if ( std::strcmp( type_name, "parallel")==0 ){
-        c = Parallel::create();
-    }
-    if ( std::strcmp( type_name, "copunctual")==0 ){
-        c = Copunctual::create();
-    }
-
-    int status;
-    in >> status;
-    bool enforced;
-    in >> enforced;
-    if ( in.status()!=0) {
-        return nullptr;
-    }
-    c->setStatus( static_cast<Status>(status) );
-    c->setEnforced( enforced );
-
-    return c;
-}
-
 std::shared_ptr<ConstraintBase> ConstraintBase::clone() const
 {
    // qDebug() << Q_FUNC_INFO;
    std::shared_ptr<ConstraintBase> ptr = doClone();
-   auto & r = *ptr.get();
+   auto & r = *ptr;  // .get();
    assert( typeid(r) == typeid(*this)
            && "ConstraintBase: doClone() incorrectly overridden" );
    return ptr;

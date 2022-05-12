@@ -62,8 +62,17 @@ Quantiles::Recognition State::recogn_;
 Quantiles::Snapping    State::snap_;
 
 
-QDataStream & operator<< (QDataStream & out, const IncidenceMatrix & AA);
-QDataStream & operator>> (QDataStream & in,  IncidenceMatrix & AA);
+//! Serialization of sparse incidence matrix
+QDataStream & operator<< ( QDataStream & out, const IncidenceMatrix & AA);
+//! Deserialization of sparse incidence matrix
+QDataStream & operator>> ( QDataStream & in,  IncidenceMatrix & AA);
+
+
+//! Serialization of geometric constraint
+QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c);
+//! Deserialization of geometric constraint
+QDataStream & operator>> ( QDataStream & in,  ConstraintBase & c);
+
 
 /*QDebug operator << (QDebug d, const Eigen::VectorXi &v);
 QDebug operator << (QDebug d, const Eigen::VectorXi &v)
@@ -110,7 +119,7 @@ public:
 
     void clearAll();
 
-    //augment
+    // augment
     void append( const QPolygonF & track);
     void reasoning_augment_and_adjust( const Quantiles::Snapping &snap);
 
@@ -367,12 +376,10 @@ QDataStream & operator>> ( QDataStream & in, IncidenceMatrix & AA )
     return in;
 }*/
 
-bool impl::deserialize( QDataStream &in )
+bool impl::deserialize( QDataStream & in )
 {
     // qDebug() <<  Q_FUNC_INFO;
-
     // st_clear();  //  required? st: new()
-
 
     qDebug() << "(1) reading topology...";
     in >> Adj;
@@ -380,24 +387,9 @@ bool impl::deserialize( QDataStream &in )
     in >> x_touches_l;
     in >> y_touches_l;
     in >> PP;
-    //    if ( !Adj.deserialize( in ) ) {
-    //        return false;
-    //    }
-    //    if ( !Bi.deserialize( in ) ) {
-    //        return false;
-    //    }
-    //    if ( !x_touches_l.deserialize( in ) ) {
-    //        return false;
-    //    }
-    //    if ( !y_touches_l.deserialize( in ) ) {
-    //        return false;
-    //    }
-    //    if ( !PP.deserialize( in ) ) {
-    //        return false;
-    //    }
-
 
     qDebug() << "(2) reading geometry...";
+    qDebug() << "(2.1) reading uncertain straight line segments...";
     for ( Index s=0; s<Bi.rows(); s++ ) {
         // auto seg = std::make_shared<uStraightLineSegment>();
         auto seg = uStraightLineSegment::create();
@@ -407,11 +399,34 @@ bool impl::deserialize( QDataStream &in )
         segm_.append( seg );
     }
 
+    qDebug() << "(2.2) reading geometric constraintss...";
     for ( Index i=0; i<Bi.cols(); i++ ) {
-        auto c = ConstraintBase::deserialize(in);  // calls 'create'
+        // auto c = ConstraintBase::deserialize(in);  // calls 'create'
+
+        char* type_name;
+        in >> type_name;
+        qDebug() << Q_FUNC_INFO << type_name;
+        if ( in.status()!=0) {
+            return false;
+        }
+
+        std::shared_ptr<ConstraintBase> c;
+        if ( std::strcmp( type_name, "orthogonal")==0 ){
+            c = Orthogonal::create();
+        }
+        if ( std::strcmp( type_name, "parallel")==0 ){
+            c = Parallel::create();
+        }
+        if ( std::strcmp( type_name, "copunctual")==0 ){
+            c = Copunctual::create();
+        }
+
         if ( c==nullptr ) {
             return false;
         }
+
+        in >> *c;  // .get();
+
         constr_.append( c );
     }
 
@@ -452,7 +467,7 @@ bool impl::deserialize( QDataStream &in )
         qStroke.append( q);
     }
 
-    qDebug() << "   unconstrained segments...";
+    qDebug() << "    unconstrained segments...";
     for ( Index i=0; i<Bi.rows(); i++) {
         auto q = std::make_shared<QEntity::QUnconstrained>();
         if( !q->deserialize(in) ) {
@@ -461,7 +476,7 @@ bool impl::deserialize( QDataStream &in )
         qUnconstrained.append( q);
     }
 
-    qDebug() << "   constrained segments...";
+    qDebug() << "    constrained segments...";
     for ( Index i=0; i<Bi.rows(); i++) {
         auto q = std::make_shared<QEntity::QConstrained>();
         if( !q->deserialize(in) ) {
@@ -560,7 +575,8 @@ void impl::serialize( QDataStream &out ) const
         item->serialize( out );
     }
     for ( const auto & item : constr_) {
-        item->serialize( out );
+        // item->serialize( out );
+        out << *item;
     }
 
     // (3) graphics
@@ -1565,3 +1581,30 @@ QDataStream & operator>> (QDataStream & in,  IncidenceMatrix & AA)
 
     return in;
 }
+
+
+
+QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c)
+{
+    qDebug() <<  Q_FUNC_INFO << c.type_name();
+    out << c.type_name();
+    out << c.status();    // { UNEVAL=0 | REQUIRED | OBSOLETE };
+    out << c.enforced();
+    return out;
+}
+
+QDataStream & operator>> ( QDataStream &in, ConstraintBase &c )
+{
+    qDebug() << Q_FUNC_INFO;
+
+    int status;
+    in >> status;
+    c.setStatus( static_cast<ConstraintBase::Status>(status) );
+
+    bool enforced;
+    in >> enforced;
+    c.setEnforced( enforced );
+
+    return in;
+}
+

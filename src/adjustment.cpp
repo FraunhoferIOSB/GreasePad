@@ -24,8 +24,9 @@
 using Graph::IncidenceMatrix;
 using Constraint::ConstraintBase;
 
+#ifdef QT_DEBUG
 static const double T_ZERO = 1e-5;
-
+#endif
 
 int AdjustmentFramework::indexOf( const Eigen::VectorXi & v,
                                   const int x) const
