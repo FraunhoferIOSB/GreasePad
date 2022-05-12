@@ -32,6 +32,11 @@ using Eigen::Vector3d;
 using Eigen::Matrix2d;
 using Eigen::Matrix3d;
 
+ConicBase::ConicBase( const Matrix3d& other) : Matrix3d(other)
+{
+    // Q_ASSERT( isSymmetric()==true);
+    assert( isSymmetric()==true );
+}
 
 Matrix3d ConicBase::skew( const Vector3d &x) const
 {
