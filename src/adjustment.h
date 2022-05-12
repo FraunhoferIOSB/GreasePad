@@ -39,11 +39,14 @@ using Eigen::SparseMatrix;
 using Eigen::Index;
 using Eigen::RowVectorXi;
 
+//! Adjustment framework: obervations, Jacobians, optimization...
 class AdjustmentFramework
 {
 public:
     AdjustmentFramework() = delete;
     AdjustmentFramework( const AdjustmentFramework &) = delete;
+
+    //! Value constructor: vector of observations and covariance matrix
     AdjustmentFramework( const std::pair<VectorXd, SparseMatrix<double> > & p)
         : l_(p.first), Cov_ll_(p.second)
     {
@@ -55,11 +58,13 @@ public:
     void operator= ( const AdjustmentFramework &)  = delete;
     AdjustmentFramework & operator= ( AdjustmentFramework &&) = delete;
 
+    //! Enforce the constraints of a subtask (adjustment)
     bool enforce_constraints( const QList<std::shared_ptr<ConstraintBase> > *constr,
                               const Graph::IncidenceMatrix *bi,
                               const RowVectorXi &maps,
                               const RowVectorXi &mapc);
 
+    //! Get s-th entity, i.e., segment, represented by vector of length len
     std::pair<VectorXd, MatrixXd> getEntity( Index s, int len) const;
 
 private:

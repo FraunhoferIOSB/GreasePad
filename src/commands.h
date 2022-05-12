@@ -30,27 +30,30 @@ class MainScene;
 }
 
 
-
+//! Namespace for commands (und/redo)
 namespace Cmd {
 
+//! Base class for undo/redo commands
 class Undo : public QUndoCommand
 {
 public:
-    Undo( const Undo &) = delete;
-    Undo (Undo &&) = delete;
-    Undo & operator= (const Undo & other) = delete;
-    Undo & operator= (Undo && other) = delete;
+    Undo( const Undo &) = delete;      //!< Copy constructor
+    Undo (Undo &&) = delete;           //!< Move constructor
+    Undo & operator= (const Undo & other) = delete; //!< Copy assignment operator
+    Undo & operator= (Undo && other) = delete;      //!< Move assignment operator
 
 protected:
-    Undo(QUndoCommand *parent=nullptr);
+    Undo( QUndoCommand *parent=nullptr); //!< Standard constructor
     ~Undo() override = default;
 
-    State *current_state_{};
-    std::unique_ptr<State> next_state_;
-    std::unique_ptr<State> prev_state_;
+    State *current_state_{};             //!< Pointer to current state
+    std::unique_ptr<State> next_state_;  //!< Pointer to next state (redo)
+    std::unique_ptr<State> prev_state_;  //!< Pointer to previous state (undo)
 
 public:
+    //! Set pointer to scene
     static void setScene ( GUI::MainScene * sc) {  s_scene = sc; }
+    //! Get pointer to scene
     static GUI::MainScene * scene() { return s_scene;  }
 
 private:
@@ -58,9 +61,11 @@ private:
 };
 
 
+//! Command 'add a stroke'
 class AddStroke : public Undo
 {
 public:
+    //! Value constructor
     AddStroke( State *curr,
                std::unique_ptr<State> & p,
                std::unique_ptr<State> & n,
@@ -76,9 +81,12 @@ private:
     void undo() override;
 };
 
+
+//! Command 'delete selection'
 class DeleteSelection : public Undo
 {
 public:
+    //! Value constructor
     DeleteSelection( State *st,
                      std::unique_ptr<State> &p,
                      std::unique_ptr<State> &n,
@@ -90,9 +98,11 @@ private:
 };
 
 
+//! Command 'clear all'
 class TabulaRasa : public Undo
 {
 public:
+    //! Value constructor
     TabulaRasa( State *st,
                 QUndoCommand *parent=nullptr);
 private:
@@ -100,9 +110,11 @@ private:
     void undo() override;
 };
 
+//! Command 'replace view with file content'
 class ReplaceStateWithFileContent : public Undo
 {
 public:
+    //! Value constructor (filename)
     ReplaceStateWithFileContent( const QString &fileName,
                                  State *curr,
                                  std::unique_ptr<State> &p,

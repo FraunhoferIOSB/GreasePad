@@ -104,32 +104,33 @@ QDebug operator << (QDebug d, const SparseMatrix<int,ColMajor> &MM)
 }*/
 
 
+//! Implementation details of class 'state' (pImpl idiom)
 class impl {
 
 public:
-    bool deserialize( QDataStream & in  );
-    void serialize(   QDataStream & out ) const;
+    bool deserialize( QDataStream & in  );        //!< Serialization
+    void serialize(   QDataStream & out ) const;  //!< Deserialization
 
-    QString StatusMsg() const;
+    QString StatusMsg() const;           //!< Create message for status bar
 
-    void toggleVisibilityStrokes();
-    void toggleVisibilityConstraints();
-    void toggleVisibilityConstrained();
-    void toggleVisibilityUnconstrained();
+    void toggleVisibilityStrokes();        //!< Toggle the visibility of strokes (point sequences)
+    void toggleVisibilityConstraints();    //!< Toggle the visibility of markers depicting geometric constraints
+    void toggleVisibilityConstrained();    //!< Toggle the visibility of constrained segments
+    void toggleVisibilityUnconstrained();  //!< Toggle the visibility of unconstrained segments
 
-    void clearAll();
+    void clearAll();        //!< Clear all, create blank state
 
     // augment
-    void append( const QPolygonF & track);
-    void reasoning_augment_and_adjust( const Quantiles::Snapping &snap);
+    void append( const QPolygonF & track);   //!< Augment state: append one track (segment)
+    void reasoning_augment_and_adjust( const Quantiles::Snapping &snap);  //!< Augment state: reasoning & adjustment
 
     // reduce
-    void remove_elements();
-    void reasoning_reduce_and_adjust();
+    void remove_elements();              //!< Reduce state: delete selected elements
+    void reasoning_reduce_and_adjust();  //!< Reduce state: reasoning & adjustment
 
     // augment & reduce
-    void replaceGraphics();
-    void graphicItemsAdd( QGraphicsScene *sc) const;
+    void replaceGraphics();               //!< Graphics: Replace where necessary
+    void graphicItemsAdd( QGraphicsScene *sc) const;  //!< Graphics: add items
 
 private:
     // augment
