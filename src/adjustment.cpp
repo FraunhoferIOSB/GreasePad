@@ -128,9 +128,8 @@ void AdjustmentFramework::update( const Index start,
     assert( l0_.segment( idx3,3).hasNaN()==false );
 }
 
-bool AdjustmentFramework::enforce_constraints( const QList<std::shared_ptr<Constraint::ConstraintBase> > *constr,
-                                               const IncidenceMatrix * bi,
-                                               // const int E,
+bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
+                                               const IncidenceMatrix * Bi,
                                                const Eigen::RowVectorXi & maps,
                                                const Eigen::RowVectorXi & mapc )
 {
@@ -176,7 +175,7 @@ bool AdjustmentFramework::enforce_constraints( const QList<std::shared_ptr<Const
         if ( verbose ) {
             qDebug().noquote() << QString("  iteration #%1...").arg(it+1);
         }
-        a_Jacobian( constr, bi, BBr, g0, maps, mapc);
+        a_Jacobian( constr, Bi, BBr, g0, maps, mapc);
 
         // reduced coordinates: vector and covariance matrix .............
         for ( Index s=0; s<S; s++ )
@@ -264,14 +263,14 @@ bool AdjustmentFramework::enforce_constraints( const QList<std::shared_ptr<Const
     }
 
     // check constraints .........................................
-    a_check_constraints( constr, bi, maps, mapc);
+    a_check_constraints( constr, Bi, maps, mapc);
 
     return true;
 }
 
 
 void AdjustmentFramework::a_Jacobian(
-        const QList<std::shared_ptr<ConstraintBase> > * constr,
+        const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
         const IncidenceMatrix * Bi,
         SparseMatrix<double, Eigen::ColMajor> & BBr,
         VectorXd & g0,
@@ -316,7 +315,7 @@ void AdjustmentFramework::a_Jacobian(
 }
 
 void AdjustmentFramework::a_check_constraints(
-        const QList<std::shared_ptr<Constraint::ConstraintBase> > * constr,
+        const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
         const IncidenceMatrix * bi,
         const Eigen::RowVectorXi & maps,
         const Eigen::RowVectorXi & mapc) const

@@ -59,8 +59,8 @@ public:
     AdjustmentFramework & operator= ( AdjustmentFramework &&) = delete;
 
     //! Enforce the constraints of a subtask (adjustment)
-    bool enforce_constraints( const QList<std::shared_ptr<ConstraintBase> > *constr,
-                              const Graph::IncidenceMatrix *bi,
+    bool enforce_constraints(const QVector<std::shared_ptr<ConstraintBase> > *constr,
+                              const Graph::IncidenceMatrix *Bi,
                               const RowVectorXi &maps,
                               const RowVectorXi &mapc);
 
@@ -84,18 +84,17 @@ private:
     void reset() { l0_ = l_;}
     void update( Index start, const VectorXd &x );
 
-    void a_Jacobian( const QList<std::shared_ptr<ConstraintBase> > *constr,
+    void a_Jacobian( const QVector<std::shared_ptr<ConstraintBase> > *constr,
                      const Graph::IncidenceMatrix *Bi,
-                     SparseMatrix<double,
-                     Eigen::ColMajor> & BBr,
+                     SparseMatrix<double, Eigen::ColMajor> & BBr,
                      VectorXd & g0,
                      const RowVectorXi & maps,
                      const RowVectorXi & mapc) const;
 
-    void a_check_constraints( const QList<std::shared_ptr<ConstraintBase> > *constr,
+    void a_check_constraints( const QVector<std::shared_ptr<ConstraintBase> > *constr,
                               const Graph::IncidenceMatrix *bi,
                               const RowVectorXi & maps,
-                              const RowVectorXi  &mapc ) const;
+                              const RowVectorXi & mapc ) const;
 
     bool verbose = false;
     VectorXd l0_;             // vector of approximate/estimated observations
