@@ -39,7 +39,7 @@ Matrix<double,3,2> BasicEntity2D::null( const Vector3d &xs ) const
     //if ( fabs(xs.norm()-1.) > T_ZERO )
     //    qDebug() << xs;
 
-#ifdef Q_DEBUG
+#ifdef QT_DEBUG
     QString what = QStringLiteral("norm(x) = %1")
             .arg( QString::number(xs.norm()) );
     Q_ASSERT_X( std::fabs(xs.norm()-1.) <= T_ZERO,
@@ -84,7 +84,7 @@ bool isCovMat( const MatrixXd & MM )
     Eigen::SelfAdjointEigenSolver<MatrixXd> eig( MM, Eigen::ComputeEigenvectors);
     Eigen::VectorXcd ev = eig.eigenvalues();
 
-//#ifdef Q_DEBUG
+#ifdef QT_DEBUG
     if ( (ev.real().array() < -DBL_EPSILON ).any() ) {
         for ( Eigen::Index i=0; i< ev.size(); i++) {
             qDebug() << QStringLiteral( "(%1,%2)")
@@ -92,7 +92,7 @@ bool isCovMat( const MatrixXd & MM )
                         .arg( ev(i).imag() );
         }
     }
-//#endif
+#endif
 
     return (ev.real().array() >= -DBL_EPSILON ).all();
 }

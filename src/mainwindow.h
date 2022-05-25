@@ -95,6 +95,8 @@ private:
     std::unique_ptr<QAction>   actionExit;
     std::unique_ptr<QAction>   actionExportSaveAs;
     std::unique_ptr<QAction>   actionFitInView;
+    std::unique_ptr<QAction>   actionItemMoveToBottom;
+    std::unique_ptr<QAction>   actionItemMoveToTop;
     std::unique_ptr<QAction>   actionRedo;
     std::unique_ptr<QAction>   actionTabulaRasa;
     std::unique_ptr<QAction>   actionToggleConsiderOrthogonal{};
@@ -151,6 +153,8 @@ private:
     bool slotExportSaveAs();
     void slotFileOpen();
     void slotFitInView();
+    void slotItemMoveToBottom();
+    void slotItemMoveToTop();
     void slotSelectionChanged();
     void slotShowStatus( const QString & s) { statusBar()->showMessage( s, 0); }
     void slotStackIndexChanged() {  statusBar()->showMessage( curr_state.StatusMsg() ); }

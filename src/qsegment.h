@@ -63,6 +63,8 @@ public:
     //! Get status visibility confidence regions
     static bool showUncertainty() { return s_showUncertainty; }
 
+    static void setPenSelected( const QPen & p) { s_penSelected = p;}
+
 protected:
     //! Standard constructor
     QSegment( QGraphicsItem *parent= nullptr );
@@ -94,6 +96,7 @@ private:
     QPolygonF minBBox;   // used in shape() und paint()
 
     static bool s_showUncertainty;
+    static QPen s_penSelected;
 };
 
 
@@ -147,7 +150,7 @@ public:
     static void setPenDefault( const QPen &p) { s_defaultPen = p; }  //!< Set default pen
     static QPen defaultPen() { return s_defaultPen; }  //!< Get current default pen
 protected:
-   // QRectF boundingRect() const override { return QSegment::boundingRect(); }
+    // QRectF boundingRect() const override { return QSegment::boundingRect(); }
     //! Plot unconstrained uncertain straight line segment
     void paint( QPainter *painter,
                 const QStyleOptionGraphicsItem *option,

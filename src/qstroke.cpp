@@ -25,6 +25,7 @@
 namespace QEntity {
 
 QPen QStroke::s_defaultPen = QPen();
+QPen QStroke::s_penSelected = QPen();
 bool QStroke::s_show = false;
 
 void QStroke::serialize( QDataStream &out ) const
@@ -71,7 +72,7 @@ void QStroke::paint( QPainter *painter,
     // qDebug() << Q_FUNC_INFO;
 
     if ( isSelected() ) {
-        painter->setPen( QPen( Qt::black, 2, Qt::DashLine, Qt::RoundCap) );
+        painter->setPen( s_penSelected );
         painter->drawPolygon( boundingRect() );
     }
     painter->setPen( m_pen );

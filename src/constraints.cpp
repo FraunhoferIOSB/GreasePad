@@ -35,9 +35,10 @@ MatrixXd ConstraintBase::Rot_ab( const VectorXd &a,
                                  const VectorXd &b)
 {
     Q_ASSERT( a.size()==b.size() );
+#ifdef QT_DEBUG
     Q_ASSERT( std::fabs( a.norm()-1.) < T_ZERO );
     Q_ASSERT( std::fabs( b.norm()-1.) < T_ZERO );
-
+#endif
     return MatrixXd::Identity( a.size(),a.size())
             +2*b*a.adjoint()
             -(a+b)*(a+b).adjoint()/(1.+a.dot(b));
@@ -50,7 +51,7 @@ MatrixXd ConstraintBase::null( const VectorXd & xs )
     //if ( fabs(xs.norm()-1.) > T_ZERO )
     //    qDebug() << xs;
 
-#ifdef Q_DEBUG
+#ifdef QT_DEBUG
     QString what = QStringLiteral("norm(x) = %1").arg( QString::number(xs.norm()) );
     Q_ASSERT_X( fabs(xs.norm()-1.) <= T_ZERO,
                 "null(x)",
@@ -71,8 +72,9 @@ MatrixXd ConstraintBase::null( const VectorXd & xs )
     JJ.bottomRows(1) = -x0.adjoint();
 
     VectorXd check = JJ.adjoint()*xs;
+#ifdef QT_DEBUG
     Q_ASSERT_X( check.norm() <= T_ZERO, Q_FUNC_INFO, "not a zero vector");
-
+#endif
     return JJ;
 }
 

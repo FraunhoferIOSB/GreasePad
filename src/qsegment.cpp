@@ -37,6 +37,8 @@ bool QUnconstrained::s_show = false;
 
 bool QSegment::s_showUncertainty = false;
 
+QPen QSegment::s_penSelected = QPen();
+
 QPen & myQPen();
 
 //! Initialized pen upon first call to the function
@@ -113,7 +115,7 @@ void QSegment::paint( QPainter *painter,
     }
 
     if ( isSelected() ) {
-        painter->setPen( QPen( Qt::blue, 2, Qt::DashLine, Qt::RoundCap) );
+        painter->setPen( s_penSelected );
         painter->drawPolygon( minBBox );
     }
 

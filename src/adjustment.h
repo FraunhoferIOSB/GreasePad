@@ -114,7 +114,7 @@ private:
                      const VectorXd & b) const;
     MatrixXd null(   const VectorXd & xs ) const;
 
-    int indexOf( const Eigen::VectorXi & v, int x) const;
+    Index indexOf( const Eigen::VectorXi & v, int x) const;
 };
 
 #endif // ADJUSTMENT_H

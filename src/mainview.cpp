@@ -97,12 +97,14 @@ void MainView::createActions()
                                );
 
     QList<QKeySequence> listIn;
-    listIn << QKeySequence::ZoomIn << Qt::Key_Plus;
+    // listIn << QKeySequence::ZoomIn << Qt::Key_Plus;
+    listIn << Qt::Key_Plus;  //  [Ctrl]+[+] : move selected items to top
     actionZoomIn->setShortcuts( listIn);
     actionZoomIn->setIcon(      QPixmap(":/icons/Tango/List-add.svg"));
 
     QList<QKeySequence> listOut;
-    listOut << QKeySequence::ZoomOut << Qt::Key_Minus;
+    // listOut << QKeySequence::ZoomOut << Qt::Key_Minus;
+    listOut << Qt::Key_Minus;  // [Ctrl]+[-] : move selected items to bottom
     actionZoomOut = std::make_unique<QAction>( "Zoom out" );
     actionZoomOut->setToolTip(    QString("Zoom out (%1)")
                                   .arg(QKeySequence(QKeySequence::ZoomOut).toString(QKeySequence::NativeText))

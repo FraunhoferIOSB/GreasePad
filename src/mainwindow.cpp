@@ -104,7 +104,7 @@ MainWindow::MainWindow(QWidget *parent)
                 );
 
     QConstraint::QConstraintBase::setPenSelected(
-                QPen(  Qt::black,2, Qt::DashLine,  Qt::RoundCap, Qt::RoundJoin)
+                QPen(  Qt::darkGreen,2, Qt::DashLine,  Qt::RoundCap, Qt::RoundJoin)
                 );
 
     QEntity::QConstrained::setPenDefault(
@@ -117,6 +117,14 @@ MainWindow::MainWindow(QWidget *parent)
 
     QEntity::QStroke::setPenDefault(
                 QPen( Qt::darkRed, 2, Qt::SolidLine, Qt::RoundCap)
+                );
+
+    QEntity::QSegment::setPenSelected(
+                QPen( Qt::darkGreen, 2, Qt::DashLine, Qt::RoundCap)
+                );
+
+    QEntity::QStroke::setPenSelected(
+                QPen( Qt::darkGreen, 2, Qt::DashLine, Qt::RoundCap)
                 );
 }
 
@@ -190,7 +198,7 @@ void MainWindow::createActions()
     actionExit->setIcon( style()->standardIcon( QStyle::SP_BrowserStop));
 
     actionTabulaRasa = std::make_unique<QAction>( "Delete all" );
-    actionTabulaRasa->setToolTip(  "Make a clean sweep (blank state)");
+    actionTabulaRasa->setToolTip(  "Make a clean sweep (blank state)" );
     actionTabulaRasa->setIcon( QPixmap(":/icons/Tango/Edit-clear.svg" ) );
     actionTabulaRasa->setIcon( style()->standardIcon( QStyle::SP_DialogResetButton ) );
 
@@ -246,7 +254,7 @@ void MainWindow::createActions()
     actionToggleShowConstrained->setIconVisibleInMenu( false );
 
     actionToggleShowUncertainty = std::make_unique<QAction>( "Show uncertainty" );
-    actionToggleShowUncertainty->setShortcut(  QKeySequence( "Ctrl+U") );
+    actionToggleShowUncertainty->setShortcut(  QKeySequence( "Ctrl+U" ) );
     actionToggleShowUncertainty->setToolTip(   "Show confidence regions" );
     actionToggleShowUncertainty->setCheckable( true );
     actionToggleShowUncertainty->setChecked(   QEntity::QSegment::showUncertainty() );
@@ -316,9 +324,16 @@ void MainWindow::createActions()
     actionToggleConsiderConcurrent->setIconVisibleInMenu( false );
     actionToggleConsiderConcurrent->setIcon( QPixmap( ":/icons/consider_concurrence.svg" ));
 
+    actionItemMoveToBottom = std::make_unique<QAction>( "Move selected items to bottom" );
+    actionItemMoveToBottom->setToolTip( "Send items to back (visual stacking)" );
+    actionItemMoveToBottom->setShortcut( QKeySequence("Ctrl+-") );
+
+    actionItemMoveToTop = std::make_unique<QAction>( "Move selected items to top" );
+    actionItemMoveToTop->setToolTip( "Bring items to front (visual stacking)" );
+    actionItemMoveToTop->setShortcut( QKeySequence("Ctrl++") );
 
     actionChangeFormat = std::make_unique<QAction>( "Format selected entities", this);
-    actionChangeFormat->setToolTip( "Format selected entities (Ctrl+F)" );
+    actionChangeFormat->setToolTip( "Format selected entities" );
     actionChangeFormat->setShortcut( QKeySequence("Ctrl+F"));
 
 }
@@ -350,15 +365,6 @@ void MainWindow::createBoxes()
     spinBoxAlphaSnap->setToolTip(    "significance level" );
     spinBoxAlphaSnap->setFont( font );
 
-    /*spinBoxVizu = new QDoubleSpinBox(this);
-    spinBoxVizu->setRange(confBox.min,confBox.max);
-    spinBoxVizu->setSingleStep(confBox.step);
-    spinBoxVizu->setDecimals(confBox.decimals);
-    spinBoxVizu->setValue(confBox.default_val);
-    spinBoxVizu->setPrefix(QStringLiteral("P="));
-    spinBoxVizu->setSuffix(QStringLiteral(" "));
-    spinBoxVizu->setToolTip(QStringLiteral("visualization confidence region"));
-*/
     spinBoxOpacity = std::make_unique<QDoubleSpinBox>( this );
     spinBoxOpacity->setRange(       opacityBox.min, opacityBox.max);
     spinBoxOpacity->setSingleStep(  opacityBox.step);
@@ -404,20 +410,17 @@ void MainWindow::createMenus()
     menuEdit->addAction( m_view->actionCopySvgToClipboard.get() );
     menuEdit->addAction( m_view->actionCopyPdfToClipboard.get() );
     menuEdit->addAction( m_view->actionCopyScreenshotToClipboard.get() );
-    /*menuEdit->addSeparator();  // ..............................................
-    menuEdit->addAction( actionBringToFront.get() );
-    menuEdit->addAction( actionSendBack.get() );*/
+
     menuEdit->addAction( actionBackgroundImageRemove.get() );
     menuEdit->addAction( actionFitInView.get() );
     menuEdit->addSeparator();
+
+    menuEdit->addAction( actionItemMoveToTop.get() );
+    menuEdit->addAction( actionItemMoveToBottom.get() );
     menuEdit->addAction( actionToggleSelection.get() );
     menuEdit->addAction( actionDeselectAll.get() );
-    /*menuEdit->addAction( actionSelectAllConstraints.get() );
-    menuEdit->addAction( actionSelectAllRedundantConstraints.get() );
-    menuEdit->addAction( actionSelectAllSegments.get() );
-    menuEdit->addSeparator();  */ // ..............................................
+
     menuEdit->addAction( actionChangeFormat.get() );
-    //menuEdit->setFont(f);
     menuBar()->addMenu( menuEdit.get() );
 
 
@@ -524,19 +527,19 @@ void MainWindow::createToolBars()
 void MainWindow::establishConnections()
 {
     connect( m_undoStack.get(), &QUndoStack::indexChanged,
-             this,               &MainWindow::slotStackIndexChanged);
+             this,              &MainWindow::slotStackIndexChanged);
 
     // edit ............................................................
     connect( m_scene.get(),   &MainScene::signalCmdAddStroke,
-             this,             &MainWindow::slotCmdAddStroke);
+             this,            &MainWindow::slotCmdAddStroke);
     connect( m_scene.get(),   &MainScene::signalCmdDeleteSelection,    // pressed key [del] via emit signal
-             this,             &MainWindow::slotCmdDeleteSelection);
+             this,            &MainWindow::slotCmdDeleteSelection);
     connect( actionDeleteSelection.get(), &QAction::triggered,          // select menu item
              this,                        &MainWindow::slotCmdDeleteSelection);
     connect( actionTabulaRasa.get(),  &QAction::triggered,
              this,                    &MainWindow::slotCmdTabulaRasa);
     connect( actionToggleSelection.get(),  &QAction::triggered,
-             this,                   &MainWindow::slotToggleSelection);
+             this,                         &MainWindow::slotToggleSelection);
     connect( actionDeselectAll.get(),  &QAction::triggered,
              this,                     &MainWindow::slotDeselectAll);
 
@@ -557,10 +560,10 @@ void MainWindow::establishConnections()
 
     // If necessary, enable/disable the menu entry "delete selection"
     connect( m_scene.get(), &MainScene::selectionChanged,
-             this,           &MainWindow::slotSelectionChanged);
+             this,          &MainWindow::slotSelectionChanged);
 
     connect( m_scene.get(), &MainScene::signalUndoLastAction,
-             this,           &MainWindow::slotUndoLastAction);
+             this,          &MainWindow::slotUndoLastAction);
 
     // background
     connect( actionBackgroundImageLoad.get(),   &QAction::triggered,
@@ -569,12 +572,12 @@ void MainWindow::establishConnections()
              this,                              &MainWindow::slotBackgroundImageRemove);
 
     // search, consider
-    connect( actionToggleConsiderOrthogonal.get(),  &QAction::triggered,
-             this,                                &MainWindow::slotToggleConsiderOrthogonal);
-    connect( actionToggleConsiderParallel.get(),    &QAction::triggered,
+    connect( actionToggleConsiderOrthogonal.get(), &QAction::triggered,
+             this,                                 &MainWindow::slotToggleConsiderOrthogonal);
+    connect( actionToggleConsiderParallel.get(),  &QAction::triggered,
              this,                                &MainWindow::slotToggleConsiderParallel);
     connect( actionToggleConsiderConcurrent.get(),  &QAction::triggered,
-             this,                                &MainWindow::slotToggleConsiderConcurrent);
+             this,                                  &MainWindow::slotToggleConsiderConcurrent);
 
     // show/display
     connect( actionBackgroundImageToggleShow.get(), &QAction::triggered,
@@ -592,15 +595,10 @@ void MainWindow::establishConnections()
     connect( actionToggleShowColoration.get(),   &QAction::triggered,
              this,                               &MainWindow::slotToggleShowColored);
 
-
-
     connect( actionBinaryRead.get(),   &QAction::triggered,
              this,                     &MainWindow::slotFileOpen);
-//    connect( this,                     &MainWindow::isWindowModified,
-//             actionBinarySave.get(),   &QAction::setEnabled );
     connect( actionBinarySave.get(),   &QAction::triggered,
              this,                     &MainWindow::fileSave);
-
 
     connect( actionExportSaveAs.get(), &QAction::triggered,
              this,                     &MainWindow::slotExportSaveAs);
@@ -615,24 +613,16 @@ void MainWindow::establishConnections()
              this,                 &MainWindow::slotAboutQt);
     connect( actionAbout.get(),  &QAction::triggered,
              this,               &MainWindow::slotAbout);
-    /*connect( actionShortcuts.get(),       &QAction::triggered,
-             this,                        &MainWindow::slotShortcuts);*/
-
 
     // view
     connect( actionFitInView.get(),  &QAction::triggered,
              this,                   &MainWindow::slotFitInView);
 
-    /*connect( actionSelectAllConstraints.get(), &QAction::triggered,
-             this, &MainWindow::slotSelectAllConstraints);
-    connect( actionSelectAllRedundantConstraints.get(), &QAction::triggered,
-             this,                                      &MainWindow::slotSelectAllRedundantConstraints);
-    connect( actionSelectAllSegments.get(),    &QAction::triggered,
-             this,                             &MainWindow::slotSelectAllSegments);
-    connect( actionBringToFront.get(), &QAction::triggered,
-             this,                     &MainWindow::slotItemBringToFront);
-    connect( actionSendBack.get(),     &QAction::triggered,
-             this,                     &MainWindow::slotItemSendToBack);*/
+    //edit
+    connect( actionItemMoveToTop.get(), &QAction::triggered,
+             this,                      &MainWindow::slotItemMoveToTop);
+    connect( actionItemMoveToBottom.get(), &QAction::triggered,
+             this,                         &MainWindow::slotItemMoveToBottom);
 
     connect( spinBoxAlphaRecognition.get(), QOverload<double>::of(&QDoubleSpinBox::valueChanged),
              this,                          &MainWindow::slotValueChangedAlphaRecognition);
@@ -645,8 +635,7 @@ void MainWindow::establishConnections()
              this,                 &MainWindow::slotValueChangedOpacity);
 
     connect ( m_view.get(), &MainView::signalShowStatus,
-              this,          &MainWindow::slotShowStatus );
-
+              this,         &MainWindow::slotShowStatus );
 }
 
 bool MainWindow::maybeSave()
@@ -1203,5 +1192,53 @@ void MainWindow::slotUpdateMarkerSize( const int sz)
    }
    m_scene->update();
 }
+
+
+void MainWindow::slotItemMoveToBottom()
+{
+    qDebug() << Q_FUNC_INFO;
+    if ( m_scene->selectedItems().isEmpty() ) {
+        return;
+    }
+
+    constexpr double shift = -0.1;
+    const auto constSelectedItems = m_scene->selectedItems();
+    for ( auto & selectedItem : constSelectedItems ) {
+        qreal zValue =  selectedItem->zValue();
+        const auto constCollidingItems = selectedItem->collidingItems();
+        for ( const auto item : constCollidingItems ) {
+            if ( item->zValue() <= zValue ) {
+                zValue = item->zValue() +shift;
+            }
+        }
+        selectedItem->setZValue( zValue );
+        // selectedItem->setSelected( false ); // ??
+    }
+}
+
+void MainWindow::slotItemMoveToTop()
+{
+    qDebug() << Q_FUNC_INFO;
+
+    if ( m_scene->selectedItems().isEmpty() ) {
+        return;
+    }
+
+    const auto constSelectedItems = m_scene->selectedItems();
+    constexpr double shift = +0.1;
+    for ( auto & selectedItem : constSelectedItems ) {
+        qreal zValue =  selectedItem->zValue();
+
+        const auto collidingItems = selectedItem->collidingItems();
+        for ( const auto item : collidingItems ) {
+            if ( item->zValue() >= zValue ) {
+                zValue = item->zValue() +shift;
+            }
+        }
+        selectedItem->setZValue( zValue );
+        // selectedItem->setSelected( false );
+    }
+}
+
 
 } // namespace GUI

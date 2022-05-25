@@ -46,8 +46,9 @@ public:
 
     static void toggleShow() { s_show = !s_show; }  //!< Toggle visibility
     static bool show()  { return s_show; }          //!< Get status visibility
-    static void setPenDefault( const QPen & p) {  s_defaultPen = p; } //!< Set default pen
-    static QPen defaultPen() {  return s_defaultPen; }                //!< Get current default pen
+    static void setPenDefault( const QPen & p) {  s_defaultPen = p; }  //!< Set default pen
+    static void setPenSelected( const QPen & p) { s_penSelected = p; } //!< Set pen for selection
+    static QPen defaultPen() {  return s_defaultPen; }                 //!< Get current default pen
 
 protected:
     void mousePressEvent( QGraphicsSceneMouseEvent *event) override; //!< Handle mouse press event
@@ -58,6 +59,7 @@ private:
     QPen m_pen;
 
     static QPen s_defaultPen;
+    static QPen s_penSelected;
     static bool s_show;
 };
 

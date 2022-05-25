@@ -40,7 +40,7 @@ FormatTool::FormatTool( const QString &title,
                         QWidget *parent)
  : QDialog(parent)
 {
-    // qDebug() << Q_FUNC_INFO;
+    qDebug() << Q_FUNC_INFO;
 
     setWindowTitle( title );
     setWindowFlags( Qt::Tool );
@@ -91,9 +91,9 @@ void FormatTool::createLayout()
 void FormatTool::establishConnections()
 {
     connect( m_colorDialog.get(), &QColorDialog::currentColorChanged,
-             this,           &FormatTool::slotUpdateColor);
+             this,                &FormatTool::slotUpdateColor);
     connect( m_colorPushButton.get(), &QPushButton::clicked,
-             this,                &FormatTool::showColorDialog);
+             this,                    &FormatTool::showColorDialog);
     connect( m_lineWidthSpinBox.get(),   static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
              this,                       &FormatTool::updateLineWidth);
     connect( m_markerSizeSpinBox.get(),  static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
@@ -101,9 +101,9 @@ void FormatTool::establishConnections()
     connect( m_styleCombo.get(),  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
              this,                &FormatTool::updateLineStyle);
 
-    connect( m_buttonBox->button(QDialogButtonBox::Discard),
+    /* connect( m_buttonBox->button(QDialogButtonBox::Discard),
              &QAbstractButton::pressed,
-             this,  & FormatTool::slotDiscard);
+             this,  & FormatTool::slotDiscard); */
     connect( m_buttonBox->button(QDialogButtonBox::Apply),
              &QAbstractButton::pressed,
              this,  & FormatTool::slotApply);
@@ -180,7 +180,7 @@ void FormatTool::createElements()
 
     m_buttonBox = std::make_unique<QDialogButtonBox>(
                 QDialogButtonBox::Apply
-                | QDialogButtonBox::Discard
+               // | QDialogButtonBox::Discard
                 );
 }
 

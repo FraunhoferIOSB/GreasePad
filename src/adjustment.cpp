@@ -28,8 +28,8 @@ using Constraint::ConstraintBase;
 static const double T_ZERO = 1e-5;
 #endif
 
-int AdjustmentFramework::indexOf( const Eigen::VectorXi & v,
-                                  const int x) const
+Index AdjustmentFramework::indexOf( const Eigen::VectorXi & v,
+                                    const int x) const
 {
     //    for ( Index j=0; j<v.size(); j++) {
     //        if ( v(j)==x ) {
@@ -50,9 +50,10 @@ MatrixXd AdjustmentFramework::Rot_ab( const VectorXd &a,
                                       const VectorXd &b) const
 {
     Q_ASSERT( a.size()==b.size());
+#ifdef QT_DEBUG
     Q_ASSERT( fabs( a.norm()-1.) < T_ZERO );
     Q_ASSERT( fabs( b.norm()-1.) < T_ZERO );
-
+#endif
     return MatrixXd::Identity( a.size(),a.size())
             +2*b*a.adjoint()
             -(a+b)*(a+b).adjoint()/(1.+a.dot(b));
@@ -65,7 +66,7 @@ MatrixXd AdjustmentFramework::null( const VectorXd &xs ) const
     //if ( fabs(xs.norm()-1.) > T_ZERO )
     //    qDebug() << xs;
 
-#ifdef Q_DEBUG
+#ifdef QT_DEBUG
     QString what = QStringLiteral("norm(x) = %1").arg( QString::number(xs.norm()) );
     Q_ASSERT_X( std::fabs(xs.norm()-1.) <= T_ZERO,
                 Q_FUNC_INFO,
@@ -85,8 +86,9 @@ MatrixXd AdjustmentFramework::null( const VectorXd &xs ) const
     JJ.bottomRows(1) = -x0.adjoint();
 
     VectorXd check = JJ.adjoint()*xs;
-    Q_ASSERT_X( check.norm() <= T_ZERO, "nullspace", "not a zero vector");
-
+#ifdef QT_DEBUG
+    Q_ASSERT_X( check.norm() <= T_ZERO, Q_FUNC_INFO, "not a zero vector");
+#endif
     return JJ;
 }
 

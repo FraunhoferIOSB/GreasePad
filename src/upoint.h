@@ -36,7 +36,7 @@ public:
     uPoint( const Vector3d & x,
             const Matrix3d & Cov_xx);
     // uPoint( const uPoint &ux ) = default;
-    ~uPoint() override = default;
+    // ~uPoint() override = default;
 
     Aabb bbox() const;
     /* nodiscard */ uPoint euclidean() const;

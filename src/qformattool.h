@@ -80,8 +80,8 @@ public Q_SLOTS:
     void updateLineStyle( int s) {  Q_EMIT signalLineStyleChanged(s);  } //!< Update line style
     void updateMarkerSize( int s) { Q_EMIT signalMarkerSizeChanged(s); } //!< Update marker size
 
-    void slotDiscard()  {   } //!< slot discard dialog
-    void slotApply();         //!< alot apply selection
+    // void slotDiscard()  {   } //!< slot discard dialog
+    void slotApply();         //!< slot apply selection
 };
 
 } // namespace GUI
