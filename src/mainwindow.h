@@ -87,6 +87,7 @@ private:
     std::unique_ptr<QAction>   actionBackgroundImageLoad;
     std::unique_ptr<QAction>   actionBackgroundImageRemove;
     std::unique_ptr<QAction>   actionBackgroundImageToggleShow;
+    std::unique_ptr<QAction>   actionBasicDocumentation;
     std::unique_ptr<QAction>   actionBinaryRead;
     std::unique_ptr<QAction>   actionBinarySave;
     std::unique_ptr<QAction>   actionChangeFormat;
@@ -146,6 +147,7 @@ private:
     void slotAboutQt();
     void slotBackgroundImageLoad();
     void slotBackgroundImageRemove();
+    void slotBasicDocumentation();
     void slotCmdAddStroke( QPainterPath *);
     void slotCmdDeleteSelection();
     void slotCmdTabulaRasa();

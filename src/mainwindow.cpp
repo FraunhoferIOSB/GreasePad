@@ -297,8 +297,12 @@ void MainWindow::createActions()
     actionFitInView->setIconVisibleInMenu(   true );
     actionFitInView->setToolTip(             "Scale scene to fit in view" );
 
+    actionBasicDocumentation = std::make_unique<QAction>( "Getting Started..." );
+    actionBasicDocumentation->setToolTip( "Basic Documentation" );
+    actionBasicDocumentation->setIcon( style()->standardIcon( QStyle::SP_MessageBoxQuestion ));
+
     actionAbout = std::make_unique<QAction>( "About" );
-    actionAbout->setIcon( style()->standardIcon( QStyle::SP_FileDialogInfoView) );
+    actionAbout->setIcon( style()->standardIcon( QStyle::SP_MessageBoxInformation )); // _FileDialogInfoView) );
 
     actionAboutQt = std::make_unique<QAction>( "About Qt" );
     actionAboutQt->setIcon( style()->standardIcon( QStyle::SP_TitleBarMenuButton) );
@@ -443,6 +447,7 @@ void MainWindow::createMenus()
 
     // help .........................................................
     menuHelp = std::make_unique<QMenu>( tr("Help") );
+    menuHelp->addAction( actionBasicDocumentation.get() );
     menuHelp->addAction( actionAbout.get()  );
     menuHelp->addAction( actionAboutQt.get());
     menuBar()->addMenu( menuHelp.get() );
@@ -613,6 +618,8 @@ void MainWindow::establishConnections()
              this,                 &MainWindow::slotAboutQt);
     connect( actionAbout.get(),  &QAction::triggered,
              this,               &MainWindow::slotAbout);
+    connect( actionBasicDocumentation.get(), &QAction::triggered,
+             this,                           &MainWindow::slotBasicDocumentation);
 
     // view
     connect( actionFitInView.get(),  &QAction::triggered,
@@ -1064,6 +1071,32 @@ void MainWindow::slotValueChangedAlphaSnap( const double alpha_val)
     State::setAlphaSnapping(alpha_val);
 }
 
+void MainWindow::slotBasicDocumentation()
+{
+    QMessageBox::about( this, QApplication::applicationName() + " " + QApplication::applicationVersion(),
+                        "<h2> Basic documentation</h2>"
+                        "<table style=\"white-space: nowrap;\">"
+                        "<tr><td>[left mouse]    </td><td>draw straight strokes (no polylines)</td></tr>"
+                        "<tr><td>[right mouse]   </td><td>select/unselect graphical elements</td></tr>"
+                        "<tr><td>[mouse wheel]   </td><td>zoom in or out</td></tr>"
+                        "</table>"
+                        "<h2>Keyboard shortcuts</h2>"
+                        "<table>"
+                        "<tr><td>Navigation    </td><td>[+]/[-]</td>            <td>zoom in/out</td></tr>"
+                        "<tr><td></td>              <td>[&#8592;]/[&#8594;]</td><td>move left/right</td></tr>"
+                        "<tr><td></td>              <td>[&#8593;]/[&#8595;]</td><td>move up/down</td></tr>"
+                        "<tr><td>Selection</td><td>[Ctrl]+[A]</td>        <td>select all</td></tr>"
+                        "<tr><td></td>         <td>[Ctrl]+[Shift]+[A]</td><td>deselect all</td></tr>"
+                        "<tr><td>Editing</td><td>[Ctrl]+[Z]</td><td>undo</td></tr>"
+                        "<tr><td> </td>       <td>[Ctrl]+[Y]</td><td>redo</td></tr>"
+                        "<tr><td></td>       <td>[Del]</td><td>delete selected items</td></tr>"
+                        "<tr><td></td>       <td>[Ctrl]+[F]</td><td>format selected entities</td></tr>"
+                        "<tr><td>Show</td><td>[Ctrl]+[U]</td><td>confidence regions (uncertainty)</td></tr>"
+                        "<tr><td></td>    <td>[Ctrl]+[T]</td><td>background tiles</td></tr>"
+                        "</table>"
+                        );
+
+}
 void MainWindow::slotAbout()
 {
     QMessageBox msgBox;

@@ -160,7 +160,7 @@ void MainScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         QMessageBox msg;
         msg.setIcon(            QMessageBox::Warning );
         msg.setWindowTitle(     QApplication::applicationName() );
-        msg.setText(            "Stroke too short (Not enough points)." );
+        msg.setText(            "Pen stroke too short (Not enough points)." );
         msg.setStandardButtons( QMessageBox::Ok );
         msg.exec();
 
@@ -174,7 +174,7 @@ void MainScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         QMessageBox msg;
         msg.setIcon(            QMessageBox::Warning);
         msg.setWindowTitle(     QApplication::applicationName() );
-        msg.setText(            "Not a straight stroke. Try again, please." );
+        msg.setText(            "Not a straight pen stroke. Try again, please." );
         msg.setStandardButtons( QMessageBox::Ok );
         msg.exec();
 
