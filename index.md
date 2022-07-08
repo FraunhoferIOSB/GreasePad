@@ -1,8 +1,4 @@
-## GreasePad
 
-You can use the [editor on GitHub](https://github.com/FraunhoferIOSB/GreasePad/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+# Win64 Binaries: Download and execution
 
-
-### Win64 Binaries
-
-download under construction...
+<a href = "/downloads/GreasePad110_x64.zip download="download">Zip file</a>
