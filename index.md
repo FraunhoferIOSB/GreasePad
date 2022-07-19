@@ -1,5 +1,5 @@
 
-# Win64 Binaries: Download and execution (Release 1.1.0)
+# Pre-compiled Win64 Binaries: Download and execution (Release 1.1.0)
 
 No installation procedue is provided. Instead, please perform the following steps:
                                                               
