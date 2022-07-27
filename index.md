@@ -1,9 +1,11 @@
 
 # GreasePad 1.1.0
 
+The *GreasePad* provides a drawing area and expects pen strokes as the only user input. These strokes are approximated by straight line segments leading to line drawings. During this interactive process, geometric relations such as orthogonality are recognized and enforced immediately by an adjustment process. The program can be utilized to study systems of straight lines and constraints (closure theorems) or to outline the shapes of human-made objects in images. As a pointing device, you can use a computer mouse, a stylus, or one of your fingers in combination with a touchscreen.
+
 ## Content
 
-- [Precompiled Win64 Binaries](#pre-compiled)
+- [Precompiled Win64 binaries](#pre-compiled)
 - [Gallery](#gallery)
 - [Copyright](#copyright)
 - [Licensing](#licensing)
@@ -13,7 +15,7 @@
 - [Frequently Asked Questions](#faq)
 
 <a name="pre-compiled"></a>
-## Pre-compiled Win64 Binaries
+## Pre-compiled Win64 binaries
 
 No installation procedure is provided. Instead, please perform the following steps:
                                                               
@@ -50,7 +52,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 Jochen Meidow, Fraunhofer IOSB, Ettlingen, Germany.
 
-jochen.meidow@iosb.fraunhofer.de
+[jochen.meidow@iosb.fraunhofer.de](mailt:jochen.meidow@iosb.fraunhofer.de)
 
 
 <a name="references"></a>
@@ -73,5 +75,5 @@ The author would like to thank Wolfgang Förstner (University of Bonn) and Horst
 
 *Q. Given a scene with segments and constraints, how do I select individual segments and/or constraints?*
 
-A. With a computer mouse as pointing device, you can select segments or constraints using the mouse's right button. With a stylus or one of your fingers, you will probably have to press for a short moment onto the touch pad. If a graphicsal element covers another element, you can change the visual stacking.
+A. With a computer mouse as pointing device, you can select segments or constraints using the mouse's right button. With a stylus or one of your fingers, you will probably have to press for a short moment onto the touch pad. If a graphical element covers another element, you can change the visual stacking.
  
