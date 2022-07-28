@@ -1,14 +1,15 @@
 # GreasePad
 **Freehand Drawing guided by Geometric REASoning**
 
-The *GreasePad* provides a drawing area and expects pen strokes as the only user input. These strokes are approximated by straight line segments leading to line drawings. During this interactive process, geometric relations such as orthogonallity are recognized and automatically enforced by an adjustment procedure. The program can be utilzed to analyse systems of straight lines and constraints (theorem proving) or to outline the shapes of human-made objects in images. As a pointing device, you can use a computer mouse, a stylus, or one of your fingers in combination with a touchscreen.
+The *GreasePad* provides a drawing area and expects pen strokes as the only user input. These strokes are approximated by straight line segments leading to line drawings. During this interactive process, geometric relations such as orthogonallity are recognized and enforced immediately by an adjustment process. The program can be utilzed to study systems of straight lines and constraints (closure theorems) or to outline the shapes of human-made objects in images. As a pointing device, you can use a computer mouse, or - in combination with a touchscreen - a stylus or one of your fingers.
 
+<img src="./docs/screenshots/screenshot_orthocenter.png" width = "40%">
+<img src="./docs/screenshots/screenshot_roofshape.png" width="40%">
 
-### Screenshots
+### Project website
 
-<img src="./docs/screenshots/screenshot_orthocenter.png" width = "47.5%">
-<img src="./docs/screenshots/screenshot_roofshape.png" width="47.5%">
-
+For precompiled binaries (64-bit Windows), further screenshots, references, and FAQs, visit the project website
+https://fraunhoferiosb.github.io/GreasePad/
 
 ### Copyright
 
@@ -41,20 +42,3 @@ For the compiliation and building of the programme, the following components are
 ### Contributing to GreasePad
 
 The software is still under development. Contributions in form of issues and pull requests are highly welcome.
-
-  
-### References
-
-Details on the utilized methods can be found in the following papers:
-
-- J. Meidow and L. Lucks (2019) [Draw and Order - Modeless Interactive Acquisition of Outlines](https://doi.org/10.5194/isprs-annals-IV-2-W7-103-2019). ISPRS - Annals of Photogrammetry, Remote Sensing and Spatial Information Sciences, vol. IV-2/W7, pp. 103-110
-- J. Meidow, H. Hammer, and L. Lucks (2020) [Delineation and Construction of 2D Geometries by Freehand Drawing and Geometric Reasoning](https://www.isprs-ann-photogramm-remote-sens-spatial-inf-sci.net/V-5-2020/77/2020/). ISPRS - Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences, vol. V-5-2020, pp. 77-84
-    
-	
-Please cite these papers when using *GreasePad* or parts of it in an academic publication.
-
-### Contact
-
-Jochen Meidow, Fraunhofer IOSB, Ettlingen, Germany.
-
-jochen.meidow@iosb.fraunhofer.de
