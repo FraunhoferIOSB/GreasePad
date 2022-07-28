@@ -6,7 +6,7 @@ The *GreasePad* provides a drawing area and expects pen strokes as the only user
 ## Content
 
 - [Precompiled Win64 binaries](#pre-compiled)
-- [Gallery](#gallery)
+- [Gallery (Screenshots)](#gallery)
 - [Copyright](#copyright)
 - [Licensing](#licensing)
 - [Contact](#contact)
@@ -25,9 +25,59 @@ No installation procedure is provided. Instead, please perform the following ste
 
 
 <a name="gallery"></a>
-## Gallery
+## Gallery (Screenshots)
 
-under construction
+
+<figure>
+<img src="./gallery/pappus_affine.png" width = "100%">
+<figcaption align="left">
+Pappus's hexagon theorem, affine form
+</figcaption>
+</figure>
+
+<figure>
+<img src="./gallery/confidence.png" width = "100%">
+<figcaption align="left">
+Confidence regions
+</figcaption>
+</figure>
+
+<figure>
+<img src="./gallery/outlining.png" width = "100%">
+<figcaption align="left">
+Tracing & outlining
+</figcaption>
+</figure>
+
+<figure>
+<img src="./gallery/orthocenter.png" width = "100%">
+<figcaption align="left">
+Orthocenter of a triangle
+</figcaption>
+</figure>
+
+<figure>
+<img src="./gallery/subtasks.png" width = "100%">
+<figcaption align="left">
+Identification of subtasks (connected components)
+</figcaption>
+</figure>
+
+<figure>
+<img src="./gallery/thomsen.png" width = "100%">
+<figcaption align="left">
+Thomsen's figure
+</figcaption>
+</figure>
+
+<figure>
+<img src="./gallery/mid_point.png" width = "100%">
+<figcaption align="left">
+Mid point of a triangle's side
+</figcaption>
+</figure>
+
+
 
 
 <a name="copyright"></a>
@@ -52,7 +102,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 Jochen Meidow, Fraunhofer IOSB, Ettlingen, Germany.
 
-[jochen.meidow@iosb.fraunhofer.de](mailt:jochen.meidow@iosb.fraunhofer.de)
+jochen.meidow@iosb.fraunhofer.de
 
 
 <a name="references"></a>
