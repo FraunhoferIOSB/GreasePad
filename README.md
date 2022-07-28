@@ -3,8 +3,9 @@
 
 The *GreasePad* provides a drawing area and expects pen strokes as the only user input. These strokes are approximated by straight line segments leading to line drawings. During this interactive process, geometric relations such as orthogonallity are recognized and enforced immediately by an adjustment process. The program can be utilzed to study systems of straight lines and constraints (closure theorems) or to outline the shapes of human-made objects in images. As a pointing device, you can use a computer mouse, or - in combination with a touchscreen - a stylus or one of your fingers.
 
-<img src="./docs/screenshots/screenshot_orthocenter.png" width = "40%">
-<img src="./docs/screenshots/screenshot_roofshape.png" width="40%">
+
+| ![alt](./docs/screenshots/screenshot_orthocenter.png) | ![alt](./docs/screenshots/screenshot_roofshape.png) |
+| ----------------------------------------------------- | --------------------------------------------------- |
 
 ### Project website
 
