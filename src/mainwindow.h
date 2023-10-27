@@ -100,9 +100,14 @@ private:
     std::unique_ptr<QAction>   actionItemMoveToTop;
     std::unique_ptr<QAction>   actionRedo;
     std::unique_ptr<QAction>   actionTabulaRasa;
+
     std::unique_ptr<QAction>   actionToggleConsiderOrthogonal{};
     std::unique_ptr<QAction>   actionToggleConsiderParallel{};
     std::unique_ptr<QAction>   actionToggleConsiderConcurrent{};
+    std::unique_ptr<QAction>   actionToggleConsiderVertical{};
+    std::unique_ptr<QAction>   actionToggleConsiderHorizontal{};
+    std::unique_ptr<QAction>   actionToggleConsiderDiagonal{};
+
     std::unique_ptr<QAction>   actionToggleSelection;
     std::unique_ptr<QAction>   actionToggleShowConstrained{};
     std::unique_ptr<QAction>   actionToggleShowConstraints{};
@@ -160,9 +165,14 @@ private:
     void slotSelectionChanged();
     void slotShowStatus( const QString & s) { statusBar()->showMessage( s, 0); }
     void slotStackIndexChanged() {  statusBar()->showMessage( curr_state.StatusMsg() ); }
-    void slotToggleConsiderOrthogonal(){  State::toggleConsiderOrthogonal(); }
-    void slotToggleConsiderParallel(){    State::toggleConsiderParallel(); }
-    void slotToggleConsiderConcurrent() { State::toggleConsiderConcurrent(); }
+
+    void slotToggleConsiderOrthogonal() { State::toggleConsiderOrthogonal(); }
+    void slotToggleConsiderParallel()   { State::toggleConsiderParallel();   }
+    void slotToggleConsiderCopunctual() { State::toggleConsiderCopunctual(); }
+    void slotToggleConsiderVertical()   { State::toggleConsiderVertical();   }
+    void slotToggleConsiderHorizontal() { State::toggleConsiderHorizontal(); }
+    void slotToggleConsiderDiagonal()   { State::toggleConsiderDiagonal();   }
+
     void slotToggleSelection();
     void slotToggleShowBackgroundImage();
     void slotToggleShowConstrained();

@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ double StandardNormal::icdf( const double P ) const
         return -DBL_MAX;
     }
 
-    double alpha0 = 1-P;
+    double alpha0 = 1.0-P;
     // K-R Koch, (241.8), alpha > 0.5
     const double alpha = (alpha0<0.5) ? 1.-alpha0 : alpha0;
 
@@ -322,7 +322,7 @@ double Gamma::icdf( const double P ) const
         y_old = y_new;
     }
 
-    // TODO(meijoc) case not converged.
+    // TO DO case not converged.
     return y_old;
 }
 
@@ -335,7 +335,9 @@ double Gamma::rnd() const
     double v;
     while ( true ) {
         double x = rng.rnd();
-        double u = (rand()+1)/static_cast<double>(RAND_MAX);
+
+        // rand(): [0,RANDMAX] (int)
+        double u = static_cast<double>(rand()+1)/static_cast<double>(RAND_MAX +1); // (0,1]
         v = pow( 1.0 + x/sqrt(9.0*d), 3.0);
         if  ( v>0.0  &&  log(u) > x*x/2.0 +d -d*v +d*log(v) ) {
             break;

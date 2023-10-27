@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,15 +55,23 @@ public:
     //! Signed distance between (0,0) and this straight line
     double signedDistanceToOrigin() const { return v().z()/v().head(2).norm(); }
 
-    uPoint project(  const uPoint & ux) const;
-    uPoint cross(    const uStraightLine & um ) const;  // not required
+    uPoint project( const uPoint & ux) const;
+    uPoint cross(   const uStraightLine & um ) const;  // not required
+    double acute(   const uStraightLine & um ) const;
 
-    // relations ..................................................
-    bool isOrthogonalTo(   const uStraightLine & um, double T_q) const;
+    // unary relations ..................................................
+    bool isVertical(   double T) const;
+    bool isHorizontal( double T) const;
+    bool isDiagonal(   double T) const;
+
+    // binary relations ..................................................
+    bool isOrthogonalTo(const uStraightLine & um, double T) const;
+    bool isParallelTo(  const uStraightLine & um, double T) const;
+
+    // ternary relation ..................................................
     bool isCopunctualWith( const uStraightLine & um,
-                             const uStraightLine & un,
-                             double T_d) const;
-    bool isParallelTo( const uStraightLine & um,  double T) const;
+                           const uStraightLine & un,
+                           double T) const;
 
 private:
     using Matrix6d    = Eigen::Matrix<double,6,6>;
@@ -73,6 +81,9 @@ private:
 
     static Matrix3d CC();
     static Matrix3d S3();
+
+    template <typename T>
+    inline int sign(T val) const { return (T(0) < val) - (val < T(0));  }
 };
 
 } // namespace Uncertain

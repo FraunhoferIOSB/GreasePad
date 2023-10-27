@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#define _USE_MATH_DEFINES
+
 #include "upoint.h"
 #include "ustraightline.h"
+
+#include <cmath>
 
 #include <QDebug>
 
@@ -59,7 +63,7 @@ uStraightLine::uStraightLine( const Vector3d & l,
 uStraightLine::uStraightLine( const VectorXd & xi,
                               const VectorXd & yi)
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
 
     // centroid ............................................
     double x0 = xi.mean();
@@ -125,11 +129,32 @@ uPoint uStraightLine::project( const uPoint & ux) const
     return { z, Cov_zz};
 }
 
+
+
+double uStraightLine::acute(const uStraightLine &um) const
+{
+    Eigen::Vector2d a = m_val.head(2);
+    Eigen::Vector2d b = um.m_val.head(2);
+    assert( a.norm() > 1e-6 );
+    assert( b.norm() > 1e-6 );
+    a.normalize();
+    b.normalize();
+
+    assert( fabs(a.dot(b)) <= 1.0 );  // a'*b in [-1,+1]
+    double alpha = acos( a.dot(b) );  // [0,pi]
+    if ( alpha > M_PI_2) {            // M_PI_2 = pi/2
+        alpha = M_PI -alpha;
+    }
+    assert( alpha >= 0.0    );
+    assert( alpha <= M_PI_2 );
+    return alpha;
+}
+
 //! Uncertain straight line connecting two uncorrelated uncertain points
 uStraightLine::uStraightLine( const uPoint & ux,
                               const uPoint & uy)
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
 
     Matrix3d Sx = skew( ux.v() );
     Matrix3d Sy = skew( uy.v() );
@@ -166,6 +191,38 @@ uStraightLine uStraightLine::sphericalNormalized() const
     return {p};
 }
 
+//! Check if the uncertain straight line is vertical.
+bool uStraightLine::isVertical( double T_q) const
+{
+    // l=[a,b,c], b=0 ?
+    double d = m_val(1);
+    Eigen::RowVector3d JJ = (Eigen::RowVector3d() << 0,1,0).finished();
+    double var_d = JJ*m_cov*JJ.adjoint();
+    return d*d/var_d < T_q;
+}
+
+//! Check if the uncertain straight line is horizontal.
+bool uStraightLine::isHorizontal(double T_q) const
+{
+    // l=[a,b,c], a=0 ?
+    double d = m_val(0);
+    Eigen::RowVector3d JJ = (Eigen::RowVector3d() << 1,0,0).finished();
+    double var_d = JJ*m_cov*JJ.adjoint();
+    return d*d/var_d < T_q;
+}
+
+//! Check if the uncertain straight line is diagonal.
+bool uStraightLine::isDiagonal(double T_q) const
+{
+    // l=[a,b,c],   abs(a)-abs(b)=0  ?
+
+    double d = abs(m_val(0)) -abs(m_val(1));
+    Eigen::RowVector3d JJ = (Eigen::RowVector3d() << sign(m_val(0)),-sign(m_val(1)),0).finished();
+    double var_d = JJ*m_cov*JJ.adjoint();
+    return d*d/var_d < T_q;
+}
+
+
 //! Check if uncertain straight line 'um' is orthogonal to this.
 bool uStraightLine::isOrthogonalTo( const uStraightLine & um,
                                     const double T_q) const
@@ -178,11 +235,11 @@ bool uStraightLine::isOrthogonalTo( const uStraightLine & um,
     Cov_lm.topLeftCorner(3,3) = m_cov;
     Cov_lm.bottomRightCorner(3,3) = um.Cov();
 
-    double d = m_val.adjoint()*CC()*um.v();
+    double d = m_val.dot( CC()*um.v() );
     double var_d = JJ*Cov_lm*JJ.adjoint();
-    double T_d  = d*d/var_d;
+    // double T_d  = d*d/var_d;
 
-    return T_d <  T_q;
+    return d*d/var_d <  T_q;
 }
 
 //! Check if the three uncertain straight lines 'um', 'un', and 'this' are copunctual.
@@ -212,12 +269,12 @@ bool uStraightLine::isCopunctualWith( const uStraightLine & um,
 
 //! Check if the uncertain straight line 'um' is parallel to 'this'.
 bool uStraightLine::isParallelTo( const uStraightLine & um,
-                                  const double T) const
+                                  const double T_q) const
 {
-    double d = -m_val.adjoint()*S3()*um.v();  // (7.24)
+    double d = -m_val.dot( S3()*um.v() );  // (7.24)
 
     RowVector6d JJ;
-    JJ.leftCols(3) = -um.v().adjoint()*S3().adjoint();
+    JJ.leftCols(3) = -um.v().adjoint()*S3().adjoint();  // adj(S3)=-S3 ?
     JJ.rightCols(3) =  -m_val.adjoint()*S3();
 
     Matrix6d Cov_lm = Matrix6d::Zero();
@@ -226,7 +283,7 @@ bool uStraightLine::isParallelTo( const uStraightLine & um,
 
     double var_d = JJ*Cov_lm*JJ.adjoint();
 
-    return d*d/var_d < T;
+    return d*d/var_d < T_q;
 }
 
 

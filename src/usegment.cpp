@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ QDataStream & operator<< (QDataStream & out, const Aabb & bbox);
 QDataStream & operator>> (QDataStream & in, Aabb & bbox);
 
 
+//! Diag([1,1,0])
 Matrix3d uStraightLineSegment::CC()
 {
     static Matrix3d tmp = ( Matrix3d() << 1,0,0,0,1,0,0,0,0 ).finished();
@@ -232,25 +233,45 @@ Vector3d uStraightLineSegment::hy() const
     return skew( l )*n;
 }
 
+
+//! Check if the uncertain straight line segment is vertical.
+bool uStraightLineSegment::isVertical( const double T) const
+{
+    return ul().isVertical( T);
+}
+
+//! Check if the uncertain straight line segment is horizontal.
+bool uStraightLineSegment::isHorizontal( const double T) const
+{
+    return ul().isHorizontal( T);
+}
+
+//! Check if the uncertain straight line segment is diagonal.
+bool uStraightLineSegment::isDiagonal( const double T) const
+{
+    return ul().isDiagonal( T);
+}
+
+
 //! Check if uncertain straight line segment is orthogonal to uncertaint straight line segment 'ut'
-bool uStraightLineSegment::isOrthogonalTo( const uStraightLineSegment & ut,
+bool uStraightLineSegment::isOrthogonalTo( const uStraightLine & um,
                                            const double T_q) const
 {
-    return ul().isOrthogonalTo( ut.ul(), T_q );
+    return ul().isOrthogonalTo( um, T_q );
 }
 
 //! Check if uncertain straight line segment is parallel to uncertaint straight line segment 'ut'
-bool uStraightLineSegment::isParallelTo( const uStraightLineSegment & ut,
+bool uStraightLineSegment::isParallelTo( const uStraightLine & um,
                                          const double T) const
 {
-    return ul().isParallelTo( ut.ul(), T );
+    return ul().isParallelTo( um, T );
 }
 
 //! Check if uncertain straight lines 'this' and 'ut' are identical
-bool uStraightLineSegment::straightLineIsIdenticalTo( const uStraightLineSegment & ut,
+bool uStraightLineSegment::straightLineIsIdenticalTo( const uStraightLine & um,
                                                       const double T) const
 {
-    return ul().isIdenticalTo( ut.ul(), T );
+    return ul().isIdenticalTo( um, T );
 }
 
 //! Move endpoint x along l to intersection point of m and l.
@@ -292,11 +313,11 @@ bool uStraightLineSegment::move_y_to( const Vector3d & n )
 
 
 //! Check if the uncertain straight line of 'this' is copunctual with the two uncertaint straight lines of 'us' and 'ut'
-bool uStraightLineSegment::isCopunctualWith( const uStraightLineSegment & us,
-                                               const uStraightLineSegment & ut,
-                                               const double T_det) const
+bool uStraightLineSegment::isCopunctualWith( const uStraightLine & um,
+                                             const uStraightLine & un,
+                                             const double T) const
 {
-    return ul().isCopunctualWith( us.ul(), ut.ul(), T_det );
+    return ul().isCopunctualWith( um, un, T);
 }
 
 //! Transform uncertain straight line segment via 9x9 transformation matrix for t = [l',m',n']'.
@@ -369,16 +390,6 @@ QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,9> & MM)
 }
 
 
-//QDebug & operator<< ( QDebug & out, const Eigen::VectorXd &v);
-//QDebug & operator<< ( QDebug & out, const Eigen::VectorXd &v)
-//{
-//    qDebug() << Q_FUNC_INFO;
-//    for ( int i=0; i<v.size(); i++) {
-//        out << v[i];
-//    }
-//    return out;
-//}
-
 QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,1> &v);
 
 //! Overloaded <<operator for 9-vectors
@@ -415,7 +426,7 @@ void uStraightLineSegment::serialize( QDataStream & out ) const
 //! Deserialization of uncertain straight line segment and its bounding box
 bool uStraightLineSegment::deserialize( QDataStream & in )
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     in >> m_t;
     in >> m_Cov_tt;
     in >> m_bounding_box;

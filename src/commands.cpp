@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ GUI::MainScene * Cmd::Undo::s_scene = nullptr;
 
 Undo::Undo( QUndoCommand *parent) : QUndoCommand(parent)
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
 }
 
 
@@ -40,7 +40,7 @@ AddStroke::AddStroke( State *curr,
                       std::unique_ptr<State> &n,
                       QUndoCommand *parent) : Undo(parent)
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     setText( "add stroke" );
     current_state_ = curr;      // set pointer
     prev_state_ = std::move(p);
@@ -49,7 +49,7 @@ AddStroke::AddStroke( State *curr,
 
 void AddStroke::redo()
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     *current_state_ = *next_state_;    // copy content
     scene()->removeAllItems();
     scene()->addGraphicItems( next_state_.get() );
@@ -57,7 +57,7 @@ void AddStroke::redo()
 
 void AddStroke::undo()
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     *current_state_ = *prev_state_;  // set
     scene()->removeAllItems();
     scene()->addGraphicItems( prev_state_.get() );
@@ -94,7 +94,7 @@ void DeleteSelection::undo()
 
 TabulaRasa::TabulaRasa( State *st, QUndoCommand *parent ) : Undo(parent)
 {
-    qDebug() << Q_FUNC_INFO ;
+    // qDebug() << Q_FUNC_INFO ;
     setText( "clear all" );
     current_state_ = st;   // pointer
     prev_state_ = std::make_unique<State>(*st);   // copy
@@ -106,14 +106,14 @@ TabulaRasa::TabulaRasa( State *st, QUndoCommand *parent ) : Undo(parent)
 
 void TabulaRasa::redo()
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     *current_state_ = *next_state_;
     scene()->removeAllItems();
 }
 
 void TabulaRasa::undo()
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     *current_state_ = *prev_state_;
     scene()->addGraphicItems( prev_state_.get() );
 }
@@ -125,7 +125,7 @@ ReplaceStateWithFileContent::ReplaceStateWithFileContent( const QString & fileNa
                                                           QUndoCommand *parent)
     : Undo(parent)
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     setText( fileName );
 
     current_state_ = curr;   // pointer
@@ -136,7 +136,7 @@ ReplaceStateWithFileContent::ReplaceStateWithFileContent( const QString & fileNa
 
 void ReplaceStateWithFileContent::redo()
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     *current_state_ = *next_state_;
     scene()->removeAllItems();
     scene()->addGraphicItems( next_state_.get() );
@@ -144,7 +144,7 @@ void ReplaceStateWithFileContent::redo()
 
 void ReplaceStateWithFileContent::undo()
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     *current_state_ = *prev_state_;
     scene()->removeAllItems();
     scene()->addGraphicItems( prev_state_.get() );

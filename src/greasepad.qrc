@@ -17,5 +17,8 @@
         <file>icons/consider_concurrence.svg</file>
         <file>icons/consider_orthogonality.svg</file>
         <file>icons/consider_parallelism.svg</file>
+        <file>icons/consider_diag.svg</file>
+        <file>icons/consider_horiz.svg</file>
+        <file>icons/consider_vert.svg</file>
     </qresource>
 </RCC>

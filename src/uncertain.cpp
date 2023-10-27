@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,7 +87,7 @@ bool isCovMat( const MatrixXd & MM )
 #ifdef QT_DEBUG
     if ( (ev.real().array() < -DBL_EPSILON ).any() ) {
         for ( Eigen::Index i=0; i< ev.size(); i++) {
-            qDebug() << QStringLiteral( "(%1,%2)")
+            qDebug().noquote() << QStringLiteral( "(%1,%2)")
                         .arg( ev(i).real() )
                         .arg( ev(i).imag() );
         }
@@ -100,7 +100,7 @@ bool isCovMat( const MatrixXd & MM )
 //! Spherically normalize the entity
 void BasicEntity2D::normalizeSpherical()
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
 
     const Matrix3d I = Matrix3d::Identity();
     assert( m_val.norm()>0.0 );
@@ -130,7 +130,8 @@ bool BasicEntity2D::isIdenticalTo( const BasicEntity2D & us,
     Vector2d d = JJ.adjoint()*( a.v() -b.v() );     // (10.141)
     Eigen::Matrix2d Cov_dd = JJ.adjoint()*( a.Cov()+b.Cov())*JJ;
 
-    return d.adjoint()*Cov_dd.inverse()*d < T;    // dof = 2
+    // return d.adjoint()*Cov_dd.inverse()*d < T;    // dof = 2
+    return d.dot(Cov_dd.inverse()*d) < T;    // dof = 2
 }
 
 

@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ class QGraphicsScene;
 
 class impl;
 
-//! Class 'State' for a set of uncertain straight line segments and geometric relations
+//! Class for a set of uncertain straight line segments and geometric relations
 class State
 {
 public:
@@ -54,22 +54,37 @@ public:
     void toggleVisibilityUnconstrained();  //!< Toggle the visibility of unconstrained segments
 
     //! Toggle consideration of orthogonality (recognition and enforcement)
-    static void toggleConsiderOrthogonal() { considerOrthogonality_ = !considerOrthogonality_; }
+    static void toggleConsiderOrthogonal() { considerOrthogonal_ = !considerOrthogonal_; }
 
     //! Toggle consideration of parallelism (recognition and enforcement)
-    static void toggleConsiderParallel()   { considerParallelism_   = !considerParallelism_;   }
+    static void toggleConsiderParallel()   { considerParallel_ = !considerParallel_;   }
 
     //! Toggle consideration of concurrence (recognition and enforcement)
-    static void toggleConsiderConcurrent() { considerConcurrence_   = !considerConcurrence_;   }
+    static void toggleConsiderCopunctual() { considerCopunctual_ = !considerCopunctual_;   }
+
+    //! Toggle consideration of vertical lines (recognition and enforcement)
+    static void toggleConsiderVertical() { considerVertical_ = !considerVertical_;   }
+
+    //! Toggle consideration of horizontal lines (recognition and enforcement)
+    static void toggleConsiderHorizontal() { considerHorizontal_ = !considerHorizontal_;   }
+
+    //! Toggle consideration of diagonal lines (recognition and enforcement)
+    static void toggleConsiderDiagonal() { considerDiagonal_ = !considerDiagonal_;   }
+
 
     //! Get status consideration orthogonality
-    static bool considerOrthogonality() { return considerOrthogonality_; }
+    static bool considerOrthogonal() { return considerOrthogonal_; }
 
     //! Get status consideration parallelism
-    static bool considerParallelism()   { return considerParallelism_;   }
+    static bool considerParallel()   { return considerParallel_;   }
 
     //! Get status consideration concurrence (copunctuality)
-    static bool considerConcurrence()   { return considerConcurrence_;  }
+    static bool considerCopunctual()   { return considerCopunctual_;  }
+
+    //! Get status consideration vertical/horizontal/diagonal
+    static bool considerVertical()   { return considerVertical_;   }
+    static bool considerHorizontal() { return considerHorizontal_; }
+    static bool considerDiagonal()   { return considerDiagonal_;   }
 
     //! Set significane level for recognition tasks
     static void setAlphaRecognition( const double alpha) { recogn_.setAlpha(alpha);  }
@@ -81,9 +96,12 @@ public:
     static Quantiles::Snapping    snap_;    //!< Quantiles for snapping
 
 private:
-    static bool considerOrthogonality_;
-    static bool considerParallelism_;
-    static bool considerConcurrence_;
+    static bool considerOrthogonal_;
+    static bool considerParallel_;
+    static bool considerCopunctual_;
+    static bool considerVertical_;
+    static bool considerHorizontal_;
+    static bool considerDiagonal_;
 
     impl* pImpl() { return m_pImpl.get(); }
     const impl* pImpl() const { return m_pImpl.get(); }

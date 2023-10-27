@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 #include <QDebug>
 #include <QGraphicsItem>
 #include <QPen>
+
+#include <Eigen/Dense>
 
 #include <memory>
 
@@ -80,8 +82,10 @@ public:
     bool enforced() const { return m_is_enforced; }
 
     virtual void setMarkerSize ( qreal s) = 0;  //!< Set marker size
-    virtual void setGeometry( const uStraightLineSegment &s,
-                              const uStraightLineSegment &t) = 0; //!< Set geometry
+    //virtual void setGeometry( const uStraightLineSegment &s,
+    //                          const uStraightLineSegment &t) = 0; //!< Set geometry
+    virtual void setGeometry( QVector<std::shared_ptr< const uStraightLineSegment>> &,
+                              const Eigen::VectorXi &idx) = 0; //!< Set geometry
 
     static QPen defaultPenReq() { return s_defaultPenReq; }  //!< Get default pen for required constraints
     static QPen defaultPenRed() { return s_defaultPenRed; }  //!< Get default pen for redundant constraints
@@ -134,8 +138,8 @@ class QCopunctual : public QConstraintBase,
 public:
     static std::shared_ptr<QConstraintBase> create();  //!< Create copunctual constraint
 
-    void setGeometry( const uStraightLineSegment &s,
-                      const uStraightLineSegment &t) override;
+    void setGeometry( QVector<std::shared_ptr<const uStraightLineSegment>> &s,
+                      const Eigen::VectorXi &idx) override;
     void setMarkerSize ( qreal s) override;
     qreal markerSize() const override;
 
@@ -149,9 +153,34 @@ protected:
                 QWidget *widget) override; //!< Plot the circle
 
 private:
-    // std::shared_ptr<QConstraintBase> clone() const override;
     std::shared_ptr<QConstraintBase> doClone() const override;
 };
+
+
+//! Vertical, horizontal or diagonal straight line
+class QAligned : public QConstraintBase
+{
+public:
+    static std::shared_ptr<QConstraintBase> create();
+
+    void setGeometry( QVector<std::shared_ptr<const uStraightLineSegment>> &s,
+                      const Eigen::VectorXi & idx) override;
+    void setMarkerSize ( qreal s) override;
+    qreal markerSize() const override;
+
+protected:
+    QAligned();
+    QAligned( const QAligned & other); //!< Copy constructor
+
+    QRectF boundingRect() const override;   //!< Get axis-aligned bounding box
+    void paint( QPainter *painter,
+                const QStyleOptionGraphicsItem *option,
+                QWidget *widget) override;  //!< Plot line
+private:
+    std::shared_ptr<QConstraintBase> doClone() const override;
+    QGraphicsLineItem a;
+};
+
 
 
 //! Graphics: Two orthogonal straight lines (square)
@@ -161,8 +190,8 @@ class QOrthogonal : public QConstraintBase,
 public:
     static std::shared_ptr<QConstraintBase> create();  //!< Create orthogonallity constraint
 
-    void setGeometry( const uStraightLineSegment &s,
-                      const uStraightLineSegment &t) override;
+    void setGeometry( QVector<std::shared_ptr<const uStraightLineSegment>> &s,
+                      const Eigen::VectorXi & idx) override;
     void setMarkerSize ( qreal s) override;
     qreal markerSize() const override;
 
@@ -175,11 +204,10 @@ protected:
                 const QStyleOptionGraphicsItem *option,
                 QWidget *widget) override;  //!< Plot square
 private:
-    // std::shared_ptr<QConstraintBase> clone() const override;
     std::shared_ptr<QConstraintBase> doClone() const override;
 };
 
-//! Graphics: Marker for indentity
+//! Graphics: Marker for identity
 class QIdentical : public QConstraintBase,
         public QGraphicsPolygonItem
 {
@@ -188,8 +216,8 @@ public:
 
     void setMarkerSize ( qreal s) override;
     qreal markerSize() const override;
-    void setGeometry( const uStraightLineSegment &s,
-                      const uStraightLineSegment &t) override;
+    void setGeometry( QVector<std::shared_ptr<const uStraightLineSegment>> &s,
+                      const Eigen::VectorXi &idx) override;
 
 protected:
     QIdentical();
@@ -201,7 +229,6 @@ protected:
                 QWidget *widget) override; //!< Plot marker
 
 private:
-    // std::shared_ptr<QConstraintBase> clone() const override;
     std::shared_ptr<QConstraintBase> doClone() const override;
 };
 
@@ -212,8 +239,8 @@ class QParallel : public QConstraintBase
 public:
     static std::shared_ptr<QConstraintBase> create();  //!< Create parallelism constraint
 
-    void setGeometry( const uStraightLineSegment &s,
-                      const uStraightLineSegment &t) override;
+    void setGeometry( QVector<std::shared_ptr<const uStraightLineSegment >> &s,
+                      const Eigen::VectorXi &idx) override;
     void setMarkerSize ( qreal s) override;
     qreal markerSize() const override;
 
@@ -226,7 +253,6 @@ protected:
                 const QStyleOptionGraphicsItem *option,
                 QWidget *widget) override;  //!< Plot marker
 private:
-    // std::shared_ptr<QConstraintBase> clone() const override;
     std::shared_ptr<QConstraintBase> doClone() const override;
 
     QGraphicsLineItem a;

@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ uPoint::uPoint( const Vector3d &x,
                 const Matrix3d &Cov_xx)
     : BasicEntity2D (x, Cov_xx)
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     Q_ASSERT_X( isCovMat(m_cov),
                 Q_FUNC_INFO,
                 "invalid covariance matrix");

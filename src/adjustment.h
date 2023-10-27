@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ public:
     AdjustmentFramework & operator= ( AdjustmentFramework &&) = delete;
 
     //! Enforce the constraints of a subtask (adjustment)
-    bool enforce_constraints(const QVector<std::shared_ptr<ConstraintBase> > *constr,
+    bool enforce_constraints( const QVector<std::shared_ptr<ConstraintBase> > *constr,
                               const Graph::IncidenceMatrix *Bi,
                               const RowVectorXi &maps,
                               const RowVectorXi &mapc);
@@ -84,19 +84,19 @@ private:
     void reset() { l0_ = l_;}
     void update( Index start, const VectorXd &x );
 
-    void a_Jacobian( const QVector<std::shared_ptr<ConstraintBase> > *constr,
-                     const Graph::IncidenceMatrix *Bi,
-                     SparseMatrix<double, Eigen::ColMajor> & BBr,
-                     VectorXd & g0,
-                     const RowVectorXi & maps,
-                     const RowVectorXi & mapc) const;
+    void Jacobian( const QVector<std::shared_ptr<ConstraintBase> > *constr,
+                   const Graph::IncidenceMatrix *Bi,
+                   SparseMatrix<double, Eigen::ColMajor> & BBr,
+                   VectorXd & g0,
+                   const RowVectorXi & maps,
+                   const RowVectorXi & mapc) const;
 
-    void a_check_constraints( const QVector<std::shared_ptr<ConstraintBase> > *constr,
-                              const Graph::IncidenceMatrix *bi,
-                              const RowVectorXi & maps,
-                              const RowVectorXi & mapc ) const;
+    void check_constraints( const QVector<std::shared_ptr<ConstraintBase> > *constr,
+                            const Graph::IncidenceMatrix *bi,
+                            const RowVectorXi & maps,
+                            const RowVectorXi & mapc ) const;
 
-    bool verbose = false;
+    bool verbose = true;
     VectorXd l0_;             // vector of approximate/estimated observations
     const VectorXd l_;        // vector of observations.
     const MatrixXd Cov_ll_;   // covariance matrix of vector of observations
@@ -110,8 +110,10 @@ private:
         const double numericalCheck  = 1e-5;  // numerical check constraints
     } threshold_;
 
+    //! Rotation matrix for minimal rotation
     MatrixXd Rot_ab( const VectorXd & a,
                      const VectorXd & b) const;
+    //! Nullspace of row vector
     MatrixXd null(   const VectorXd & xs ) const;
 
     Index indexOf( const Eigen::VectorXi & v, int x) const;

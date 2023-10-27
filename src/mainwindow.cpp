@@ -310,23 +310,46 @@ void MainWindow::createActions()
     actionToggleConsiderOrthogonal = std::make_unique<QAction>( "Consider orthogonallity" );
     actionToggleConsiderOrthogonal->setToolTip(   "Consider orthogonallity" );
     actionToggleConsiderOrthogonal->setCheckable( true );
-    actionToggleConsiderOrthogonal->setChecked(   State::considerOrthogonality() );
+    actionToggleConsiderOrthogonal->setChecked(   State::considerOrthogonal() );
     actionToggleConsiderOrthogonal->setIconVisibleInMenu( false );
     actionToggleConsiderOrthogonal->setIcon( QPixmap( ":/icons/consider_orthogonality.svg" ));
 
-    actionToggleConsiderParallel = std::make_unique<QAction>( "Consider parallelism" );
-    actionToggleConsiderParallel->setToolTip(   "Consider parallelism" );
+    actionToggleConsiderParallel = std::make_unique<QAction>( "Consider parallel" );
+    actionToggleConsiderParallel->setToolTip(   "Consider parallel" );
     actionToggleConsiderParallel->setCheckable( true );
-    actionToggleConsiderParallel->setChecked(   State::considerParallelism() );
+    actionToggleConsiderParallel->setChecked(   State::considerParallel() );
     actionToggleConsiderParallel->setIconVisibleInMenu( false );
     actionToggleConsiderParallel->setIcon( QPixmap( ":/icons/consider_parallelism.svg" ));
 
-    actionToggleConsiderConcurrent = std::make_unique<QAction>( "Consider concurrence" );
-    actionToggleConsiderConcurrent->setToolTip( "Consider concurrence (copunctual)" );
+    actionToggleConsiderConcurrent = std::make_unique<QAction>( "Consider copunctual" );
+    actionToggleConsiderConcurrent->setToolTip( "Consider copunctual" );
     actionToggleConsiderConcurrent->setCheckable( true );
-    actionToggleConsiderConcurrent->setChecked( State::considerConcurrence() );
+    actionToggleConsiderConcurrent->setChecked( State::considerCopunctual() );
     actionToggleConsiderConcurrent->setIconVisibleInMenu( false );
     actionToggleConsiderConcurrent->setIcon( QPixmap( ":/icons/consider_concurrence.svg" ));
+
+    actionToggleConsiderVertical = std::make_unique<QAction>( "Consider vertical" );
+    actionToggleConsiderVertical->setToolTip( "Consider vertical" );
+    actionToggleConsiderVertical->setCheckable( true );
+    actionToggleConsiderVertical->setChecked( State::considerVertical() );
+    actionToggleConsiderVertical->setIconVisibleInMenu( false );
+    actionToggleConsiderVertical->setIcon( QPixmap( ":/icons/consider_vert.svg" ));
+
+    actionToggleConsiderHorizontal = std::make_unique<QAction>( "Consider horizontal" );
+    actionToggleConsiderHorizontal->setToolTip( "Consider horizontal" );
+    actionToggleConsiderHorizontal->setCheckable( true );
+    actionToggleConsiderHorizontal->setChecked( State::considerHorizontal() );
+    actionToggleConsiderHorizontal->setIconVisibleInMenu( false );
+    actionToggleConsiderHorizontal->setIcon( QPixmap( ":/icons/consider_horiz.svg" ));
+
+
+    actionToggleConsiderDiagonal = std::make_unique<QAction>( "Consider diagonal" );
+    actionToggleConsiderDiagonal->setToolTip( "Consider diagonal" );
+    actionToggleConsiderDiagonal->setCheckable( true );
+    actionToggleConsiderDiagonal->setChecked( State::considerHorizontal() );
+    actionToggleConsiderDiagonal->setIconVisibleInMenu( false );
+    actionToggleConsiderDiagonal->setIcon( QPixmap( ":/icons/consider_diag.svg" ));
+
 
     actionItemMoveToBottom = std::make_unique<QAction>( "Move selected items to bottom" );
     actionItemMoveToBottom->setToolTip( "Send items to back (visual stacking)" );
@@ -432,7 +455,11 @@ void MainWindow::createMenus()
     menuConstr->addAction( actionToggleConsiderOrthogonal.get() );
     menuConstr->addAction( actionToggleConsiderParallel.get()   );
     menuConstr->addAction( actionToggleConsiderConcurrent.get() );
-    menuBar()->addMenu (menuConstr.get());
+    menuConstr->addSeparator(); // -----------------------------------
+    menuConstr->addAction( actionToggleConsiderVertical.get()   );
+    menuConstr->addAction( actionToggleConsiderHorizontal.get() );
+    menuConstr->addAction( actionToggleConsiderDiagonal.get() );
+    menuBar()->addMenu ( menuConstr.get());
 
     menuShow = std::make_unique<QMenu>( tr("Display") );
     menuShow->addAction( actionToggleShowConstrained.get()   );
@@ -485,7 +512,10 @@ void MainWindow::createToolBars()
     barConstr->addAction( actionToggleConsiderOrthogonal.get() );
     barConstr->addAction( actionToggleConsiderParallel.get()   );
     barConstr->addAction( actionToggleConsiderConcurrent.get() );
-    barConstr->setHidden( true );
+    barConstr->addAction( actionToggleConsiderVertical.get()   );
+    barConstr->addAction( actionToggleConsiderHorizontal.get() );
+    barConstr->addAction( actionToggleConsiderDiagonal.get()   );
+    // barConstr->setHidden( true );
     addToolBar( barConstr.get() );
     //barConstraints->setToolButtonStyle(Qt::ToolButtonFollowStyle);
 
@@ -521,7 +551,7 @@ void MainWindow::createToolBars()
     barTesting->addWidget( spinBoxAlphaSnap.get() );
     addToolBar( barTesting.get() );
 
-    barBackground = std::make_unique<QToolBar>( "Background");
+    barBackground = std::make_unique<QToolBar>( "Background" );
     barBackground->addWidget( labelBoxOpacity.get() );
     barBackground->addWidget( spinBoxOpacity.get() );
     barBackground->setToolTip( "Background");
@@ -578,11 +608,17 @@ void MainWindow::establishConnections()
 
     // search, consider
     connect( actionToggleConsiderOrthogonal.get(), &QAction::triggered,
-             this,                                 &MainWindow::slotToggleConsiderOrthogonal);
+             this,        &MainWindow::slotToggleConsiderOrthogonal);
     connect( actionToggleConsiderParallel.get(),  &QAction::triggered,
-             this,                                &MainWindow::slotToggleConsiderParallel);
+             this,        &MainWindow::slotToggleConsiderParallel);
     connect( actionToggleConsiderConcurrent.get(),  &QAction::triggered,
-             this,                                  &MainWindow::slotToggleConsiderConcurrent);
+             this,        &MainWindow::slotToggleConsiderCopunctual);
+    connect( actionToggleConsiderVertical.get(),  &QAction::triggered,
+             this,        &MainWindow::slotToggleConsiderVertical);
+    connect( actionToggleConsiderHorizontal.get(),  &QAction::triggered,
+             this,        &MainWindow::slotToggleConsiderHorizontal);
+    connect( actionToggleConsiderDiagonal.get(),  &QAction::triggered,
+             this,        &MainWindow::slotToggleConsiderDiagonal);
 
     // show/display
     connect( actionBackgroundImageToggleShow.get(), &QAction::triggered,
@@ -763,7 +799,7 @@ void MainWindow::slotCmdTabulaRasa()
 // invoked by MainScene:signalCmdAddStroke:
 void MainWindow::slotCmdAddStroke( QPainterPath *path)
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
 
     // convert path to polyline
     QPolygonF poly( path->elementCount()) ;
@@ -1103,16 +1139,17 @@ void MainWindow::slotAbout()
     msgBox.setTextFormat( Qt::RichText );
     msgBox.setText( QStringLiteral(
                         "<b>%1 %2: Freehand Drawing guided by Geometric Reasoning</b><br><br>"
-                        "<b>Copyright.</b> \xa9 2022 <a href=\"mailto:jochen.meidow@iosb.fraunhofer.de\">Jochen Meidow</a>, <a href=\"https://www.iosb.fraunhofer.de/en.html\">%3</a>, Germany.<br><br>"
+                        "<b>Copyright.</b> \xa9 2022-2023 <a href=\"mailto:jochen.meidow@iosb.fraunhofer.de\">Jochen Meidow</a>, <a href=\"https://www.iosb.fraunhofer.de/en.html\">%3</a>, Germany.<br><br>"
                         "<b>Licensing.</b> Distributed under the <a href=\"https://www.gnu.org/licenses/gpl-3.0.en.html\">GNU General Public Licence</a>, Version 3.<br /><br />"
                         "<b>Dependencies.</b> This software uses the C++ template library <a href=\"https://eigen.tuxfamily.org\">Eigen</a>, version %4.%5.%6, "
                         "and the <a href=\"https://www.qt.io\">Qt</a> widget toolkit, version %7.<br /><br />"
                         "<b>Credits.</b> The author thanks Wolfgang F\xF6rstner and Horst Hammer for their inspiring collaboration.<br /><br />"
-                        "<b>References</b>. Details of the implemented methods can be found in the following papers:"
-                        "<ol>"
-                        "<li>J. Meidow and L. Lucks (2019) Draw and Order - Modeless Interactive Acquisition of Outlines, ISPRS - Annals of Photogrammetry, Remote Sensing and Spatial Information Sciences, vol. IV-2/W7, pp. 103-110.</li>"
-                        "<li>J. Meidow, H. Hammer and L. Lucks (2020) Delineation and Construction of 2D Geometries by Freehand Drawing and Geometric Reasoning, ISPRS - Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences, vol. V-5-2020, pp. 77-84.</li>"
-                        "</ol>"
+                        "<b>References</b>. Details of the implemented methods can be found in the following paper:"
+                        "<blockquote>"
+                        "J. Meidow (2023) Geometric Reasoning for the freehand-drawn Delineation of 2D Geometries, ISPRS Journal of Photogrammetry and Remote Sensing, vol. 201, pp. 67-77.</li>"
+                        // "<li>J. Meidow and L. Lucks (2019) Draw and Order - Modeless Interactive Acquisition of Outlines, ISPRS - Annals of Photogrammetry, Remote Sensing and Spatial Information Sciences, vol. IV-2/W7, pp. 103-110.</li>"
+                        // "<li>J. Meidow, H. Hammer and L. Lucks (2020) Delineation and Construction of 2D Geometries by Freehand Drawing and Geometric Reasoning, ISPRS - Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences, vol. V-5-2020, pp. 77-84.</li>"
+                        "</blockquote>"
                         "Please cite these papers when using %1 or parts of it in an academic publication.")
                     .arg( QApplication::applicationName() )
                     .arg( QApplication::applicationVersion())

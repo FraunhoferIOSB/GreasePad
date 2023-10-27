@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,6 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+
+#define _USE_MATH_DEFINES
+
 
 #include "adjustment.h"
 #include "conncomp.h"
@@ -46,6 +49,9 @@ using Constraint::Parallel;
 using Constraint::Orthogonal;
 using Constraint::Copunctual;
 using Constraint::Identical;
+using Constraint::Vertical;
+using Constraint::Horizontal;
+using Constraint::Diagonal;
 
 using Uncertain::uPoint;
 using Uncertain::uStraightLine;
@@ -54,9 +60,12 @@ using Uncertain::uStraightLineSegment;
 using Graph::IncidenceMatrix;
 
 
-bool State::considerOrthogonality_ = true;
-bool State::considerParallelism_   = true;
-bool State::considerConcurrence_   = true;
+bool State::considerOrthogonal_ = true;
+bool State::considerParallel_   = true;
+bool State::considerCopunctual_ = true;
+bool State::considerVertical_   = false;
+bool State::considerHorizontal_ = false;
+bool State::considerDiagonal_   = false;
 
 Quantiles::Recognition State::recogn_;
 Quantiles::Snapping    State::snap_;
@@ -67,41 +76,12 @@ QDataStream & operator<< ( QDataStream & out, const IncidenceMatrix & AA);
 //! Deserialization of sparse incidence matrix
 QDataStream & operator>> ( QDataStream & in,  IncidenceMatrix & AA);
 
-
 //! Serialization of geometric constraint
 QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c);
 //! Deserialization of geometric constraint
 QDataStream & operator>> ( QDataStream & in,  ConstraintBase & c);
 
 
-/*QDebug operator << (QDebug d, const Eigen::VectorXi &v);
-QDebug operator << (QDebug d, const Eigen::VectorXi &v)
-{
-    for ( Eigen::Index r=0; r<v.rows(); r++) {
-        d << v(r) << " ";
-    }
-    d << endl;
-
-    return d;
-}*/
-
-/*QDebug operator << (QDebug d, const SparseMatrix<int,ColMajor> &MM);
-QDebug operator << (QDebug d, const SparseMatrix<int,ColMajor> &MM)
-{
-    // qDebug() << "sparse:";
-    for ( Index r=0; r<MM.rows(); r++) {
-        for ( Index c=0; c<MM.cols(); c++) {
-            d << MM.coeff(r,c);
-        }
-        d << endl;
-    }
-
-    //    for ( Index k=0; k<MM.outerSize(); ++k)
-    //        for (SparseMatrix<int>::InnerIterator it(MM,k); it; ++it)
-    //            d << QStringLiteral("(%1,%2) %3\n" ).arg(it.row()).arg(it.col()).arg(it.value());
-
-    return d;
-}*/
 
 
 //! Implementation details of class 'state' (pImpl idiom)
@@ -153,15 +133,25 @@ private:
 
     void setAltColors() const;
 
-    bool are_converging( int a, int b, int c);
+    bool is_vertical(    int a);
+    bool is_horizontal(  int a);
+    bool is_diagonal(    int a);
+
     bool are_parallel(   int a, int b);
     bool are_orthogonal( int a, int b);
     bool are_identical(  int a, int b);
 
-    void establish_convergence(   int a, int b, int c );
-    void establish_parallelism(   int a, int b );
-    void establish_orthogonality( int a, int b );
-    void establish_identity(      int a, int b );
+    bool are_copunctual( int a, int b, int c);
+
+    void establish_vertical(   int a);
+    void establish_horizontal( int a);
+    void establish_diagonal(   int a);
+
+    void establish_parallel(   int a, int b );
+    void establish_orthogonal( int a, int b );
+    void establish_identical(  int a, int b );
+
+    void establish_copunctual( int a, int b, int c );
 
     std::pair<Eigen::VectorXd, SparseMatrix<double> >
     a_Maker( const Eigen::RowVectorXi & maps_ ) const;
@@ -205,48 +195,6 @@ VectorXi impl::find_in_sparse_column( const SparseMatrix<int> &AA, const int k)
 
     return idx;
 }
-
-/*static MatrixXd Rot_ab( const VectorXd &a, const VectorXd &b)
-{
-    Q_ASSERT( a.size()==b.size());
-    Q_ASSERT( fabs( a.norm()-1.) < T_ZERO );
-    Q_ASSERT( fabs( b.norm()-1.) < T_ZERO );
-
-    return MatrixXd::Identity( a.size(),a.size())
-            +2*b*a.adjoint()
-            -(a+b)*(a+b).adjoint()/(1.+a.dot(b));
-}*/
-
-/*static MatrixXd null( const VectorXd &xs )
-{
-    // cf. PCV, eq. (A.120)
-
-    //if ( fabs(xs.norm()-1.) > T_ZERO )
-    //    qDebug() << xs;
-
-    QString what = QStringLiteral("norm(x) = %1").arg( QString::number(xs.norm()) );
-    Q_ASSERT_X( fabs(xs.norm()-1.) <= T_ZERO,
-                "util::null(x)",
-                what.toStdString().data() ) ;
-
-    Index  N = xs.size();
-
-    VectorXd x0 = xs.head(N-1);
-    double   xN = xs(N-1);
-    if ( xN < 0.0 ) {
-        x0 = -x0;
-        xN = -xN;
-    }
-
-    MatrixXd JJ(N,N-1);
-    JJ.topRows(N-1)  = MatrixXd::Identity(N-1,N-1) -x0*x0.adjoint()/(1.+xN);
-    JJ.bottomRows(1) = -x0.adjoint();
-
-    VectorXd check = JJ.adjoint()*xs;
-    Q_ASSERT_X( check.norm() <= T_ZERO, "nullspace", "not a zero vector");
-
-    return JJ;
-}*/
 
 
 VectorXi impl::unique(const VectorXi &x) const
@@ -301,27 +249,10 @@ State::State() : m_pImpl( std::make_unique<impl>()) // new impl() ){
 State & State::operator= ( const State & other )
 {
     // qDebug() << Q_FUNC_INFO;
-
     if ( &other==this ) {
-
         return *this;
     }
-
-    // m_pImpl.reset( new impl(* other.m_pImpl));
     m_pImpl = std::make_unique<impl>( *other.m_pImpl);
-    /*qStroke = other.qStroke;
-    qUnconstrained  = other.qUnconstrained;
-    qConstrained    = other.qConstrained;
-    qConstraint     = other.qConstraint;
-
-    segm_    = other.segm_;
-    constr_ = other.constr_;
-
-    Adj  = other.Adj;
-    Bi   = other.Bi;
-    PP   = other.PP;
-    x_touches_l  = other.x_touches_l;
-    y_touches_l  = other.y_touches_l;*/
 
     return *this;
 }
@@ -340,57 +271,21 @@ void State::clearAll()
     pImpl()->clearAll();
 }
 
-/*QDataStream & operator>> ( QDataStream & in, IncidenceMatrix & AA );
-QDataStream & operator>> ( QDataStream & in, IncidenceMatrix & AA )
-{
-    // qDebug() << Q_FUNC_INFO;
-
-    uint nrows;
-    uint ncols;
-    uint nnz;
-    int r;
-    int c;
-    in >> nrows >> ncols >> nnz;
-
-    qDebug()<< nrows << ncols << nnz;
-
-    assert( nnz < UINT_MAX);
-
-    std::vector< Eigen::Triplet<int> > tripletList;
-    tripletList.reserve( nnz );
-    for ( uint i=0; i<nnz; i++ ) {
-        in >> r >> c;
-        tripletList.emplace_back( Eigen::Triplet<int>(r, c, 1) );
-    }
-    assert( in.status() == 0 );
-
-    AA.resize( int(nrows),int(ncols) );
-    AA.setFromTriplets( tripletList.begin(), tripletList.end() );
-
-    qDebug() << AA;
-    //    for ( int ir=0; ir<AA.rows(); ir++) {
-    //        for ( int ic=0; ic< AA.cols(); ic++ ) {
-    //            qDebug().noquote().nospace() << AA.coeff(ir,ic);
-    //        }
-    //        qDebug() << "\n";
-    //    }
-    return in;
-}*/
 
 bool impl::deserialize( QDataStream & in )
 {
     // qDebug() <<  Q_FUNC_INFO;
     // st_clear();  //  required? st: new()
 
-    qDebug() << "(1) reading topology...";
+    qDebug().noquote() << "(1) reading topology...";
     in >> Adj;
     in >> Bi;
     in >> x_touches_l;
     in >> y_touches_l;
     in >> PP;
 
-    qDebug() << "(2) reading geometry...";
-    qDebug() << "(2.1) reading uncertain straight line segments...";
+    qDebug().noquote() << "(2) reading geometry...";
+    qDebug().noquote() << "(2.1) reading uncertain straight line segments...";
     for ( Index s=0; s<Bi.rows(); s++ ) {
         // auto seg = std::make_shared<uStraightLineSegment>();
         auto seg = uStraightLineSegment::create();
@@ -400,24 +295,38 @@ bool impl::deserialize( QDataStream & in )
         m_segm.append( seg );
     }
 
-    qDebug() << "(2.2) reading geometric constraintss...";
+    qDebug().noquote() << "(2.2) reading geometric constraints...";
     for ( Index i=0; i<Bi.cols(); i++ ) {
         // auto c = ConstraintBase::deserialize(in);  // calls 'create'
 
         char* type_name;
         in >> type_name;
-        qDebug() << Q_FUNC_INFO << type_name;
+        // qDebug() << Q_FUNC_INFO << type_name;
         if ( in.status()!=0) {
             return false;
         }
 
         std::shared_ptr<ConstraintBase> c;
+        // (1) unary
+        if ( std::strcmp( type_name, "vertical")==0 ){
+            c = Vertical::create();
+        }
+        if ( std::strcmp( type_name, "horizontal")==0 ){
+            c = Horizontal::create();
+        }
+        if ( std::strcmp( type_name, "diagonal")==0 ){
+            c = Diagonal::create();
+        }
+
+        // (2) binary
         if ( std::strcmp( type_name, "orthogonal")==0 ){
             c = Orthogonal::create();
         }
         if ( std::strcmp( type_name, "parallel")==0 ){
             c = Parallel::create();
         }
+
+        // (3) ternary
         if ( std::strcmp( type_name, "copunctual")==0 ){
             c = Copunctual::create();
         }
@@ -431,10 +340,34 @@ bool impl::deserialize( QDataStream & in )
         m_constr.append( c );
     }
 
-    qDebug() << "(3) graphics...";
+    qDebug().noquote() << "(3) graphics...";
 
-    qDebug() << "    constraints...";
+    qDebug().noquote() << "    constraints...";
     for ( const auto & con : qAsConst( m_constr)) {
+
+        if ( con->is<Vertical>() ) {
+            auto q = QConstraint::QAligned::create();
+            if ( !q->deserialize( in ) ) {
+                return false;
+            }
+            m_qConstraint.append( q);
+        }
+
+        if ( con->is<Horizontal>() ) {
+            auto q = QConstraint::QAligned::create();
+            if ( !q->deserialize( in ) ) {
+                return false;
+            }
+            m_qConstraint.append( q);
+        }
+
+        if ( con->is<Diagonal>() ) {
+            auto q = QConstraint::QAligned::create();
+            if ( !q->deserialize( in ) ) {
+                return false;
+            }
+            m_qConstraint.append( q);
+        }
 
         if ( con->is<Orthogonal>() ) {
             auto q = QConstraint::QOrthogonal::create();
@@ -459,7 +392,7 @@ bool impl::deserialize( QDataStream & in )
         }
     }
 
-    qDebug() << "    strokes ...";
+    qDebug().noquote() << "    strokes ...";
     for ( Index i=0; i<Bi.rows(); i++) {
         auto q = std::make_shared<QEntity::QStroke>();
         if( !q->deserialize(in) ) {
@@ -468,7 +401,7 @@ bool impl::deserialize( QDataStream & in )
         m_qStroke.append( q);
     }
 
-    qDebug() << "    unconstrained segments...";
+    qDebug().noquote() << "    unconstrained segments...";
     for ( Index i=0; i<Bi.rows(); i++) {
         auto q = std::make_shared<QEntity::QUnconstrained>();
         if( !q->deserialize(in) ) {
@@ -477,7 +410,7 @@ bool impl::deserialize( QDataStream & in )
         m_qUnconstrained.append( q);
     }
 
-    qDebug() << "    constrained segments...";
+    qDebug().noquote() << "    constrained segments...";
     for ( Index i=0; i<Bi.rows(); i++) {
         auto q = std::make_shared<QEntity::QConstrained>();
         if( !q->deserialize(in) ) {
@@ -531,24 +464,6 @@ bool State::reduce()
     return true;
 }
 
-/*QDataStream & operator<< (QDataStream & out, const IncidenceMatrix & AA);
-QDataStream & operator<< (QDataStream & out, const IncidenceMatrix & AA)
-{
-    // qDebug() << Q_FUNC_INFO;
-
-    out <<  uint( AA.rows() );
-    out <<  uint( AA.cols() );
-    out <<  uint( AA.nonZeros() );
-
-    for( Index c=0; c<AA.outerSize(); ++c) {
-        SparseMatrix<int,ColMajor>::InnerIterator it( AA, c);
-        for( ; it; ++it) {
-            out << int(it.row()) << int(it.col());
-        }
-    }
-
-    return out;
-}*/
 
 void State::serialize( QDataStream  & out ) const
 {
@@ -565,11 +480,6 @@ void impl::serialize( QDataStream &out ) const
     out << x_touches_l;
     out << y_touches_l;
     out << PP;
-    //    Adj.serialize( out );
-    //    Bi.serialize(  out );
-    //    x_touches_l.serialize( out );
-    //    y_touches_l.serialize( out );
-    //    PP.serialize( out );
 
     // (2) geometry
     for ( const auto & item : m_segm) {
@@ -594,7 +504,7 @@ void impl::serialize( QDataStream &out ) const
         item->serialize( out );
     }
 
-    qDebug() << "Export finished.";
+    qDebug().noquote() << "Export finished.";
 }
 
 void impl::find_adjacencies_of_latest_segment( const Quantiles::Snapping & snap )
@@ -682,7 +592,7 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
     int num_new_constraints_ = find_new_constraints();
     assert( num_new_constraints_ >= 0 );
 
-    qDebug() << QString("%1 new constraint%2 found.")
+    qDebug().noquote() << QString("%1 new constraint%2 found.")
                 .arg(num_new_constraints_)
                 .arg(num_new_constraints_==1 ? "" : "s");
 
@@ -702,7 +612,7 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
             Eigen::RowVectorXi mapc_ = CoCoBi.mapTail( cc, m_constr.length());
 
             assert( mapc_.size()> 0);
-            qDebug() << blue << QString("Reasoning for connected component #%1/%2...")
+            qDebug().noquote() << blue << QString("Reasoning for connected component #%1/%2...")
                         .arg(cc).arg(LabelsNewConstrUnique.size())
                      << black;
 
@@ -740,13 +650,31 @@ int impl::find_new_constraints()
         }
     }*/
 
-    if (  State::considerOrthogonality() ) {
+    // unary relations ......................................
+    if ( State::considerVertical() ) {
+        if ( is_vertical(c)) {
+            establish_vertical(c);
+        }
+    }
+    if ( State::considerHorizontal() ) {
+        if ( is_horizontal(c)) {
+            establish_horizontal(c);
+        }
+    }
+    if ( State::considerDiagonal() ) {
+        if ( is_diagonal(c)) {
+            establish_diagonal(c);
+        }
+    }
+
+
+    if (  State::considerOrthogonal() ) {
         for ( SparseMatrix<int>::InnerIterator it(Adj,c) ; it; ++it) {
             Q_ASSERT( it.value()==1 );
             const int a = it.index(); // a is direct neighbor of c.
             // a and c: potentially orthogonal or identical, not both
             if ( are_orthogonal( a, c) ) {
-                establish_orthogonality( a, c);
+                establish_orthogonal( a, c);
             }
         }
     }
@@ -755,8 +683,9 @@ int impl::find_new_constraints()
     // if square: number of walks of length 2
     SparseMatrix<int> WW = Adj*Adj;
 
+
     // concurrence & parallelism (1) ..................................
-    if ( State::considerConcurrence() || State::considerParallelism() ) {
+    if ( State::considerCopunctual() || State::considerParallel() ) {
         // Find walks of length 2 between the vertices of the graph.
 
         VectorXi nbs = find_in_sparse_column( WW, c);
@@ -765,16 +694,16 @@ int impl::find_new_constraints()
 
             if ( !Adj.isSet(a,c) ) {
                 // [a] and [c] are no neighbors.
-                if ( State::considerParallelism() ) {
+                if ( State::considerParallel() ) {
                     // Check if [a] and [c] are parallel.
                     if ( !are_identical(a,c) && are_parallel( a, c) ) {
-                        establish_parallelism( a, c);
+                        establish_parallel( a, c);
                     }
                 }
                 continue;
             }
 
-            if ( State::considerConcurrence() ) {
+            if ( State::considerCopunctual() ) {
                 // [a] and [c] are adjacent and have at least one common neighbor.
                 // Find all common neighbors of [a] and [c].
                 VectorXi nbnb = Adj.findInColumn(a); // neighbors of [a].
@@ -789,8 +718,8 @@ int impl::find_new_constraints()
 
                     if ( b > a ) {
                         if ( !are_identical(b,c) && !are_identical(a,c) && !are_identical(a,b) ) {
-                            if ( are_converging( a, b, c) ) {
-                                establish_convergence( a, b, c );
+                            if ( are_copunctual( a, b, c) ) {
+                                establish_copunctual( a, b, c );
                             }
                         }
                     }
@@ -810,12 +739,12 @@ int impl::find_new_constraints()
             if ( WW.coeffRef( idx(i), idx(j) )==1 ) {
                 // qDebug().noquote() << QString("There is just one walk of length 2 between [%1} and [%2].").arg(idx(i)).arg(idx(j));
                 if ( are_identical( idx(i), idx(j) ) ) {
-                    establish_identity(idx(i), idx(j));
+                    establish_identical(idx(i), idx(j));
                 }
                 else {
-                    if ( State::considerParallelism() ) {
+                    if ( State::considerParallel() ) {
                         if ( are_parallel( idx(i), idx(j) ) ) {
-                            establish_parallelism( idx(i), idx(j));
+                            establish_parallel( idx(i), idx(j));
                         }
                     }
                 }
@@ -863,7 +792,7 @@ void impl::search_subtask( const Eigen::RowVectorXi & mapc_,
     // adjustment with consistent set of constraints ..................
     if ( !last_constraint_required ) {
         const int C = number_of_required_constraints();
-        qDebug().noquote() << blue << QString("final adjustment with %1 %2.")
+        qDebug().noquote() << blue << QString("final adjustment with *%1* %2.")
                               .arg( C)
                               .arg( C==1 ? "constraint" : "consistent constraints" ) << black;
         // number of equations (not constraints!):
@@ -979,38 +908,68 @@ void impl::snap_endpoints( const int nnc)
     }
 }
 
-bool impl::are_converging( const int a,
+bool impl::is_vertical( const int a)
+{
+    return m_segm.at(a)->isVertical(
+                State::recogn_.quantile_chi2_1dof()
+                );
+}
+
+bool impl::is_horizontal( const int a)
+{
+    return m_segm.at(a)->isHorizontal(
+                State::recogn_.quantile_chi2_1dof()
+                );
+}
+
+bool impl::is_diagonal( const int a)
+{
+    return m_segm.at(a)->isDiagonal(
+                State::recogn_.quantile_chi2_1dof() )
+            ;
+}
+
+bool impl::are_copunctual( const int a,
                            const int b,
                            const int c)
 {
-    return  m_segm.at(c)->isCopunctualWith( *m_segm.at(a),
-                                             *m_segm.at(b),
-                                             State::recogn_.quantile_chi2_1dof() );
+    return  m_segm.at(c)->isCopunctualWith( m_segm.at(a)->ul(),
+                                            m_segm.at(b)->ul(),
+                                            State::recogn_.quantile_chi2_1dof() );
 }
 
 bool impl::are_parallel( const int a,
                          const int b)
 {
-    return  m_segm.at(a)->isParallelTo( *m_segm.at(b),
-                                         State::recogn_.quantile_chi2_1dof() );
+    return  m_segm.at(a)->isParallelTo( m_segm.at(b)->ul(),
+                                        State::recogn_.quantile_chi2_1dof() );
 }
 
 bool impl::are_orthogonal( const int a,
                            const int b)
 {
-    return  m_segm.at(a)->isOrthogonalTo( *m_segm.at(b),
-                                           State::recogn_.quantile_chi2_1dof() );
+    return  m_segm.at(a)->isOrthogonalTo( m_segm.at(b)->ul(),
+                                          State::recogn_.quantile_chi2_1dof() );
 }
 
-bool impl::are_identical( const int a,
-                          const int b)
+
+bool impl::are_identical( const int i,
+                          const int j)
 {
-    return  m_segm.at(a)->straightLineIsIdenticalTo( *m_segm.at(b),
-                                                           State::recogn_.quantile_chi2_2dof() );
+    constexpr double rho = 180./M_PI;
+    // pre-check with acute angle
+    double alpha = m_segm.at(i)->ul().acute( m_segm.at(j)->ul() );
+    if ( alpha*180/3.14159 > 20.0 ) {
+        return false;
+    }
+
+    // statistical test
+    return  m_segm.at(i)->straightLineIsIdenticalTo( m_segm.at(j)->ul(),
+                                                     State::recogn_.quantile_chi2_2dof() );
 }
 
-void impl::establish_parallelism( const int a,
-                                  const int b)
+void impl::establish_parallel( const int a,
+                               const int b)
 {
     if ( PP.isSet(a,b) ) {
         // qDebug() << "already parallel!";
@@ -1029,9 +988,35 @@ void impl::establish_parallelism( const int a,
     Bi.set( b, Bi.cols()-1 ); // B(b,end) = 1;
 }
 
+void impl::establish_vertical( const int a)
+{
+    m_qConstraint.append( QConstraint::QAligned::create());
+    m_constr.append( std::make_shared<Vertical>() );
 
-void impl::establish_orthogonality( const int a,
-                                    const int b)
+    Bi.conservativeResize( Bi.rows(), Bi.cols()+1); //  append a column
+    Bi.set( a, Bi.cols()-1 );   // B(a,end)  = 1;
+}
+
+void impl::establish_horizontal( const int a)
+{
+    m_qConstraint.append( QConstraint::QAligned::create());
+    m_constr.append( std::make_shared<Horizontal>() );
+
+    Bi.conservativeResize( Bi.rows(), Bi.cols()+1); //  append a column
+    Bi.set( a, Bi.cols()-1 );   // B(a,end)  = 1;
+}
+
+void impl::establish_diagonal( const int a)
+{
+    m_qConstraint.append( QConstraint::QAligned::create());
+    m_constr.append( std::make_shared<Diagonal>() );
+
+    Bi.conservativeResize( Bi.rows(), Bi.cols()+1); //  append a column
+    Bi.set( a, Bi.cols()-1 );   // B(a,end)  = 1;
+}
+
+void impl::establish_orthogonal( const int a,
+                                 const int b)
 {
     m_qConstraint.append( QConstraint::QOrthogonal::create());
     m_constr.append( std::make_shared<Orthogonal>() );
@@ -1043,7 +1028,7 @@ void impl::establish_orthogonality( const int a,
 }
 
 
-void impl::establish_convergence( const int a,
+void impl::establish_copunctual( const int a,
                                   const int b,
                                   const int c)
 {
@@ -1057,7 +1042,7 @@ void impl::establish_convergence( const int a,
 }
 
 
-void impl::establish_identity( const int a,  const int b)
+void impl::establish_identical( const int a,  const int b)
 {
     m_qConstraint.append( QConstraint::QIdentical::create() );
     m_constr.append( std::make_shared<Identical>() );
@@ -1130,16 +1115,6 @@ int impl::number_of_required_constraints() const
     return std::count_if( m_constr.begin(), m_constr.end(), predicate);
 }
 
-/* int impl::number_of_required_equations( const Eigen::RowVectorXi & mapc_) const
-{
-    int E = 0;
-    for ( Index c=0; c<mapc_.size(); c++ ) {
-        if ( constr_.at( mapc_(c) )->required() ) {
-            E += constr_.at( mapc_(c) )->dof();
-        }
-    }
-    return E;
-}*/
 
 bool impl::identities_removed()
 {
@@ -1170,7 +1145,7 @@ bool impl::identities_removed()
 
 void impl::merge_segment( const int a)
 {
-    qDebug() << Q_FUNC_INFO << a;
+    // qDebug() << Q_FUNC_INFO << a;
 
     const int idx = m_segm.size()-1;  // zero-based
 
@@ -1377,11 +1352,12 @@ void impl::replaceGraphics() {
 
         if ( modified ) {
             auto q = m_qConstraint.at(c)->clone();
-            Q_ASSERT( idxx.size()>1 && idxx.size()<4 ); // {2,3}-ary
+            Q_ASSERT( idxx.size()>0 && idxx.size()<4 ); // {1,2,3}-ary
             q->setStatus(   m_constr.at(c)->required(),
                             m_constr.at(c)->enforced() );
-            q->setGeometry( *m_segm.at(idxx(0)),
-                            *m_segm.at(idxx(1))  );
+            //q->setGeometry( *m_segm.at(idxx(0)),
+            //                *m_segm.at(idxx(1))  );
+            q->setGeometry( m_segm, idxx  );
             m_qConstraint.replace( c, q);
         }
     }
@@ -1587,7 +1563,7 @@ QDataStream & operator>> (QDataStream & in,  IncidenceMatrix & AA)
 
 QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c)
 {
-    qDebug() <<  Q_FUNC_INFO << c.type_name();
+    // qDebug() <<  Q_FUNC_INFO << c.type_name();
     out << c.type_name();
     out << c.status();    // { UNEVAL=0 | REQUIRED | OBSOLETE };
     out << c.enforced();
@@ -1596,8 +1572,7 @@ QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c)
 
 QDataStream & operator>> ( QDataStream &in, ConstraintBase &c )
 {
-    qDebug() << Q_FUNC_INFO;
-
+    // qDebug() << Q_FUNC_INFO;
     int status;
     in >> status;
     c.setStatus( static_cast<ConstraintBase::Status>(status) );

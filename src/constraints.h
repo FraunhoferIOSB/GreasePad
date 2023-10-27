@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 #include "global.h"
 
 using Eigen::Matrix3d;
+using Eigen::Vector3d;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::VectorXi;
@@ -93,6 +94,10 @@ private:
 
     Status m_status;    // { UNEVAL=0 | REQUIRED | OBSOLETE };
     bool   m_enforced;
+
+protected:
+    template <typename T>
+    inline int sign(T val) const { return (T(0) < val) - (val < T(0));  }
 };
 
 
@@ -143,6 +148,76 @@ private:
     static const int s_arity = 2;
 };
 
+//! Vertical straight line
+class Vertical : public ConstraintBase
+{
+public:
+    MatrixXd Jacobian(   const VectorXi &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
+    VectorXd contradict( const VectorXi &idxx,  const VectorXd &l0) const override;
+    int dof() const override   { return s_dof;   }
+    int arity() const override { return s_arity; }
+
+    //! Create constraint
+    static std::shared_ptr<ConstraintBase> create() {
+        return std::make_shared<Vertical>();
+    }
+private:
+    const char* type_name() const override { return "vertical"; }
+    std::shared_ptr<ConstraintBase> doClone() const override;
+
+    static const int s_dof = 1;
+    static const int s_arity = 1;
+
+    static Vector3d e2(); //!< [0,1,0]'
+};
+
+
+//! Horizontal straight line
+class Horizontal : public ConstraintBase
+{
+public:
+    MatrixXd Jacobian(   const VectorXi &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
+    VectorXd contradict( const VectorXi &idxx,  const VectorXd &l0) const override;
+    int dof() const override   { return s_dof;   }
+    int arity() const override { return s_arity; }
+
+    //! Create constraint
+    static std::shared_ptr<ConstraintBase> create() {
+        return std::make_shared<Horizontal>();
+    }
+private:
+    const char* type_name() const override { return "horizontal"; }
+    std::shared_ptr<ConstraintBase> doClone() const override;
+
+    static const int s_dof = 1;
+    static const int s_arity = 1;
+
+    static Vector3d e1(); //!< [1,0,0]'
+};
+
+
+//! Diagonal straight line
+class Diagonal : public ConstraintBase
+{
+public:
+    MatrixXd Jacobian(   const VectorXi &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
+    VectorXd contradict( const VectorXi &idxx,  const VectorXd &l0) const override;
+    int dof() const override   { return s_dof;   }
+    int arity() const override { return s_arity; }
+
+    //! Create constraint
+    static std::shared_ptr<ConstraintBase> create() {
+        return std::make_shared<Diagonal>();
+    }
+private:
+    const char* type_name() const override { return "diagonal"; }
+    std::shared_ptr<ConstraintBase> doClone() const override;
+
+    static const int s_dof = 1;
+    static const int s_arity = 1;
+};
+
+
 //! Orthogonallity constraint
 class Orthogonal : public ConstraintBase
 {
@@ -165,6 +240,7 @@ private:
     static const int s_arity = 2;
 };
 
+
 //! Identity constraint
 class Identical : public ConstraintBase
 {
@@ -183,9 +259,6 @@ private:
 
     template <typename T>
     inline bool sameSign( T a, T b ) const {  return a*b >= 0.; }   // for debugging and assertion
-
-    template <typename T>
-    inline int sign(T val) const { return (T(0) < val) - (val < T(0));  }
 };
 
 } // namespace Constraint

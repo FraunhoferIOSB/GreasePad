@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,15 +63,21 @@ public:
     bool touchedBy(  const uPoint &,
                      double T_dist,
                      double T_in) const;
-    bool isOrthogonalTo( const uStraightLineSegment & ut,
-                         double T) const;
-    bool isParallelTo( const uStraightLineSegment & ut,
-                       double t_para) const;
-    bool straightLineIsIdenticalTo( const uStraightLineSegment & ut,
-                                    double t_ident) const;
-    bool isCopunctualWith( const uStraightLineSegment & us,
-                           const uStraightLineSegment & ut,
-                           double T_det) const;
+
+    // unary
+    bool isVertical  ( double T) const;
+    bool isHorizontal( double T) const;
+    bool isDiagonal  ( double T) const;
+
+    // binary
+    bool isOrthogonalTo( const uStraightLine & um,    double T) const;
+    bool isParallelTo(   const uStraightLine & um,    double T) const;
+    bool straightLineIsIdenticalTo( const uStraightLine & um,  double T) const;
+
+    // ternary
+    bool isCopunctualWith( const uStraightLine & um,
+                           const uStraightLine & un,
+                           double T) const;
 
     uPoint ux() const;
     uPoint uy() const;
@@ -126,13 +132,6 @@ private:
     inline bool sameSign( T a, T b ) const {  return a*b >= 0.; }   // for debugging and assertion
 };
 
-/*
-//! serialization axis-aligned bounding box
-QDataStream & operator<< ( QDataStream & out, const Aabb & bbox);
-
-//! deserialization axis-aligned bounding box
-QDataStream & operator>> ( QDataStream &  in,       Aabb & bbox);
-*/
 } // namespace Uncertain
 
 #endif // USEGMENT_H
