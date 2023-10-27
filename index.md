@@ -23,7 +23,7 @@ The *GreasePad* provides a drawing area and expects pen strokes as the only user
 
 No installation procedure is provided. Instead, please perform the following steps:
                                                               
-1. Download the zip file from [https://FraunhoferIOSB.github.io/GreasePad/downloads](https://FraunhoferIOSB.github.io/GreasePad/downloads) to your machine. 
+1. Download the zip file from [https://FraunhoferIOSB.github.io/GreasePad/downloads/GreasePad120_x64.zip](https://FraunhoferIOSB.github.io/GreasePad/downloads/GreasePad120_x64.zip) to your machine. 
 2. Unpack the file contents to a folder. The zip file contains the executable *greasepad.exe* and the required dynamically linked libraries, and the redistributable *vcredist_x64.exe*.
 3. select and start the executable *greasepad.exe*.
 
