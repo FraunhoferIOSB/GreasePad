@@ -18,7 +18,7 @@ The *GreasePad* provides a drawing area and expects pen strokes as the only user
 - [Acknowledgements](#acknowledgements)
 - [Frequently Asked Questions](#faq)
 
-<a name="news">
+<a name="news"></a>
 ## News
 * Version 1.2.0 (Oct. 2023): The additional, specific constraints *horizontal*, *vertical*, and *diagonal* enable the alignment of segments with the frame of the canvas. These constraints are disable be default, i.e., they have to be activated by selecting the corresponding menu item.
 
