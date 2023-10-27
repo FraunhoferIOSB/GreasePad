@@ -8,7 +8,7 @@ The *GreasePad* provides a drawing area and expects pen strokes as the only user
 </figure>
 
 ## Content
-- [News] (#news)
+- [News](#news)
 - [Precompiled Win64 binaries](#pre-compiled)
 - [Gallery (Screenshots)](#gallery)
 - [Copyright](#copyright)
