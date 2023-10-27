@@ -1,5 +1,5 @@
 
-# GreasePad 1.1.0
+# GreasePad 1.2.0
 
 The *GreasePad* provides a drawing area and expects pen strokes as the only user input. These strokes are approximated by straight line segments leading to line drawings. During this interactive process, geometric relations such as orthogonality are recognized and enforced immediately by an adjustment process. The program can be utilized to study systems of straight lines and constraints (closure theorems) or to outline the shapes of human-made objects in images. As a pointing device, you can use a computer mouse, a stylus, or one of your fingers in combination with a touchscreen.
 
@@ -23,7 +23,7 @@ The *GreasePad* provides a drawing area and expects pen strokes as the only user
 
 No installation procedure is provided. Instead, please perform the following steps:
                                                               
-1. Download the zip file [https://FraunhoferIOSB.github.io/GreasePad/downloads/GreasePad110_x64.zip](https://FraunhoferIOSB.github.io/GreasePad/downloads/GreasePad110_x64.zip) to your machine. 
+1. Download the zip file from [https://FraunhoferIOSB.github.io/GreasePad/downloads](https://FraunhoferIOSB.github.io/GreasePad/downloads) to your machine. 
 2. Unpack the file contents to a folder. The zip file contains the executable *greasepad.exe* and the required dynamically linked libraries, and the redistributable *vcredist_x64.exe*.
 3. select and start the executable *greasepad.exe*.
 
@@ -87,7 +87,7 @@ Mid point of a triangle's side
 <a name="copyright"></a>
 ## Copyright
 
-Copyright (c) 2022 Jochen Meidow, [Fraunhofer IOSB](http::/www.iosb.fraunhofer.de), Germany.
+Copyright (c) 2022-2023 Jochen Meidow, [Fraunhofer IOSB](http::/www.iosb.fraunhofer.de), Germany.
 
 
 <a name="licensing"></a>
