@@ -1,5 +1,12 @@
 # Changelog
 
+## Release version 1.2.0
+
+**New features**
+
+* Introduction of additional unary constraints: horizontal, vertical, and diagonal
+
+
 ## Release version 1.1.0
 
 
