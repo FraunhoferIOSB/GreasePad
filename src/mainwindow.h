@@ -103,7 +103,7 @@ private:
 
     std::unique_ptr<QAction>   actionToggleConsiderOrthogonal{};
     std::unique_ptr<QAction>   actionToggleConsiderParallel{};
-    std::unique_ptr<QAction>   actionToggleConsiderConcurrent{};
+    std::unique_ptr<QAction>   actionToggleConsiderCopunctual{};
     std::unique_ptr<QAction>   actionToggleConsiderVertical{};
     std::unique_ptr<QAction>   actionToggleConsiderHorizontal{};
     std::unique_ptr<QAction>   actionToggleConsiderDiagonal{};
@@ -166,12 +166,12 @@ private:
     void slotShowStatus( const QString & s) { statusBar()->showMessage( s, 0); }
     void slotStackIndexChanged() {  statusBar()->showMessage( curr_state.StatusMsg() ); }
 
-    void slotToggleConsiderOrthogonal() { State::toggleConsiderOrthogonal(); }
-    void slotToggleConsiderParallel()   { State::toggleConsiderParallel();   }
-    void slotToggleConsiderCopunctual() { State::toggleConsiderCopunctual(); }
-    void slotToggleConsiderVertical()   { State::toggleConsiderVertical();   }
-    void slotToggleConsiderHorizontal() { State::toggleConsiderHorizontal(); }
-    void slotToggleConsiderDiagonal()   { State::toggleConsiderDiagonal();   }
+    void slotToggleConsiderOrthogonal();
+    void slotToggleConsiderParallel();
+    void slotToggleConsiderCopunctual();
+    void slotToggleConsiderVertical();
+    void slotToggleConsiderHorizontal();
+    void slotToggleConsiderDiagonal();
 
     void slotToggleSelection();
     void slotToggleShowBackgroundImage();

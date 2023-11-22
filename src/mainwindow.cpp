@@ -307,12 +307,13 @@ void MainWindow::createActions()
     actionAboutQt = std::make_unique<QAction>( "About Qt" );
     actionAboutQt->setIcon( style()->standardIcon( QStyle::SP_TitleBarMenuButton) );
 
-    actionToggleConsiderOrthogonal = std::make_unique<QAction>( "Consider orthogonallity" );
-    actionToggleConsiderOrthogonal->setToolTip(   "Consider orthogonallity" );
+    actionToggleConsiderOrthogonal = std::make_unique<QAction>( "Consider orthogonal" );
+    actionToggleConsiderOrthogonal->setToolTip(   "Consider orthogonal" );
     actionToggleConsiderOrthogonal->setCheckable( true );
     actionToggleConsiderOrthogonal->setChecked(   State::considerOrthogonal() );
     actionToggleConsiderOrthogonal->setIconVisibleInMenu( false );
     actionToggleConsiderOrthogonal->setIcon( QPixmap( ":/icons/consider_orthogonality.svg" ));
+    actionToggleConsiderOrthogonal->setShortcut( QKeySequence("o") );
 
     actionToggleConsiderParallel = std::make_unique<QAction>( "Consider parallel" );
     actionToggleConsiderParallel->setToolTip(   "Consider parallel" );
@@ -320,13 +321,15 @@ void MainWindow::createActions()
     actionToggleConsiderParallel->setChecked(   State::considerParallel() );
     actionToggleConsiderParallel->setIconVisibleInMenu( false );
     actionToggleConsiderParallel->setIcon( QPixmap( ":/icons/consider_parallelism.svg" ));
+    actionToggleConsiderParallel->setShortcut( QKeySequence("p") );
 
-    actionToggleConsiderConcurrent = std::make_unique<QAction>( "Consider copunctual" );
-    actionToggleConsiderConcurrent->setToolTip( "Consider copunctual" );
-    actionToggleConsiderConcurrent->setCheckable( true );
-    actionToggleConsiderConcurrent->setChecked( State::considerCopunctual() );
-    actionToggleConsiderConcurrent->setIconVisibleInMenu( false );
-    actionToggleConsiderConcurrent->setIcon( QPixmap( ":/icons/consider_concurrence.svg" ));
+    actionToggleConsiderCopunctual = std::make_unique<QAction>( "Consider copunctual" );
+    actionToggleConsiderCopunctual->setToolTip( "Consider copunctual" );
+    actionToggleConsiderCopunctual->setCheckable( true );
+    actionToggleConsiderCopunctual->setChecked( State::considerCopunctual() );
+    actionToggleConsiderCopunctual->setIconVisibleInMenu( false );
+    actionToggleConsiderCopunctual->setIcon( QPixmap( ":/icons/consider_concurrence.svg" ));
+    actionToggleConsiderCopunctual->setShortcut( QKeySequence("c") );
 
     actionToggleConsiderVertical = std::make_unique<QAction>( "Consider vertical" );
     actionToggleConsiderVertical->setToolTip( "Consider vertical" );
@@ -334,6 +337,7 @@ void MainWindow::createActions()
     actionToggleConsiderVertical->setChecked( State::considerVertical() );
     actionToggleConsiderVertical->setIconVisibleInMenu( false );
     actionToggleConsiderVertical->setIcon( QPixmap( ":/icons/consider_vert.svg" ));
+    actionToggleConsiderVertical->setShortcut( QKeySequence("v") );
 
     actionToggleConsiderHorizontal = std::make_unique<QAction>( "Consider horizontal" );
     actionToggleConsiderHorizontal->setToolTip( "Consider horizontal" );
@@ -341,7 +345,7 @@ void MainWindow::createActions()
     actionToggleConsiderHorizontal->setChecked( State::considerHorizontal() );
     actionToggleConsiderHorizontal->setIconVisibleInMenu( false );
     actionToggleConsiderHorizontal->setIcon( QPixmap( ":/icons/consider_horiz.svg" ));
-
+    actionToggleConsiderHorizontal->setShortcut( QKeySequence("h") );
 
     actionToggleConsiderDiagonal = std::make_unique<QAction>( "Consider diagonal" );
     actionToggleConsiderDiagonal->setToolTip( "Consider diagonal" );
@@ -349,7 +353,7 @@ void MainWindow::createActions()
     actionToggleConsiderDiagonal->setChecked( State::considerHorizontal() );
     actionToggleConsiderDiagonal->setIconVisibleInMenu( false );
     actionToggleConsiderDiagonal->setIcon( QPixmap( ":/icons/consider_diag.svg" ));
-
+    actionToggleConsiderDiagonal->setShortcut( QKeySequence("d") );
 
     actionItemMoveToBottom = std::make_unique<QAction>( "Move selected items to bottom" );
     actionItemMoveToBottom->setToolTip( "Send items to back (visual stacking)" );
@@ -454,7 +458,7 @@ void MainWindow::createMenus()
     menuConstr = std::make_unique<QMenu>( tr("&Constraints") );
     menuConstr->addAction( actionToggleConsiderOrthogonal.get() );
     menuConstr->addAction( actionToggleConsiderParallel.get()   );
-    menuConstr->addAction( actionToggleConsiderConcurrent.get() );
+    menuConstr->addAction( actionToggleConsiderCopunctual.get() );
     menuConstr->addSeparator(); // -----------------------------------
     menuConstr->addAction( actionToggleConsiderVertical.get()   );
     menuConstr->addAction( actionToggleConsiderHorizontal.get() );
@@ -511,7 +515,7 @@ void MainWindow::createToolBars()
     barConstr = std::make_unique<QToolBar>( "Constraints to consider" );
     barConstr->addAction( actionToggleConsiderOrthogonal.get() );
     barConstr->addAction( actionToggleConsiderParallel.get()   );
-    barConstr->addAction( actionToggleConsiderConcurrent.get() );
+    barConstr->addAction( actionToggleConsiderCopunctual.get() );
     barConstr->addAction( actionToggleConsiderVertical.get()   );
     barConstr->addAction( actionToggleConsiderHorizontal.get() );
     barConstr->addAction( actionToggleConsiderDiagonal.get()   );
@@ -611,7 +615,7 @@ void MainWindow::establishConnections()
              this,        &MainWindow::slotToggleConsiderOrthogonal);
     connect( actionToggleConsiderParallel.get(),  &QAction::triggered,
              this,        &MainWindow::slotToggleConsiderParallel);
-    connect( actionToggleConsiderConcurrent.get(),  &QAction::triggered,
+    connect( actionToggleConsiderCopunctual.get(),  &QAction::triggered,
              this,        &MainWindow::slotToggleConsiderCopunctual);
     connect( actionToggleConsiderVertical.get(),  &QAction::triggered,
              this,        &MainWindow::slotToggleConsiderVertical);
@@ -1310,5 +1314,64 @@ void MainWindow::slotItemMoveToTop()
     }
 }
 
+void MainWindow::slotToggleConsiderOrthogonal() {
+    State::toggleConsiderOrthogonal();
+    if ( State::considerOrthogonal() ) {
+        statusBar()->showMessage("constraint 'orthogonal' enabled.");
+    }
+    else {
+        statusBar()->showMessage("constraint 'orthogonal' disabled.");
+    }
+}
+
+void MainWindow::slotToggleConsiderParallel()   {
+    State::toggleConsiderParallel();
+    if ( State::considerParallel() ) {
+        statusBar()->showMessage("constraint 'parallel' enabled.");
+    }
+    else {
+        statusBar()->showMessage("constraint 'parallel' disabled.");
+    }
+}
+
+void MainWindow::slotToggleConsiderCopunctual() {
+    State::toggleConsiderCopunctual();
+    if ( State::considerCopunctual() ) {
+        statusBar()->showMessage("constraint 'copunctual' enabled.");
+    }
+    else {
+        statusBar()->showMessage("constraint 'copunctual' disabled.");
+    }
+}
+
+void MainWindow::slotToggleConsiderVertical()   {
+    State::toggleConsiderVertical();
+    if ( State::considerVertical() ) {
+        statusBar()->showMessage("constraint 'vertical' enabled.");
+    }
+    else {
+        statusBar()->showMessage("constraint 'vertical' disabled.");
+    }
+}
+
+void MainWindow::slotToggleConsiderHorizontal() {
+    State::toggleConsiderHorizontal();
+    if ( State::considerHorizontal() ) {
+        statusBar()->showMessage("constraint 'horizontal' enabled.");
+    }
+    else {
+        statusBar()->showMessage("constraint 'horizontal' disabled.");
+    }
+}
+
+void MainWindow::slotToggleConsiderDiagonal() {
+    State::toggleConsiderDiagonal();
+    if ( State::considerDiagonal() ) {
+        statusBar()->showMessage("constraint 'diagonal' enabled.");
+    }
+    else {
+        statusBar()->showMessage("constraint 'diagonal' disabled.");
+    }
+}
 
 } // namespace GUI
