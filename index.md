@@ -91,7 +91,7 @@ Mid point of a triangle's side
 <a name="copyright"></a>
 ## Copyright
 
-Copyright (c) 2022-2023 Jochen Meidow, [Fraunhofer IOSB](http::/www.iosb.fraunhofer.de), Germany.
+Copyright (c) 2022-2025 Jochen Meidow, [Fraunhofer IOSB](http::/www.iosb.fraunhofer.de), Germany.
 
 
 <a name="licensing"></a>
