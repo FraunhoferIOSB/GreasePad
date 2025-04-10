@@ -20,6 +20,7 @@ The *GreasePad* provides a drawing area and expects pen strokes as the only user
 
 <a name="news"></a>
 ## News
+
 * Version 1.2.0 (Oct. 2023): The additional, specific constraints *horizontal*, *vertical*, and *diagonal* enable the alignment of segments with the frame of the canvas. These constraints are disabled by default, i.e., they have to be activated by selecting the corresponding menu item.
 
 <a name="pre-compiled"></a>
@@ -29,7 +30,7 @@ No installation procedure is provided. Instead, please perform the following ste
                                                               
 1. Download the zip file from [https://FraunhoferIOSB.github.io/GreasePad/downloads/GreasePad120_x64.zip](https://FraunhoferIOSB.github.io/GreasePad/downloads/GreasePad120_x64.zip) to your machine. 
 2. Unpack the file contents to a folder. The zip file contains the executable *greasepad.exe* and the required dynamically linked libraries, and the redistributable *vcredist_x64.exe*.
-3. select and start the executable *greasepad.exe*.
+3. Select and start the executable *greasepad.exe*.
 
 
 <a name="gallery"></a>
@@ -115,6 +116,7 @@ Jochen Meidow, Fraunhofer IOSB, Ettlingen, Germany.
 
 <a name="references"></a>
 ## References
+
 Details on the utilized methods can be found in the following papers:
 
 - J. Meidow (2023) [Geometric Reasoning for the freehand-drawn Delineation of 2D Geometries](https://doi.org/10.1016/j.isprsjprs.2023.05.001). ISPRS Journal of Photogrammetry and Remote Sensing, vol. 201, pp. 67-77
@@ -125,6 +127,7 @@ Details on the utilized methods can be found in the following papers:
 
 <a name ="acknowledgments"></a>
 ## Acknowledgements
+
 The author would like to thank Wolfgang Förstner (University of Bonn) and Horst Hammer (Fraunhofer IOSB) for their inspiring collaboration.
 
 <a name ="faq"></a>
