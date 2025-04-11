@@ -175,7 +175,7 @@ private:
     VectorXi unique( const VectorXi &x) const;
 
     template <typename T>
-    inline int sign( T val) const { return (T(0) < val) - (val < T(0)); }
+    inline int sign( T val) const { return (T(0) <= val) - (val < T(0)); }   // sign(0) := 1
 };
 
 
