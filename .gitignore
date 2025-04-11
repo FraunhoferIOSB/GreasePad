@@ -1,3 +1,7 @@
+# Qt-generated files
+src/greasepad.pro.user
+
+
 build/
 
 docs/
