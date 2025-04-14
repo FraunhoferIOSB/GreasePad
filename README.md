@@ -9,7 +9,7 @@ The *GreasePad* provides a drawing area and expects pen strokes as the only user
 
 ### Project website
 
-For precompiled binaries (64-bit Windows), further screenshots, references, and FAQs, visit the project website
+For **precompiled binaries** (64-bit Windows), further screenshots, references, and FAQs, visit the project website
 https://fraunhoferiosb.github.io/GreasePad/
 
 ### Copyright
@@ -37,9 +37,13 @@ For the compiliation and building of the programme, the following components are
 
 - Get the Qt toolkit and the Eigen library.
 - Clone the source code, i.e.,
-`git clone www.github.com/FraunhoferIOSB/GreasePad.git`
+	```bash
+	git clone https://www.github.com/FraunhoferIOSB/GreasePad.git
+	```
+
 - Building the programme, e.g., using the integrated development environment *QtCreator* or using *CMake* with the file *CMakeLists.txt*.
+
 
 ### Contributing to GreasePad
 
-The software is still under development. Contributions in form of issues and pull requests are highly welcome.
+Contributions in form of issues and pull requests are highly welcome.
