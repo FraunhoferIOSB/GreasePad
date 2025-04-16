@@ -47,10 +47,6 @@ public:
     uDistance distanceEuclideanTo( const uStraightLine & ul) const;
 
     bool isIncidentWith( const uStraightLine & ul, double T) const;
-
-private:
-    template <typename T>
-    inline int sign(T val) const { return (T(0) < val) - (val < T(0));  }
 };
 
 } // namespace Uncertain

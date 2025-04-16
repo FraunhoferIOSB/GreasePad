@@ -81,9 +81,6 @@ private:
 
     static Matrix3d CC();
     static Matrix3d S3();
-
-    template <typename T>
-    inline int sign(T val) const { return (T(0) < val) - (val < T(0));  }
 };
 
 } // namespace Uncertain

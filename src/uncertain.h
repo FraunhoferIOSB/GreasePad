@@ -86,6 +86,9 @@ protected:
     Vector3d m_val; //!< homogeneous 3-vector representing the entity
     Matrix3d m_cov; //!< homogeneous 3x3 covariance matrix
 
+    template <typename T>
+    inline int sign(T val) const { return (T(0) <= val) - (val < T(0));  }  // sign(0):=+1
+
 private:
     //! Nullspace of row 3-vector
     Eigen::Matrix<double,3,2> null( const Eigen::Vector3d & xs ) const;

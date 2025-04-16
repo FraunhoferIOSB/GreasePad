@@ -26,11 +26,6 @@ namespace Uncertain {
 
 static const double T_ZERO = 1e-7;
 
-//! Type-safe sign of parameter value
-template <typename T> int sign(T val) {
-    return (T(0) < val) - (val < T(0));
-}
-
 //! Nullspace of row vector
 Matrix<double,3,2> BasicEntity2D::null( const Vector3d &xs ) const
 {
