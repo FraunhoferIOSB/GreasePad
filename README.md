@@ -35,7 +35,11 @@ For the compiliation and building of the programme, the following components are
 	  
 ### Building from source
 
-- Get the Qt toolkit and the Eigen library.
+- Get the Qt toolkit and the Eigen library, 
+e.g., via
+	```bash
+	git clone https://gitlab.com/libeigen/eigen.git
+	```
 - Clone the source code, i.e.,
 	```bash
 	git clone https://www.github.com/FraunhoferIOSB/GreasePad.git
