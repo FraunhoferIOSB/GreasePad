@@ -50,6 +50,7 @@
 #include <QToolBar>
 #include <QWheelEvent>
 
+#include <QFontDialog>
 // #include <Eigen/Dense>
 
 
@@ -367,6 +368,7 @@ void MainWindow::createActions()
     actionChangeFormat->setToolTip( "Format selected entities" );
     actionChangeFormat->setShortcut( QKeySequence("Ctrl+F"));
 
+    actionSetFont = std::make_unique<QAction>( "Set GUI Font...", this);
 }
 
 void MainWindow::createBoxes()
@@ -426,9 +428,11 @@ void MainWindow::createMenus()
 
     menuFile->addSeparator();
     menuFile->addAction( actionBackgroundImageLoad.get() );
+    menuFile->addAction( actionSetFont.get());
     menuFile->addSeparator();  // .............................................
     menuFile->addAction( actionExit.get() );
-    //menuFile->setFont(f);
+
+
     menuBar()->addMenu( menuFile.get() );
 
     // edit ....................................................................
@@ -452,7 +456,11 @@ void MainWindow::createMenus()
     menuEdit->addAction( actionDeselectAll.get() );
 
     menuEdit->addAction( actionChangeFormat.get() );
+
+
     menuBar()->addMenu( menuEdit.get() );
+
+
 
 
     menuConstr = std::make_unique<QMenu>( tr("&Constraints") );
@@ -486,8 +494,8 @@ void MainWindow::createMenus()
 
 void MainWindow::createStatusBar()
 {
-    // status bar: font style and initial message
-    statusBar()->setStyleSheet( "Color: black; font-weight: bold; font-size: 30px" );
+    // status bar: initial message
+    // statusBar()->setStyleSheet( "Color: black; font-weight: bold; font-size: 30px" );
     statusBar()->showMessage(
                 QString("Ready. Max. %1 commands on stack. Add a single pen stroke...")
                 .arg( m_undoStack->undoLimit()), 0);
@@ -563,6 +571,8 @@ void MainWindow::createToolBars()
     addToolBar( barBackground.get() );
 }
 
+#include <QFontDialog>
+
 void MainWindow::establishConnections()
 {
     connect( m_undoStack.get(), &QUndoStack::indexChanged,
@@ -595,6 +605,10 @@ void MainWindow::establishConnections()
 
     connect( actionChangeFormat.get(), &QAction::triggered,
              penTool.get(),            &FormatTool::show);
+
+    connect( actionSetFont.get(), &QAction::triggered,
+             this,                &MainWindow::slotSetFont);
+
 
 
     // If necessary, enable/disable the menu entry "delete selection"
@@ -920,6 +934,32 @@ void MainWindow::slotDeselectAll()
         item->setSelected( false );
     }
     m_scene->update();
+}
+
+
+void MainWindow::slotSetFont()
+{
+    bool ok;
+    QFont font  = QFontDialog::getFont( &ok, QApplication::font(), this);
+    // QApplication::setFont(QFontDialog::getFont(0, QApplication::font(), this));
+    if (ok) {
+        spinBoxAlphaRecognition->setFont( font );
+        spinBoxAlphaSnap->setFont( font );
+        spinBoxOpacity->setFont( font );
+
+        menuBar()->setFont( font );
+        menuEdit->setFont( font );
+        menuFile->setFont( font );
+        menuShow->setFont( font );
+        menuConstr->setFont( font );
+        menuHelp->setFont( font );
+
+        labelBoxOpacity->setFont( font );
+        labelBoxAlphaSnap->setFont( font );
+        labelBoxAlphaRecogn->setFont( font );
+
+        statusBar()->setFont( font );
+    }
 }
 
 void MainWindow::slotAboutQt()
