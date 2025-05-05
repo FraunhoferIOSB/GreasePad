@@ -19,8 +19,9 @@
 #ifndef STATISTICS_H
 #define STATISTICS_H
 
-#include <limits>
 #include <cassert>
+#include <cfloat>
+#include <cmath>
 
 //! Parametric probability distributions
 namespace Stats {

@@ -28,6 +28,8 @@
 #include <QPainter>
 #include <qstyleoption.h>
 
+#include <cfloat>
+
 
 namespace QConstraint {
 

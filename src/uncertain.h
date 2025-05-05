@@ -21,6 +21,8 @@
 
 #include <Eigen/Dense>
 
+#include <cfloat>
+
 //! Uncertain geometric entities
 namespace Uncertain {
 

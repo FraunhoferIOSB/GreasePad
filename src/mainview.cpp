@@ -56,7 +56,8 @@ void MainView::wheelEvent( QWheelEvent *event )
     // restricted zooming [0.1, 10]
     const qreal lod = QStyleOptionGraphicsItem::levelOfDetailFromTransform(transform());
 
-    double s = event->delta() > 0 ? zoom_out : zoom_in;
+    // double s = event->delta() > 0 ? zoom_out : zoom_in;  // old Qt version
+    double s = event->angleDelta().y() > 0 ? zoom_out : zoom_in;
 
     setTransformationAnchor( QGraphicsView::AnchorUnderMouse );
     // qDebug() << s << lod;
