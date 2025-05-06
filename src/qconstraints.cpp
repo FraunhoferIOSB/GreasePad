@@ -247,7 +247,7 @@ std::shared_ptr<QConstraintBase> QAligned::doClone() const
 {
     auto T = std::shared_ptr<QAligned>( new QAligned(*this));
     T->setMarkerSize( this->markerSize() );
-    return std::move(T);
+    return T;
 }
 
 
@@ -362,7 +362,7 @@ std::shared_ptr<QConstraintBase> QOrthogonal::doClone() const
     // qDebug() << Q_FUNC_INFO;
     auto T = std::shared_ptr<QOrthogonal>( new QOrthogonal(*this));
     T->setMarkerSize( this->markerSize() );
-    return std::move(T);
+    return T;
 }
 
 QCopunctual::QCopunctual()
@@ -441,7 +441,7 @@ std::shared_ptr<QConstraintBase> QCopunctual::doClone() const
 {
     auto T = std::shared_ptr<QCopunctual>( new QCopunctual(*this) );
     T->setMarkerSize( this->markerSize() );
-    return std::move(T);
+    return T;
 }
 
 qreal QCopunctual::markerSize() const
@@ -462,7 +462,7 @@ std::shared_ptr<QConstraintBase> QParallel::doClone() const
 {
     auto T = std::shared_ptr<QParallel>( new QParallel(*this) );
     T->setMarkerSize( this->markerSize() );
-    return std::move(T);
+    return T;
 }
 
 
@@ -639,7 +639,7 @@ std::shared_ptr<QConstraintBase> QIdentical::doClone() const
 {
     auto T = std::shared_ptr<QIdentical>( new QIdentical(*this) );
     T->setMarkerSize( this->markerSize() );
-    return std::move(T);
+    return T;
 }
 
 } // namespace QConstraint

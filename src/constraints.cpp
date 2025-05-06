@@ -145,7 +145,7 @@ std::shared_ptr<ConstraintBase> Orthogonal::doClone() const
     auto T = std::make_shared<Orthogonal>();
     T->setStatus( this->status() );
     T->setEnforced( this->enforced());
-    return std::move(T);
+    return T;
 }
 
 
@@ -213,7 +213,7 @@ std::shared_ptr<ConstraintBase> Copunctual::doClone() const
     auto T = std::make_shared<Copunctual>();
     T->setStatus(   this->status()   );
     T->setEnforced( this->enforced() );
-    return std::move(T);
+    return T;
 }
 
 MatrixXd Identical::Jacobian( const VectorXi & idx,
@@ -276,7 +276,7 @@ std::shared_ptr<ConstraintBase> Identical::doClone() const
     auto T = std::make_shared<Identical>();
     T->setStatus(   this->status()  );
     T->setEnforced( this->enforced());
-    return std::move(T);
+    return T;
 }
 
 MatrixXd Parallel::Jacobian( const VectorXi & idx,
@@ -321,7 +321,7 @@ std::shared_ptr<ConstraintBase> Parallel::doClone() const
     auto T = std::make_shared<Parallel>();
     T->setStatus(   this->status()  );
     T->setEnforced( this->enforced());
-    return std::move(T);
+    return T;
 }
 
 
@@ -338,7 +338,7 @@ std::shared_ptr<ConstraintBase> Vertical::doClone() const
     auto T = std::make_shared<Vertical>();
     T->setStatus( this->status() );
     T->setEnforced( this->enforced());
-    return std::move(T);
+    return T;
 }
 
 
@@ -384,7 +384,7 @@ std::shared_ptr<ConstraintBase> Diagonal::doClone() const
     auto T = std::make_shared<Diagonal>();
     T->setStatus( this->status() );
     T->setEnforced( this->enforced());
-    return std::move(T);
+    return T;
 }
 
 
@@ -405,7 +405,7 @@ std::shared_ptr<ConstraintBase> Horizontal::doClone() const
     auto T = std::make_shared<Horizontal>();
     T->setStatus( this->status() );
     T->setEnforced( this->enforced());
-    return std::move(T);
+    return T;
 }
 
 VectorXd Horizontal::contradict( const VectorXi &idx,
