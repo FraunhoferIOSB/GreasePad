@@ -956,10 +956,9 @@ bool impl::are_orthogonal( const int a,
 bool impl::are_identical( const int i,
                           const int j)
 {
-    constexpr double rho = 180./M_PI;
     // pre-check with acute angle
     double alpha = m_segm.at(i)->ul().acute( m_segm.at(j)->ul() );
-    if ( alpha*180/3.14159 > 20.0 ) {
+    if ( alpha*57.2958 > 20.0 ) {  // 180°/pi = 57.2958°
         return false;
     }
 
