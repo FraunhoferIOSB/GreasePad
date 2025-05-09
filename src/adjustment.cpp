@@ -17,6 +17,8 @@
  */
 
 #include "adjustment.h"
+
+#include <math.h>
 #include "constraints.h"
 #include "global.h"
 #include "matrix.h"
@@ -333,7 +335,7 @@ void AdjustmentFramework::check_constraints(
         const Eigen::RowVectorXi & maps,
         const Eigen::RowVectorXi & mapc) const
 {
-    double d;       // distance to be checked, d = 0?
+    double d = NAN;       // distance to be checked, d = 0?
     const Index C = mapc.size();
 
     // check intrinsic constraints ..............................

@@ -18,6 +18,8 @@
 
 #include "upoint.h"
 #include "usegment.h"
+
+#include <math.h>
 #include "ustraightline.h"
 
 #include <QDebug>
@@ -356,10 +358,10 @@ QDataStream & operator<< (QDataStream & out, const Aabb & bbox)
 
 QDataStream & operator>> (QDataStream & in, Aabb & bbox)
 {
-    double x_min;
-    double x_max;
-    double y_min;
-    double y_max;
+    double x_min = NAN;
+    double x_max = NAN;
+    double y_min = NAN;
+    double y_max = NAN;
     in >> x_min >> x_max >> y_min >> y_max;
     bbox = Aabb( x_min, x_max, y_min, y_max);
 

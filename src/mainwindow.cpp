@@ -58,6 +58,7 @@ namespace GUI {
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
+    , m_pixmap(nullptr)
 {
     qDebug() <<  Q_FUNC_INFO;
 
@@ -79,7 +80,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     // curr_state = std::make_unique<State>();
     // curr_state = new State();
-    m_pixmap = nullptr; // background
 
     double alpha = 0.1;
     State::setAlphaRecognition( alpha );
@@ -939,7 +939,7 @@ void MainWindow::slotDeselectAll()
 
 void MainWindow::slotSetFont()
 {
-    bool ok;
+    bool ok = false;
     QFont font  = QFontDialog::getFont( &ok, QApplication::font(), this);
     // QApplication::setFont(QFontDialog::getFont(0, QApplication::font(), this));
     if (ok) {

@@ -26,6 +26,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QMenu>
 #include <QPainter>
+#include <math.h>
 #include <qstyleoption.h>
 
 #include <cfloat>
@@ -40,17 +41,14 @@ QPen QConstraintBase::s_defaultPenReq = QPen();
 QPen QConstraintBase::s_defaultPenRed = QPen();
 QPen QConstraintBase::s_penSelected   = QPen();
 
-
 QConstraintBase::QConstraintBase()
+    : m_pen_req(s_defaultPenReq)
+    , m_pen_red(s_defaultPenRed)
+    , m_is_required(false)
+    , m_is_enforced(false)
 {
     // qDebug() << Q_FUNC_INFO;
-    setVisible( s_show);
-
-    m_pen_req = s_defaultPenReq;
-    m_pen_red = s_defaultPenRed;
-
-    m_is_required = false;
-    m_is_enforced = false;
+    setVisible(s_show);
 
     // setHandlesChildEvents(false);  // default is 'false'
     setFlag( ItemIsSelectable, true);
@@ -58,24 +56,22 @@ QConstraintBase::QConstraintBase()
     setFlag( ItemSendsGeometryChanges, false);
 }
 
-QConstraintBase::QConstraintBase( const QConstraintBase & other)
+QConstraintBase::QConstraintBase(const QConstraintBase &other)
+    : m_altColor(other.m_altColor)
+    , m_pen_req(other.m_pen_req)
+    , m_pen_red(other.m_pen_red)
+    , m_is_required(other.m_is_required)
+    , m_is_enforced(other.m_is_enforced)
 {
     // qDebug() << Q_FUNC_INFO << m_sc;
     setVisible( s_show);
 
-    setFlag( ItemIsSelectable, true);
-    setFlag( ItemIsMovable,            false);
-    setFlag( ItemSendsGeometryChanges, false);
-
-    m_altColor = other.m_altColor;
-    m_pen_req = other.m_pen_req;
-    m_pen_red = other.m_pen_red;
-
-    m_is_required = other.m_is_required;
-    m_is_enforced = other.m_is_enforced ;
+    setFlag(ItemIsSelectable, true);
+    setFlag(ItemIsMovable, false);
+    setFlag(ItemSendsGeometryChanges, false);
 }
 
-void QConstraintBase::mousePressEvent( QGraphicsSceneMouseEvent * event )
+void QConstraintBase::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     if ( event->button() == Qt::RightButton ) {
         setSelected( !isSelected() );  // toggle selection
@@ -110,12 +106,13 @@ bool QConstraintBase::deserialize( QDataStream &in )
     in >> m_pen_red;
 
     in >> m_altColor;
-    qreal s;
+    qreal s = NAN;
     in >> s; // m_markerSize;
     setMarkerSize(s);
 
     QPointF pos;   in >> pos;
-    qreal   rot;   in >> rot;
+    qreal rot = NAN;
+    in >> rot;
 
     setRotation( rot );
     setPos( pos );
@@ -590,8 +587,8 @@ void QIdentical::setGeometry( QVector<std::shared_ptr<const uStraightLineSegment
         DD(l,l) = DBL_MAX;
     }
 
-    int ii;
-    int jj;
+    int ii = 0;
+    int jj = 0;
     DD.minCoeff( &ii, &jj);
     QConstraintBase::setPos( m_sc*(xx(0,ii)+xx(0,jj))/2, m_sc*(xx(1,ii)+xx(1,jj))/2  );
     QConstraintBase::setRotation( s.at(i)->phi_deg() );

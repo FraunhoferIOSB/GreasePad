@@ -201,7 +201,7 @@ ConicBase::intersect( const Vector3d &l) const
     Matrix3d MM = skew(l);
     Matrix3d BB = MM.adjoint()*(*this)*MM;
 
-    int idx;       // [den,idx] = max( abs(l) );
+    int idx = 0;       // [den,idx] = max( abs(l) );
     double den = l.array().abs().maxCoeff(&idx);
 
     // minors ...............................................
@@ -225,8 +225,8 @@ ConicBase::intersect( const Vector3d &l) const
     Q_ASSERT( alpha <= 0 );
     Q_ASSERT(   den >  0 );
     Matrix3d DD = BB +std::sqrt(-alpha)/den*MM;
-    int r;
-    int c;
+    int r = 0;
+    int c = 0;
     DD.array().abs().maxCoeff( &r, &c);
     Vector3d p = DD.row(r);
     Vector3d q = DD.col(c);

@@ -18,6 +18,8 @@
 
 #include "statistics.h"
 
+#include <math.h>
+
 namespace Stats {
 
 
@@ -95,9 +97,9 @@ double StandardNormal::cdf( const double x) const
 double StandardNormal::rnd() const
 {
     // Marsaglia's polar method
-    double s;
-    double u;
-    double v;
+    double s = NAN;
+    double u = NAN;
+    double v = NAN;
 
     // std::srand(time(NULL));  // #include <ctime>
     do {
@@ -312,7 +314,7 @@ double Gamma::icdf( const double P ) const
     assert( P<=1. );
 
     double y_old = mean();
-    double y_new;
+    double y_new = NAN;
     for ( int i=0; i<100; i++) {
         double h = ( cdf(y_old) -P ) / pdf( y_old );
         y_new = y_old -h;
@@ -332,7 +334,7 @@ double Gamma::rnd() const
     // Marsaglia's simple transformation-rejection method
     Stats::StandardNormal rng;
     const double d = m_alpha -1.0/3.0;
-    double v;
+    double v = NAN;
     while ( true ) {
         double x = rng.rnd();
 

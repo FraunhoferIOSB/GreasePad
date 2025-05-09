@@ -78,12 +78,11 @@ MatrixXd ConstraintBase::null( const VectorXd & xs )
     return JJ;
 }
 
-
-
-ConstraintBase::ConstraintBase() {
+ConstraintBase::ConstraintBase()
+    : m_status(UNEVAL)
+    , m_enforced(false)
+{
     // qDebug().noquote() << Q_FUNC_INFO;
-    m_status   = UNEVAL;
-    m_enforced = false;
 }
 
 std::shared_ptr<ConstraintBase> ConstraintBase::clone() const
@@ -229,8 +228,8 @@ MatrixXd Identical::Jacobian( const VectorXi & idx,
     Eigen::FullPivLU<MatrixXd> LU;  // identical
     Matrix<double,3,2> JJ;   // identical
 
-    int idx1;
-    int idx2;
+    int idx1 = 0;
+    int idx2 = 0;
     a0.cwiseAbs().maxCoeff( &idx1 );
     b0.cwiseAbs().maxCoeff( &idx2 );
 
@@ -257,8 +256,8 @@ VectorXd Identical::contradict( const VectorXi & idx,
     Eigen::FullPivLU<MatrixXd> LU;
 
     // check sign ............................................
-    int idx1;
-    int idx2;
+    int idx1 = 0;
+    int idx2 = 0;
     a0.head(2).cwiseAbs().maxCoeff( &idx1 );
     b0.head(2).cwiseAbs().maxCoeff( &idx2 );
 

@@ -53,19 +53,16 @@ QStroke::QStroke() {
     setFlag( ItemIsSelectable, true);
 }
 
-QStroke::QStroke( const QPolygonF &p )
-    : QGraphicsPolygonItem ( p)
+QStroke::QStroke(const QPolygonF &p)
+    : QGraphicsPolygonItem(p)
+    , m_pen(s_defaultPen)
 {
     // qDebug() << Q_FUNC_INFO << s_show;
     setVisible( s_show );
     setFlag( ItemIsSelectable, true);
-
-    m_pen = s_defaultPen;
 }
 
-void QStroke::paint( QPainter *painter,
-                     const QStyleOptionGraphicsItem *option,
-                     QWidget *widget)
+void QStroke::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     Q_UNUSED(option)
     Q_UNUSED(widget)

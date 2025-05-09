@@ -136,7 +136,7 @@ void IncidenceMatrix::remove_column( const int c) {
     Index C =  cols()-1;
 
     SparseMatrix<int> TT(C+1,C);
-    Index c2;
+    Index c2 = 0;
     for (c2=0; c2<c; c2++) {
         TT.insert(c2,c2) = 1;
     }
@@ -155,7 +155,7 @@ void IncidenceMatrix::remove_row(const int r)
 
     Index R = rows()-1;
     SparseMatrix<int> SS(R,R+1);
-    Index r2;
+    Index r2 = 0;
     for (r2=0; r2<r; r2++) {
         SS.insert(r2,r2) = 1;  // i.e., true
     }

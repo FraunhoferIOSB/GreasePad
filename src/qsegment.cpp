@@ -344,24 +344,25 @@ QUnconstrained::QUnconstrained( QGraphicsItem * /* parent */ )
 }
 
 QConstrained::QConstrained()
+    : altColor(Qt::black)
 {
     // qDebug() << Q_FUNC_INFO;
     setVisible( QConstrained::show() );
-    altColor = Qt::black;
-    setPen( s_defaultPen );
+
+    setPen(s_defaultPen);
 }
 
-QConstrained::QConstrained( const uPoint & ux,
-                            const uPoint & uy)
-    : QSegment(ux,uy) {
+QConstrained::QConstrained(const uPoint &ux, const uPoint &uy)
+    : QSegment(ux, uy)
+    , altColor(Qt::black)
+{
     setVisible( QConstrained::show() );
     setPen( s_defaultPen );
-    altColor = Qt::black;
 }
 
-void QUnconstrained::paint( QPainter *painter,
-                            const QStyleOptionGraphicsItem *option,
-                            QWidget *widget)
+void QUnconstrained::paint(QPainter *painter,
+                           const QStyleOptionGraphicsItem *option,
+                           QWidget *widget)
 {
     Q_UNUSED(widget)
     Q_UNUSED(option)

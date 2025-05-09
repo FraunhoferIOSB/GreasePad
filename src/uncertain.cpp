@@ -116,7 +116,7 @@ bool BasicEntity2D::isIdenticalTo( const BasicEntity2D & us,
     a.normalizeSpherical();
     b.normalizeSpherical();
 
-    int idx;                           // visitor
+    int idx = 0;                       // visitor
     a.v().cwiseAbs().maxCoeff( &idx ); // [~,idx] = max( abs(a) )
     a.m_val *= sign( a.v()(idx) );      // a = a*sign( a(idx) );
     b.m_val *= sign( b.v()(idx) );      // b = b*sign( b(idx) );
@@ -141,7 +141,7 @@ std::pair<uPoint,uPoint> uEndPoints( const Eigen::VectorXd & xi,
     const double phi  = l.angle_rad();
     const VectorXd zi = sin(phi)*xi -cos(phi)*yi;
 
-    int idx;
+    int idx = 0;
 
     Vector3d x1;
     zi.minCoeff( &idx);

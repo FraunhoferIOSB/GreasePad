@@ -37,9 +37,10 @@ namespace GUI {
 
 QPen MainScene::s_scribblePen = QPen( Qt::blue, 3, Qt::SolidLine, Qt::RoundCap );
 
-MainScene::MainScene(QObject *parent) : QGraphicsScene (parent)
+MainScene::MainScene(QObject *parent)
+    : QGraphicsScene(parent)
+    , m_scribbling(false)
 {
-    m_scribbling = false;
     // p.setCosmetic(true);
     m_path_item.setPen( s_scribblePen );
 

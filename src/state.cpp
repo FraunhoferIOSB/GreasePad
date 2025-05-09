@@ -299,7 +299,7 @@ bool impl::deserialize( QDataStream & in )
     for ( Index i=0; i<Bi.cols(); i++ ) {
         // auto c = ConstraintBase::deserialize(in);  // calls 'create'
 
-        char* type_name;
+        char *type_name = nullptr;
         in >> type_name;
         // qDebug() << Q_FUNC_INFO << type_name;
         if ( in.status()!=0) {
@@ -1064,7 +1064,7 @@ impl::a_Maker( const Eigen::RowVectorXi & maps_) const
     SparseMatrix<double,ColMajor> Cov_ll(N,N);         // covariance matrix observations
     Cov_ll.setZero();
     Cov_ll.reserve(3*N);
-    int idx;                       // [~,idx] = max( abs(l(1:2)) )
+    int idx = 0; // [~,idx] = max( abs(l(1:2)) )
 
     for ( int s=0; s<S; s++ ) {
 
@@ -1538,15 +1538,15 @@ QDataStream & operator>> (QDataStream & in,  IncidenceMatrix & AA)
 {
     qDebug() << Q_FUNC_INFO;
 
-    uint nrows;
-    uint ncols;
-    uint nnz;
+    uint nrows = 0;
+    uint ncols = 0;
+    uint nnz = 0;
     in >> nrows >> ncols >> nnz;
 
     std::vector< Eigen::Triplet<int> > tripletList;
     tripletList.reserve( nnz );
-    int r;
-    int c;
+    int r = 0;
+    int c = 0;
     for ( uint i=0; i<nnz; i++ ) {
         in >> r >> c;
         tripletList.emplace_back( Eigen::Triplet<int>(r, c, 1) );
@@ -1573,11 +1573,11 @@ QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c)
 QDataStream & operator>> ( QDataStream &in, ConstraintBase &c )
 {
     // qDebug() << Q_FUNC_INFO;
-    int status;
+    int status = 0;
     in >> status;
     c.setStatus( static_cast<ConstraintBase::Status>(status) );
 
-    bool enforced;
+    bool enforced = false;
     in >> enforced;
     c.setEnforced( enforced );
 
