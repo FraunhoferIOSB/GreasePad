@@ -343,7 +343,7 @@ bool impl::deserialize( QDataStream & in )
     qDebug().noquote() << "(3) graphics...";
 
     qDebug().noquote() << "    constraints...";
-    for ( const auto & con : qAsConst( m_constr)) {
+    for ( const auto & con : std::as_const( m_constr)) {
 
         if ( con->is<Vertical>() ) {
             auto q = QConstraint::QAligned::create();
