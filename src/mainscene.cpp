@@ -276,7 +276,7 @@ void MainScene::removeAllItems()
     // qDebug() << Q_FUNC_INFO;
 
     QList<QGraphicsItem*> all = items();
-    for (auto g: qAsConst(all) ) {
+    for (auto g: std::as_const(all) ) {
         if ( g->type() == QGraphicsPixmapItem::Type) {
             continue;
         }
