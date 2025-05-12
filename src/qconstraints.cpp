@@ -57,7 +57,8 @@ QConstraintBase::QConstraintBase()
 }
 
 QConstraintBase::QConstraintBase(const QConstraintBase &other)
-    : m_altColor(other.m_altColor)
+    : QGraphicsItem()
+    , m_altColor(other.m_altColor)
     , m_pen_req(other.m_pen_req)
     , m_pen_red(other.m_pen_red)
     , m_is_required(other.m_is_required)
@@ -343,7 +344,7 @@ void QOrthogonal::setGeometry( QVector<std::shared_ptr<const uStraightLineSegmen
 }
 
 QOrthogonal::QOrthogonal( const QOrthogonal & other)
-    : QConstraintBase( other)
+    : QConstraintBase( other), QGraphicsRectItem()
 {
     // qDebug() << Q_FUNC_INFO;
 }
@@ -372,7 +373,7 @@ QCopunctual::QCopunctual()
 }
 
 QCopunctual::QCopunctual( const QCopunctual & other)
-    : QConstraintBase( other )
+    : QConstraintBase( other ), QGraphicsEllipseItem()
 {
     // qDebug() << Q_FUNC_INFO;
 }
@@ -618,7 +619,7 @@ void QIdentical::paint( QPainter *painter,
 
 
 QIdentical::QIdentical( const QIdentical & other)
-    : QConstraintBase(other)
+    : QConstraintBase(other), QGraphicsPolygonItem()
 {
     // qDebug() << Q_FUNC_INFO;
 }
