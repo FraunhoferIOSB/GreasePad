@@ -422,8 +422,8 @@ void MainWindow::createMenus()
     menuFile = std::make_unique<QMenu>( tr("File") );
     menuFile->addAction( actionBinaryRead.get()   );
     menuFile->addAction( actionBinarySave.get() );
-    menuFile->addAction( "Save As...", this, &MainWindow::fileSaveAs,
-                         QKeySequence("Ctrl+Shift+S"));
+    menuFile->addAction( tr("Save As..."), QKeySequence("Ctrl+Shift+S"),
+                        this, &MainWindow::fileSaveAs );
     menuFile->addAction( actionExportSaveAs.get() );
 
     menuFile->addSeparator();
