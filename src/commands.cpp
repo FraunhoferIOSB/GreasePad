@@ -19,11 +19,12 @@
 #include "commands.h"
 #include "global.h"
 #include "mainscene.h"
-#include "mainwindow.h"
-// #include "uncertain.h"
+#include "state.h"
 
 #include <QDebug>
 #include <QGraphicsItem>
+#include <memory>
+#include <utility>
 
 namespace Cmd {
 

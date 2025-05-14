@@ -22,6 +22,8 @@
 #include <Eigen/Dense>
 
 #include <cfloat>
+#include <cmath>
+#include <utility>
 
 //! Uncertain geometric entities
 namespace Uncertain {
@@ -93,7 +95,7 @@ protected:
 
 private:
     //! Nullspace of row 3-vector
-    Eigen::Matrix<double,3,2> null( const Eigen::Vector3d & xs ) const;
+    static Eigen::Matrix<double, 3, 2> null(const Eigen::Vector3d &xs);
 };
 
 class uPoint;

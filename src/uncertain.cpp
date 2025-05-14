@@ -16,18 +16,24 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "uncertain.h"
+#include "qlogging.h"
 #include "upoint.h"
 #include "usegment.h"
 #include "ustraightline.h"
 
 #include <QDebug>
+#include <cassert>
+#include <cfloat>
+#include <cmath>
+#include <utility>
 
 namespace Uncertain {
 
 static const double T_ZERO = 1e-7;
 
 //! Nullspace of row vector
-Matrix<double,3,2> BasicEntity2D::null( const Vector3d &xs ) const
+Matrix<double,3,2> BasicEntity2D::null( const Vector3d &xs ) 
 {
     // cf. PCV, eq. (A.120)
 
@@ -35,13 +41,10 @@ Matrix<double,3,2> BasicEntity2D::null( const Vector3d &xs ) const
     //    qDebug() << xs;
 
 #ifdef QT_DEBUG
-    QString what = QStringLiteral("norm(x) = %1")
-            .arg( QString::number(xs.norm()) );
-    Q_ASSERT_X( std::fabs(xs.norm()-1.) <= T_ZERO,
-                Q_FUNC_INFO,
-                what.toStdString().data() ) ;
+    QString const what = QStringLiteral("norm(x) = %1").arg(QString::number(xs.norm()));
+    Q_ASSERT_X(std::fabs(xs.norm() - 1.) <= T_ZERO, Q_FUNC_INFO, what.toStdString().data());
 #endif
-    Eigen::Index  N = xs.size();
+    Eigen::Index  const N = xs.size();
 
     VectorXd x0 = xs.head(N-1);
     double   xN = xs(N-1);
@@ -98,8 +101,8 @@ void BasicEntity2D::normalizeSpherical()
     // qDebug() << Q_FUNC_INFO;
 
     const Matrix3d I = Matrix3d::Identity();
-    assert( m_val.norm()>0.0 );
-    Matrix3d Jac = (I - m_val*m_val.adjoint()/m_val.squaredNorm()) / m_val.norm();
+    assert(m_val.norm() > 0.0);
+    Matrix3d const Jac = (I - m_val*m_val.adjoint()/m_val.squaredNorm()) / m_val.norm();
     m_cov = Jac*m_cov*Jac.adjoint();
 
     m_val.normalize();  // x = x /norm(x)
@@ -121,9 +124,9 @@ bool BasicEntity2D::isIdenticalTo( const BasicEntity2D & us,
     a.m_val *= sign( a.v()(idx) );      // a = a*sign( a(idx) );
     b.m_val *= sign( b.v()(idx) );      // b = b*sign( b(idx) );
 
-    Matrix<double,3,2> JJ = null( a.v() );    // (A.120)
-    Vector2d d = JJ.adjoint()*( a.v() -b.v() );     // (10.141)
-    Eigen::Matrix2d Cov_dd = JJ.adjoint()*( a.Cov()+b.Cov())*JJ;
+    Matrix<double, 3, 2> const JJ = null(a.v());          // (A.120)
+    Vector2d const d = JJ.adjoint()*( a.v() -b.v() );     // (10.141)
+    Eigen::Matrix2d const Cov_dd = JJ.adjoint() * (a.Cov() + b.Cov()) * JJ;
 
     // return d.adjoint()*Cov_dd.inverse()*d < T;    // dof = 2
     return d.dot(Cov_dd.inverse()*d) < T;    // dof = 2
@@ -154,13 +157,13 @@ std::pair<uPoint,uPoint> uEndPoints( const Eigen::VectorXd & xi,
     const Matrix3d Zeros = Matrix3d::Zero(3,3);
     Matrix3d Cov_xx = Matrix3d::Zero();
 
-    uDistance ud1 = uPoint(x1, Zeros).distanceEuclideanTo(l);
+    uDistance const ud1 = uPoint(x1, Zeros).distanceEuclideanTo(l);
     Cov_xx.diagonal() << ud1.var_d(), ud1.var_d(), 0.;      // isotropic
-    uPoint first_ = l.project( uPoint( x1, Cov_xx) ) ;
+    uPoint const first_ = l.project(uPoint(x1, Cov_xx));
 
-    uDistance ud2 = uPoint(x2,Zeros).distanceEuclideanTo(l);
+    uDistance const ud2 = uPoint(x2, Zeros).distanceEuclideanTo(l);
     Cov_xx.diagonal() << ud2.var_d(), ud2.var_d(), 0.;
-    uPoint second_ = l.project( uPoint( x2, Cov_xx) );
+    uPoint const second_ = l.project(uPoint(x2, Cov_xx));
 
     return { first_, second_};
 }

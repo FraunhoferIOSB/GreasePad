@@ -16,18 +16,28 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "global.h"
+#include "qlogging.h"
+#include "qtypes.h"
+#include "quantiles.h"
+#include "uncertain.h"
+#include <algorithm>
+#include <cassert>
+#include <cstring>
+#include <memory>
+#include <utility>
+#include <vector>
 #define _USE_MATH_DEFINES
 
 
 #include "adjustment.h"
 #include "conncomp.h"
+#include "matrix.h"
 #include "constraints.h"
 #include "mainscene.h"
-
 #include "qconstraints.h"
 #include "qsegment.h"
 #include "qstroke.h"
-
 #include "state.h"
 #include "upoint.h"
 #include "usegment.h"
@@ -110,12 +120,12 @@ public:
 
     // augment & reduce
     void replaceGraphics();               //!< Graphics: Replace where necessary
-    void graphicItemsAdd( QGraphicsScene *sc) const;  //!< Graphics: add items
+    void graphicItemsAdd(QGraphicsScene *sc) const; //!< Graphics: add items
 
 private:
     // augment
     int find_new_constraints();
-    VectorXi find_in_sparse_column( const SparseMatrix<int> &AA, int k);
+    static VectorXi find_in_sparse_column( const SparseMatrix<int> &AA, int k);
     void find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap);
     void merge_segment ( int a);
     bool identities_removed();
@@ -129,7 +139,7 @@ private:
     void search_subtask( const Eigen::RowVectorXi & mapc_,
                          const Eigen::RowVectorXi & maps_);
 
-    std::pair<VectorXd,VectorXd> trackCoords( const QPolygonF & poly) const;
+    static std::pair<VectorXd, VectorXd> trackCoords(const QPolygonF &poly);
 
     void setAltColors() const;
 
@@ -172,7 +182,7 @@ private:
     Graph::IncidenceMatrix y_touches_l;  // "End-point y touches straight line l."
     Graph::IncidenceMatrix PP;           // parallelism
 
-    VectorXi unique( const VectorXi &x) const;
+    static VectorXi unique( const VectorXi &x) ;
 
     template <typename T>
     inline int sign( T val) const { return (T(0) <= val) - (val < T(0)); }   // sign(0) := 1
@@ -189,7 +199,7 @@ VectorXi impl::find_in_sparse_column( const SparseMatrix<int> &AA, const int k)
 
     VectorXi idx(nnz);
     int i=0;
-    for ( SparseMatrix<int>::InnerIterator it(AA,k); it; ++it ) {
+    for (SparseMatrix<int>::InnerIterator it(AA, k); it; ++it) {
         idx(i++) = it.index();
     }
 
@@ -197,7 +207,7 @@ VectorXi impl::find_in_sparse_column( const SparseMatrix<int> &AA, const int k)
 }
 
 
-VectorXi impl::unique(const VectorXi &x) const
+VectorXi impl::unique(const VectorXi &x) 
 {
     // qDebug() << Q_FUNC_INFO;
 
@@ -207,12 +217,12 @@ VectorXi impl::unique(const VectorXi &x) const
         return VectorXi(0);
     }
 
-    int m = x.maxCoeff();
-    VectorXi t = VectorXi::Zero(m+1);
+    int const m = x.maxCoeff();
+    VectorXi t = VectorXi::Zero(m + 1);
     for ( Index i=0; i<x.size(); i++ ) {
         t( x(i) ) = 1;
     }
-    int s = t.sum();
+    int const s = t.sum();
 
     VectorXi u = VectorXi::Constant(s,-1);
     for (int k=0, i=0; i<m+1; i++) {
@@ -507,11 +517,11 @@ void impl::serialize( QDataStream &out ) const
     qDebug().noquote() << "Export finished.";
 }
 
-void impl::find_adjacencies_of_latest_segment( const Quantiles::Snapping & snap )
+void impl::find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap)
 {
     // qDebug() << Q_FUNC_INFO;
 
-    int N = m_segm.length();
+    int const N = m_segm.length();
 
     for ( int i=0; i<N-1; i++)
     {
@@ -587,9 +597,8 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
         find_adjacencies_of_latest_segment( snap); // ! 2nd time
     }
 
-
     // (1) find constraints .....................................
-    int num_new_constraints_ = find_new_constraints();
+    int const num_new_constraints_ = find_new_constraints();
     assert( num_new_constraints_ >= 0 );
 
     qDebug().noquote() << QString("%1 new constraint%2 found.")
@@ -597,19 +606,17 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
                 .arg(num_new_constraints_==1 ? "" : "s");
 
     // (2) check for independence and consistency ...............
-    Graph::ConnComp  CoCoBi( Bi.biadjacency() );
+    Graph::ConnComp const CoCoBi(Bi.biadjacency());
 
-
-    if ( num_new_constraints_ > 0 ) {
-
-        VectorXi LabelsNewConstrIndividual = CoCoBi.tail( num_new_constraints_);
+    if (num_new_constraints_ > 0) {
+        VectorXi const LabelsNewConstrIndividual = CoCoBi.tail( num_new_constraints_);
         VectorXi LabelsNewConstrUnique = unique( LabelsNewConstrIndividual);
 
-        for ( Index k=0; k<LabelsNewConstrUnique.size(); k++) {
-            int cc = LabelsNewConstrUnique(k);
+        for (Index k = 0; k < LabelsNewConstrUnique.size(); k++) {
+            int const cc = LabelsNewConstrUnique(k);
 
-            Eigen::RowVectorXi maps_ = CoCoBi.mapHead( cc,  m_segm.length());
-            Eigen::RowVectorXi mapc_ = CoCoBi.mapTail( cc, m_constr.length());
+            Eigen::RowVectorXi const maps_ = CoCoBi.mapHead(cc, m_segm.length());
+            Eigen::RowVectorXi const mapc_ = CoCoBi.mapTail( cc, m_constr.length());
 
             assert( mapc_.size()> 0);
             qDebug().noquote() << blue << QString("Reasoning for connected component #%1/%2...")
@@ -619,7 +626,7 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
             search_subtask( mapc_, maps_ ); // in [augment state]
         }
 
-    }  // if ( num_new_constraints_ > 0 )
+    } // if ( num_new_constraints_ > 0 )
 
     // (3) snap all segments adjacent to new segment .............
     snap_endpoints( num_new_constraints_ );
@@ -630,7 +637,7 @@ int impl::find_new_constraints()
     // qDebug() <<  Q_FUNC_INFO;
     const int previously = m_constr.length();
 
-    const int c = int(Adj.rows()-1);
+    const int c = static_cast<int>(Adj.rows()-1);
 
     // orthogonality & identity .......................................
     /* if ( considerOrthogonality | considerIdentity ) {
@@ -818,15 +825,15 @@ void impl::search_subtask( const Eigen::RowVectorXi & mapc_,
     for ( Index s=0; s<maps_.size(); s++ ) {
         //  straight line:  s-th 3-vector
         // const StraightLine ul( a.getEntity(s, 3) );
-        std::pair<VectorXd,MatrixXd> p = a.getEntity( s, 3);
+        std::pair<VectorXd,MatrixXd> const p = a.getEntity( s, 3);
 
         const uStraightLine ul(  static_cast<Vector3d>(p.first),
                                  static_cast<Matrix3d>(p.second) );
         const uPoint ux = m_segm.at( maps_(s) )->ux();
-        const uPoint uy = m_segm.at( maps_(s) )->uy();
+        const uPoint uy = m_segm.at(maps_(s))->uy();
 
-        uPoint ua = ul.project(ux).sphericalNormalized();
-        uPoint ub = ul.project(uy).sphericalNormalized();
+        uPoint const ua = ul.project(ux).sphericalNormalized();
+        uPoint const ub = ul.project(uy).sphericalNormalized();
 
         // qDebug() << QString("subtask: replace segment %1 due to adjustment").arg(s);
         auto us = std::make_shared<uStraightLineSegment>(ua,ub);
@@ -838,7 +845,7 @@ void impl::snap_endpoints( const int nnc)
 {
     // qDebug() << Q_FUNC_INFO;
 
-    Graph::ConnComp CoCoBi( Bi.biadjacency() );
+    Graph::ConnComp const CoCoBi( Bi.biadjacency() );
     VectorXi LabelsNew = CoCoBi.tail( nnc);  // possibly empty
 
     LabelsNew.conservativeResize(LabelsNew.rows()+1, LabelsNew.cols());
@@ -846,9 +853,8 @@ void impl::snap_endpoints( const int nnc)
 
     VectorXi LabelsNewUnique = unique(LabelsNew);
 
-
-    for ( Index ll=0; ll<LabelsNewUnique.size(); ll++) {
-        int cc = LabelsNewUnique(ll);
+    for (Index ll = 0; ll < LabelsNewUnique.size(); ll++) {
+        int const cc = LabelsNewUnique(ll);
         qDebug().noquote() << blue << QString("  snap subtask %1/%2")
                               .arg( cc+1 ).arg( LabelsNewUnique.size() );
 
@@ -863,7 +869,7 @@ void impl::snap_endpoints( const int nnc)
             for ( Index n=0; n<x_touches_l.cols(); n++) // but ColMajor
             {
                 if ( x_touches_l.isSet( s, n) && !y_touches_l.isSet( s, n) ) {
-                    if ( useg.move_x_to( m_segm.at( int(n) )->hl() ) ) {
+                    if (useg.move_x_to(m_segm.at(static_cast<int>(n))->hl())) {
                         changed = true;
                         break;
                     }
@@ -872,7 +878,7 @@ void impl::snap_endpoints( const int nnc)
 
             for ( Index n=0; n<y_touches_l.cols(); n++) {
                 if ( y_touches_l.isSet( s, n)  && !x_touches_l.isSet( s, n) ) {
-                    if ( useg.move_y_to( m_segm.at( int(n) )->hl() ) ) {
+                    if (useg.move_y_to(m_segm.at(static_cast<int>(n))->hl())) {
                         changed = true;
                         break;
                     }
@@ -886,21 +892,23 @@ void impl::snap_endpoints( const int nnc)
 
             // (2) "touched by" ................................
             for ( SparseMatrix<int,ColMajor>::InnerIterator it( x_touches_l, s) ; it; ++it) {
-                Index n = it.row() ; // neighbor of segment s
+                Index const n = it.row(); // neighbor of segment s
                 if ( ( CoCoBi.label(n) != cc) && ( !y_touches_l.isSet(it.index(),s) ) ) {
-                    auto us = std::make_shared<uStraightLineSegment>(*m_segm.at( int(n) ));
-                    if ( us->move_x_to(  m_segm.at(s)->hl()  ) ) {
-                        m_segm.replace( int(n), us);
+                    auto us = std::make_shared<uStraightLineSegment>(
+                        *m_segm.at(static_cast<int>(n)));
+                    if (us->move_x_to(m_segm.at(s)->hl())) {
+                        m_segm.replace( static_cast<int>(n), us);
                     }
                 }
             }
 
-            for ( SparseMatrix<int,ColMajor>::InnerIterator it( y_touches_l, s) ; it; ++it) {
-                Index n = it.row() ; // neighbor of segment s
+            for (SparseMatrix<int, ColMajor>::InnerIterator it(y_touches_l, s); it; ++it) {
+                Index const n = it.row() ; // neighbor of segment s
                 if ( (CoCoBi.label(n) != cc) && ( !x_touches_l.isSet(it.index(),s) )) {
-                    auto us = std::make_shared<uStraightLineSegment>( *m_segm.at( int(n)));
-                    if ( us->move_y_to(  m_segm.at(s)->hl()  ) ) {
-                        m_segm.replace( int(n), us);
+                    auto us = std::make_shared<uStraightLineSegment>(
+                        *m_segm.at(static_cast<int>(n)));
+                    if (us->move_y_to(m_segm.at(s)->hl())) {
+                        m_segm.replace( static_cast<int>(n), us);
                     }
                 }
             }
@@ -957,7 +965,7 @@ bool impl::are_identical( const int i,
                           const int j)
 {
     // pre-check with acute angle
-    double alpha = m_segm.at(i)->ul().acute( m_segm.at(j)->ul() );
+    double const alpha = m_segm.at(i)->ul().acute( m_segm.at(j)->ul() );
     if ( alpha*57.2958 > 20.0 ) {  // 180°/pi = 57.2958°
         return false;
     }
@@ -1065,15 +1073,14 @@ impl::a_Maker( const Eigen::RowVectorXi & maps_) const
     Cov_ll.reserve(3*N);
     int idx = 0; // [~,idx] = max( abs(l(1:2)) )
 
-    for ( int s=0; s<S; s++ ) {
-
-        uStraightLine ul = m_segm.at( maps_(s) )->ul().sphericalNormalized();
+    for (int s = 0; s < S; s++) {
+        uStraightLine const ul = m_segm.at( maps_(s) )->ul().sphericalNormalized();
 
         Vector3d m = ul.v();
 
         // align signs consistently
-        m.head(2).cwiseAbs().maxCoeff( &idx );  // [~,idx] = max( abs(l(1:2)) )
-        int offset3 = 3*s;
+        m.head(2).cwiseAbs().maxCoeff(&idx); // [~,idx] = max( abs(l(1:2)) )
+        int const offset3 = 3*s;
         l.segment(offset3,3)  = sign( m(idx) ) * m;   // spherical normalized
 
         for ( int i=0; i<3; i++ ) {
@@ -1123,12 +1130,11 @@ bool impl::identities_removed()
 
     bool found = false;
 
-    for ( int a=int(Adj.rows()-1); a>=0 ; a-- )   // ! decrement
+    for ( int a=static_cast<int>(Adj.rows()-1); a>=0 ; a-- )   // ! decrement
     {
         // if a and c are neighbors, check for identity
         if ( Adj.isSet( a,Adj.cols()-1 ) ) {
-            if (  are_identical( a, int(Adj.cols()-1) ))
-            {
+            if (are_identical(a, static_cast<int>(Adj.cols() - 1))) {
                 found = true;
 
                 // merge segment "a" with last segment in list
@@ -1166,8 +1172,8 @@ void impl::merge_segment( const int a)
     }
     xi /= 1000;
     yi /= 1000; */
-    std::pair<VectorXd,VectorXd> xiyi = trackCoords( merged_track ); // {x_i, y_i}
-    std::pair<uPoint,uPoint> uxuy = Uncertain::uEndPoints( xiyi.first, xiyi.second);   // ux, uy
+    std::pair<VectorXd, VectorXd> const xiyi = trackCoords(merged_track); // {x_i, y_i}
+    std::pair<uPoint, uPoint> const uxuy = Uncertain::uEndPoints(xiyi.first, xiyi.second); // ux, uy
     // std::pair<uPoint,uPoint> uxuy = Uncertain::uEndPoints( xi, yi);
     auto um = std::make_shared<uStraightLineSegment>( uxuy.first, uxuy.second);
     m_segm.replace( idx, um );
@@ -1193,7 +1199,8 @@ void impl::merge_segment( const int a)
     }
 
     // delete constraints of segment [a] to be deleted.
-    for ( int ic=int(Bi.cols()-1); ic>=0; ic-- ) {   // hint: Bi is sparse, but *ColMajor*, loop is inefficient...
+    for (int ic = static_cast<int>(Bi.cols() - 1); ic >= 0;
+         ic--) { // hint: Bi is sparse, but *ColMajor*, loop is inefficient...
         if ( Bi.isSet(a,ic) ) {
             remove_constraint(ic);
             m_qConstraint.removeAt(ic);
@@ -1229,23 +1236,17 @@ QString State::StatusMsg() const
 
 QString impl::StatusMsg() const
 {
-    int S = m_segm.length();
-    int C = m_constr.length();
-    int R = number_of_required_constraints();
+    int const S = m_segm.length();
+    int const C = m_constr.length();
+    int const R = number_of_required_constraints();
 
-    Graph::ConnComp CoCoBi( Bi.biadjacency() ); // TODO(meijoc)
-    int CC = CoCoBi.number();
+    Graph::ConnComp const CoCoBi(Bi.biadjacency()); // TODO(meijoc)
+    int const CC = CoCoBi.number();
 
-    QString s0 = QApplication::tr( "%1 connected component%2, " )
-            .arg(CC)
-            .arg( CC==1 ? "" : "s");
-    QString s1 = QApplication::tr( "%1 segment%2, " )
-            .arg(S)
-            .arg( S==1 ? "" : "s");
-    QString s2 = QApplication::tr( "%1 of %2 constraint%3 required." )
-            .arg(R)
-            .arg(C)
-            .arg(C==1 ? "" : "s");
+    QString const s0 = QApplication::tr("%1 connected component%2, ").arg(CC).arg(CC == 1 ? "" : "s");
+    QString const s1 = QApplication::tr("%1 segment%2, ").arg(S).arg(S == 1 ? "" : "s");
+    QString const s2
+        = QApplication::tr("%1 of %2 constraint%3 required.").arg(R).arg(C).arg(C == 1 ? "" : "s");
 
     return s0 + s1 + s2;
 }
@@ -1254,13 +1255,13 @@ QString impl::StatusMsg() const
 void impl::reasoning_reduce_and_adjust() {
 
     // connected components / subtasks
-    Graph::ConnComp CoCoBi( Bi.biadjacency() );
-    int number_of_subtasks_ = CoCoBi.number();
+    Graph::ConnComp const CoCoBi(Bi.biadjacency());
+    int const number_of_subtasks_ = CoCoBi.number();
 
     // greedy search
     for ( int cc=0; cc<number_of_subtasks_; cc++ )
     {
-        RowVectorXi maps_ = CoCoBi.mapHead( cc,  m_segm.length()   );
+        RowVectorXi const maps_ = CoCoBi.mapHead(cc, m_segm.length());
         RowVectorXi mapc_ = CoCoBi.mapTail( cc,  m_constr.length() );
 
         bool greedySearchRequired = false;
@@ -1294,8 +1295,8 @@ void impl::remove_elements()
         if ( m_qConstrained.at(i)->isSelected()
              || m_qStroke.at(i)->isSelected()
              || m_qUnconstrained.at(i)->isSelected() ) {
-
-            for ( int c=0; c<int(Bi.cols()); c++ ) { // Bi is sparse, but ColMajor, loop is inefficient...
+            for (int c = 0; c < static_cast<int>(Bi.cols());
+                 c++) { // Bi is sparse, but ColMajor, loop is inefficient...
                 if ( Bi.isSet(i,c) ) {
                     remove_constraint(c);
                     m_qConstraint.removeAt(c);
@@ -1335,7 +1336,7 @@ void impl::replaceGraphics() {
     for( int c=0; c<m_constr.length(); c++)
     {
         bool modified = false;
-        VectorXi idxx = Bi.findInColumn(c);
+        VectorXi const idxx = Bi.findInColumn(c);
 
         if ( m_constr.at(c).use_count()==1 ) {
             modified = true; // actually not modified, but added
@@ -1377,8 +1378,8 @@ void impl::append( const QPolygonF & track)
     yi /= 1000; */
 
     // end-points of straight line segment approximating the stroke
-    std::pair<VectorXd,VectorXd> xiyi = trackCoords( track );
-    std::pair<uPoint,uPoint> uxuy = Uncertain::uEndPoints( xiyi.first, xiyi.second);
+    std::pair<VectorXd, VectorXd> const xiyi = trackCoords(track);
+    std::pair<uPoint, uPoint> const uxuy = Uncertain::uEndPoints(xiyi.first, xiyi.second);
 
     // initially constrained==constrained
     m_qStroke.append( std::make_shared<QEntity::QStroke>( track) );
@@ -1404,12 +1405,12 @@ void impl::setAltColors() const
 {
     // qDebug() << Q_FUNC_INFO;
 
-    Graph::ConnComp CoCoBi( Bi.biadjacency() );
-    int N  = CoCoBi.number();
+    Graph::ConnComp const CoCoBi(Bi.biadjacency());
+    int const N = CoCoBi.number();
     for (int cc=0; cc<N; cc++) {
 
         // (0) color ...
-        int hue = 359*cc/N;
+        int const hue = 359 * cc / N;
         assert( hue>=0 && hue<= 359 );
         QColor col =  QColor::fromHsv( hue,255,255,   255);
 
@@ -1498,9 +1499,7 @@ void impl::clearAll()
     Bi.resize(0,0);
 }
 
-
-
-std::pair<VectorXd,VectorXd> impl::trackCoords( const QPolygonF & poly ) const
+std::pair<VectorXd, VectorXd> impl::trackCoords(const QPolygonF &poly)
 {
     const int N = poly.length();
     Eigen::VectorXd xi(N);
@@ -1514,19 +1513,18 @@ std::pair<VectorXd,VectorXd> impl::trackCoords( const QPolygonF & poly ) const
     return {xi, yi};
 }
 
-
 QDataStream & operator<< (QDataStream & out, const IncidenceMatrix & AA)
 {
     qDebug() << Q_FUNC_INFO;
 
-    out <<  uint( AA.rows() );
-    out <<  uint( AA.cols() );
-    out <<  uint( AA.nonZeros() );
+    out << static_cast<uint>(AA.rows());
+    out << static_cast<uint>(AA.cols());
+    out << static_cast<uint>(AA.nonZeros());
 
     for( Index c=0; c<AA.outerSize(); ++c) {
         SparseMatrix<int,ColMajor>::InnerIterator it( AA, c);
         for( ; it; ++it) {
-            out << int(it.row()) << int(it.col());
+            out << static_cast<int>(it.row()) << static_cast<int>(it.col());
         }
     }
     return out;
@@ -1551,7 +1549,7 @@ QDataStream & operator>> (QDataStream & in,  IncidenceMatrix & AA)
         tripletList.emplace_back( Eigen::Triplet<int>(r, c, 1) );
     }
 
-    AA.resize( int(nrows), int(ncols) );
+    AA.resize(static_cast<int>(nrows), static_cast<int>(ncols));
     AA.setFromTriplets( tripletList.begin(),
                         tripletList.end() );
 

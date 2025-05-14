@@ -26,10 +26,7 @@
 
 #include <memory>
 
-#include "global.h"
-
 class State;
-
 
 namespace GUI {
 
@@ -68,7 +65,7 @@ private:
     const double threshold_ratio_eigenvalues = 0.01;
     const int    min_number_of_points = 7;
 
-    bool isaStraightStroke( double T, const QPainterPath & );
+    static bool isaStraightStroke(double T, const QPainterPath &);
 
     static QPen s_scribblePen;
 

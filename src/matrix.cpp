@@ -16,10 +16,10 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "global.h"
 #include "matrix.h"
 
 #include<QDataStream>
+#include <vector>
 
 namespace Graph {
 
@@ -93,8 +93,8 @@ bool IncidenceMatrix::isSet( const Index r, const Index c) const
 SparseMatrix<int> IncidenceMatrix::biadjacency() const {
 
     // compile A = [O, B;  B',O]
-    Index C_ = cols();
-    Index R_ = rows();
+    Index const C_ = cols();
+    Index const R_ = rows();
 
     SparseMatrix<int> AA;
     AA.resize(C_+R_,C_+R_);
@@ -114,7 +114,7 @@ SparseMatrix<int> IncidenceMatrix::biadjacency() const {
 
 VectorXi IncidenceMatrix::findInColumn( const int c ) const
 {
-    Eigen::Index nnz = innerVector(c).nonZeros();
+    Eigen::Index const nnz = innerVector(c).nonZeros();
 
     VectorXi idx( nnz );
     int i=0;
@@ -133,7 +133,7 @@ void IncidenceMatrix::remove_column( const int c) {
 
     Q_ASSERT( c>=0);
     Q_ASSERT( c<cols() );
-    Index C =  cols()-1;
+    Index const C = cols() - 1;
 
     SparseMatrix<int> TT(C+1,C);
     Index c2 = 0;
@@ -153,7 +153,7 @@ void IncidenceMatrix::remove_row(const int r)
     Q_ASSERT( r>=0 );
     Q_ASSERT( r<rows() );
 
-    Index R = rows()-1;
+    Index const R = rows() - 1;
     SparseMatrix<int> SS(R,R+1);
     Index r2 = 0;
     for (r2=0; r2<r; r2++) {

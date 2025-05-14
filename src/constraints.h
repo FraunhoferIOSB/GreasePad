@@ -19,22 +19,16 @@
 #ifndef CONSTRAINTS_H
 #define CONSTRAINTS_H
 
-// #include <QDataStream>
 #include <QDebug>
-
 #include <Eigen/Dense>
-
 #include <memory>
 
-#include "global.h"
-
+using Eigen::ColMajor;
 using Eigen::Matrix3d;
-using Eigen::Vector3d;
 using Eigen::MatrixXd;
+using Eigen::Vector3d;
 using Eigen::VectorXd;
 using Eigen::VectorXi;
-using Eigen::ColMajor;
-
 
 //! Geometric constraints (relations)
 namespace Constraint {
@@ -115,7 +109,7 @@ protected:
 
 private:
     std::shared_ptr<ConstraintBase> doClone() const override;
-    Matrix3d cof3( const Matrix3d &MM ) const;   //!< 3x3 cofactor matrix
+    static Matrix3d cof3(const Matrix3d &MM); //!< 3x3 cofactor matrix
     static const int s_dof   = 1;
     static const int s_arity = 3;
 public:

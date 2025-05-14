@@ -17,6 +17,8 @@
  */
 
 #include "mainview.h"
+#include "qgraphicsscene.h"
+#include "qgraphicsview.h"
 
 #include <QAction>
 #include <QApplication>
@@ -27,7 +29,7 @@
 #include <QStyleOptionGraphicsItem>
 #include <QSvgGenerator>
 #include <QWheelEvent>
-
+#include <memory>
 
 namespace GUI {
 
@@ -57,7 +59,7 @@ void MainView::wheelEvent( QWheelEvent *event )
     const qreal lod = QStyleOptionGraphicsItem::levelOfDetailFromTransform(transform());
 
     // double s = event->delta() > 0 ? zoom_out : zoom_in;  // old Qt version
-    double s = event->angleDelta().y() > 0 ? zoom_out : zoom_in;
+    double const s = event->angleDelta().y() > 0 ? zoom_out : zoom_in;
 
     setTransformationAnchor( QGraphicsView::AnchorUnderMouse );
     // qDebug() << s << lod;
@@ -231,7 +233,7 @@ void MainView::drawForeground( QPainter* painter,
     QPainter p( viewport() );
 
     const int h = 10;
-    QPoint Pos( h, viewport()->height()-h);
+    QPoint const Pos(h, viewport()->height() - h);
     const int r = 23;
     const int g = 156;
     const int b = 125;

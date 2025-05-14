@@ -19,12 +19,13 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
+#include <Eigen/Dense>
 #include <Eigen/Sparse>
 
 namespace Graph {
 
-using Eigen::SparseMatrix;
 using Eigen::ColMajor;
+using Eigen::SparseMatrix;
 using Eigen::VectorXi;
 // using Eigen::IOFormat;
 

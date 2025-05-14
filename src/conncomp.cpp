@@ -17,7 +17,7 @@
  */
 
 #include "conncomp.h"
-#include "global.h"
+#include <cassert>
 
 namespace Graph {
 
@@ -101,7 +101,7 @@ VectorXi ConnComp::mapTail( const int cc, const int n) const
 
     // (2) Linear indices of these elements ........................
     VectorXi map_(sz);
-    Index offset = m_comp.size() -n;
+    Index const offset = m_comp.size() - n;
     for ( int k=0,  s=0; s<n; s++  ) {
         if ( m_comp( s+offset )==cc ) {
             map_( k++ ) = s;

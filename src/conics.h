@@ -20,6 +20,7 @@
 #define CONICS_H
 
 #include <Eigen/Dense>
+#include <utility>
 
 namespace Uncertain {
 class uPoint;
@@ -59,10 +60,10 @@ public:
 
 protected:
     void transform( const Matrix3d & HH );        //!< Transformtion of conic according to x'=H*x
-    Matrix3d cof3( const Matrix3d & MM ) const;   //!< 3x3 cofactor matrix, i.e., transposed adjunct
+    static Matrix3d cof3(const Matrix3d &MM);     //!< 3x3 cofactor matrix, i.e., transposed adjunct
 
 private:
-    Matrix3d skew( const Vector3d & x ) const;
+    static Matrix3d skew(const Vector3d &x);
     bool isSymmetric() const;
 };
 

@@ -21,10 +21,10 @@
 
 #include "aabb.h"
 
-#include <Eigen/Dense>   // Eigen
-#include <memory>        // C++
-#include <QDataStream>   // Qt
-
+#include <QDataStream> // Qt
+#include <Eigen/Dense> // Eigen
+#include <cmath>
+#include <memory> // C++
 
 namespace Uncertain {
 

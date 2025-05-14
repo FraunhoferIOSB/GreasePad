@@ -18,10 +18,17 @@
 
 #include "adjustment.h"
 
-#include <math.h>
 #include "constraints.h"
 #include "global.h"
 #include "matrix.h"
+#include "qlogging.h"
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <iterator>
+#include <math.h>
+#include <memory>
+#include <utility>
 
 using Graph::IncidenceMatrix;
 using Constraint::ConstraintBase;
@@ -30,8 +37,7 @@ using Constraint::ConstraintBase;
 static const double T_ZERO = 1e-5;
 #endif
 
-Index AdjustmentFramework::indexOf( const Eigen::VectorXi & v,
-                                    const int x) const
+Index AdjustmentFramework::indexOf(const Eigen::VectorXi &v, const int x)
 {
     //    for ( Index j=0; j<v.size(); j++) {
     //        if ( v(j)==x ) {
@@ -47,9 +53,7 @@ Index AdjustmentFramework::indexOf( const Eigen::VectorXi & v,
     return std::distance( v.begin(), it);
 }
 
-
-MatrixXd AdjustmentFramework::Rot_ab( const VectorXd &a,
-                                      const VectorXd &b) const
+MatrixXd AdjustmentFramework::Rot_ab(const VectorXd &a, const VectorXd &b)
 {
     Q_ASSERT( a.size()==b.size());
 #ifdef QT_DEBUG
@@ -61,7 +65,7 @@ MatrixXd AdjustmentFramework::Rot_ab( const VectorXd &a,
             -(a+b)*(a+b).adjoint()/(1.+a.dot(b));
 }
 
-MatrixXd AdjustmentFramework::null( const VectorXd &xs ) const
+MatrixXd AdjustmentFramework::null(const VectorXd &xs)
 {
     // cf. PCV, eq. (A.120)
 
@@ -69,12 +73,10 @@ MatrixXd AdjustmentFramework::null( const VectorXd &xs ) const
     //    qDebug() << xs;
 
 #ifdef QT_DEBUG
-    QString what = QStringLiteral("norm(x) = %1").arg( QString::number(xs.norm()) );
-    Q_ASSERT_X( std::fabs(xs.norm()-1.) <= T_ZERO,
-                Q_FUNC_INFO,
-                what.toStdString().data() ) ;
+    QString const what = QStringLiteral("norm(x) = %1").arg(QString::number(xs.norm()));
+    Q_ASSERT_X(std::fabs(xs.norm() - 1.) <= T_ZERO, Q_FUNC_INFO, what.toStdString().data());
 #endif
-    Eigen::Index  N = xs.size();
+    Eigen::Index  const N = xs.size();
 
     VectorXd x0 = xs.head(N-1);
     double   xN = xs(N-1);
@@ -87,7 +89,7 @@ MatrixXd AdjustmentFramework::null( const VectorXd &xs ) const
     JJ.topRows(N-1)  = MatrixXd::Identity(N-1,N-1) -x0*x0.adjoint()/(1.+xN);
     JJ.bottomRows(1) = -x0.adjoint();
 
-    VectorXd check = JJ.adjoint()*xs;
+    VectorXd const check = JJ.adjoint()*xs;
 #ifdef QT_DEBUG
     Q_ASSERT_X( check.norm() <= T_ZERO, Q_FUNC_INFO, "not a zero vector");
 #endif
@@ -100,9 +102,9 @@ AdjustmentFramework::getEntity( const Index s,
 {
     // qDebug() << Q_FUNC_INFO;
 
-    Index offset = len*s;
+    Index const offset = len*s;
     // vector must be the null space of the covariance matrix
-    MatrixXd RR = Rot_ab( l_.segment(offset,len),  l0_.segment(offset,len));
+    MatrixXd const RR = Rot_ab( l_.segment(offset,len),  l0_.segment(offset,len));
 
     return {  l0_.segment(offset,len),
               RR*Cov_ll_.block(offset,offset,len,len)*RR.adjoint() };
@@ -121,13 +123,13 @@ void AdjustmentFramework::update( const Index start,
     // m.segment(idx3,3).normalize();
 
     // (2) via retraction ......................................................
-    Eigen::Vector3d v = null(  l0_.segment(idx3,3)  )*x.segment(2*start,2);
-    double nv = v.norm();
+    Eigen::Vector3d const v = null(l0_.segment(idx3, 3)) * x.segment(2 * start, 2);
+    double const nv = v.norm();
     if ( nv<=0.0 ) {
         return;
     }
 
-    Eigen::Vector3d p = l0_.segment( idx3,3);
+    Eigen::Vector3d const p = l0_.segment(idx3, 3);
     assert( nv>0.0 );
     l0_.segment( idx3,3) = cos( nv)*p +sin(nv)*v/nv;  // nv>0
     assert( l0_.segment( idx3,3).hasNaN()==false );
@@ -193,19 +195,17 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
         // reduced coordinates: vector and covariance matrix .............
         for ( Index s=0; s<S; s++ )
         {
-            Index offset3 = 3*s;
-            Index offset2 = 2*s;
+            Index const offset3 = 3 * s;
+            Index const offset2 = 2 * s;
 
-            Eigen::Matrix<double,3,2> NN = null( l0_segment(offset3,3) );
+            Eigen::Matrix<double, 3, 2> const NN = null(l0_segment(offset3, 3));
 
             // (i) reduced coordinates of observations
             lr.segment(offset2,2) = NN.adjoint() * l_segment(offset3,3);
 
             // (ii) covariance matrix, reduced coordinates
-            Eigen::Matrix3d RR = Rot_ab(
-                        l_segment(offset3,3),
-                        l0_segment(offset3,3) );
-            Eigen::Matrix<double,2,3> JJ = NN.adjoint()*RR;
+            Eigen::Matrix3d const RR = Rot_ab(l_segment(offset3, 3), l0_segment(offset3, 3));
+            Eigen::Matrix<double, 2, 3> const JJ = NN.adjoint() * RR;
             Eigen::Matrix2d Cov_rr = JJ*Cov_ll_block( offset3,3)*JJ.adjoint();
 
             // rCov_ll.block(offset2, offset2, 2, 2) = Cov_rr; // not for sparse matrices
@@ -219,7 +219,7 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
         // check rank and condition .....................................
 
         // rank-revealing decomposition
-        Eigen::FullPivLU<MatrixXd> lu_decomp2( BBr*rCov_ll*BBr.adjoint() );
+        Eigen::FullPivLU<MatrixXd> const lu_decomp2(BBr * rCov_ll * BBr.adjoint());
         rcn = lu_decomp2.rcond();
         if ( rcn < threshold_ReciprocalConditionNumber() ) {
             // redundant or contradictory constraint
@@ -313,7 +313,7 @@ void AdjustmentFramework::Jacobian(
         }
 
         auto JJ = con->Jacobian( idx, l0(), l() );
-        int dof   = con->dof();
+        int const dof = con->dof();
         for ( int i=0; i< con->arity(); i++ )   {
             // dof rows for this constraint
             Q_ASSERT( JJ.rows()==dof );
@@ -377,9 +377,8 @@ void AdjustmentFramework::check_constraints(
 
 #ifdef QT_DEBUG
         if ( verbose ) {
-            QString msg1 = QString("%1:  ").arg(
-                        QString::fromLatin1( con->type_name()), 12);
-            QString msg2 = QString("check = %2, \t").arg(d);
+            QString const msg1 = QString("%1:  ").arg(QString::fromLatin1(con->type_name()), 12);
+            QString const msg2 = QString("check = %2, \t").arg(d);
             QDebug deb = qDebug().noquote();
             deb << QString("constraint #%1:  ").arg(c+1,3);
             deb << (con->required() ? green : blue) << msg1 << black;
@@ -387,7 +386,7 @@ void AdjustmentFramework::check_constraints(
 
             auto idxx = bi->findInColumn( mapc(c) );
             for ( Index i=0; i<idxx.size(); i++ ) {
-                int idxxx = indexOf( maps, idxx(i) );
+                int const idxxx = indexOf(maps, idxx(i));
                 deb << idxxx+1;
             }
         }

@@ -19,6 +19,8 @@
 #include "aabb.h"
 
 #include <Eigen/Dense>  // Eigen
+#include <cassert>
+#include <cmath>
 
 Aabb::Aabb( const double x_min,  const double x_max,
             const double y_min,  const double y_max)

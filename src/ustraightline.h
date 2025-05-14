@@ -20,6 +20,7 @@
 #define USTRAIGHTLINE_H
 
 #include "uncertain.h"
+#include <cmath>
 
 // #include <QDebug>  // Q_REQUIRED_RESULT
 
@@ -77,7 +78,7 @@ private:
     using Matrix6d    = Eigen::Matrix<double,6,6>;
     using RowVector6d = Eigen::Matrix<double,1,6>;
 
-    Matrix3d cof3( const Matrix3d & MM ) const;   // compute 3x3 cofactor matrix
+    static Matrix3d cof3(const Matrix3d &MM); // compute 3x3 cofactor matrix
 
     static Matrix3d CC();
     static Matrix3d S3();

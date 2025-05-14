@@ -21,12 +21,12 @@
 
 #include "matrix.h"
 
-#include <Eigen/Sparse>  // Eigen
 #include <Eigen/Dense>
 
-#include <memory>        // C++
+#include <memory> // C++
 
 #include <QList>         // Qt
+#include <utility>
 
 namespace Constraint {
 class ConstraintBase;
@@ -111,12 +111,11 @@ private:
     } threshold_;
 
     //! Rotation matrix for minimal rotation
-    MatrixXd Rot_ab( const VectorXd & a,
-                     const VectorXd & b) const;
+    static MatrixXd Rot_ab(const VectorXd &a, const VectorXd &b);
     //! Nullspace of row vector
-    MatrixXd null(   const VectorXd & xs ) const;
+    static MatrixXd null(const VectorXd &xs);
 
-    Index indexOf( const Eigen::VectorXi & v, int x) const;
+    static Index indexOf(const Eigen::VectorXi &v, int x);
 };
 
 #endif // ADJUSTMENT_H

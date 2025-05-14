@@ -32,6 +32,9 @@
 #include <QSvgGenerator>
 
 #include <Eigen/Dense>
+#include <cassert>
+#include <memory>
+#include <utility>
 
 namespace GUI {
 
@@ -53,10 +56,9 @@ MainScene::MainScene(QObject *parent)
 
 // MainScene::~MainScene() {  qDebug() << Q_FUNC_INFO;}
 
-
-bool MainScene::isaStraightStroke( const double T , const  QPainterPath & pa)
+bool MainScene::isaStraightStroke(const double T, const QPainterPath &pa)
 {
-    int N = pa.elementCount();
+    int const N = pa.elementCount();
     if ( N==1 ) {
         return false;
     }
@@ -69,8 +71,8 @@ bool MainScene::isaStraightStroke( const double T , const  QPainterPath & pa)
         yi(i) = pa.elementAt(i).y;
     }
 
-    double x0 = xi.mean();
-    double y0 = yi.mean();
+    double const x0 = xi.mean();
+    double const y0 = yi.mean();
     Eigen::Matrix2d MM;
     MM(0,0) = xi.dot(xi) -N*x0*x0;
     MM(0,1) = xi.dot(yi) -N*x0*y0;
@@ -78,8 +80,8 @@ bool MainScene::isaStraightStroke( const double T , const  QPainterPath & pa)
     MM(1,0) = MM(0,1);
 
     Eigen::Vector2cd ev = MM.eigenvalues();
-    assert( ev.real().maxCoeff() > 0. );
-    double crit = ev.real().minCoeff()/ev.real().maxCoeff();
+    assert(ev.real().maxCoeff() > 0.);
+    double const crit = ev.real().minCoeff()/ev.real().maxCoeff();
 
     return crit < T;
 }
@@ -223,8 +225,9 @@ void MainScene::export_view_as_pdf( QString &fileName)
 
 
     QPdfWriter pdfwriter( fileName );
-    QPageSize ps( QSize(int( sceneRect().width()),
-                        int( sceneRect().height())), QPageSize::Point);
+    QPageSize ps(QSize(static_cast<int>(sceneRect().width()),
+                       static_cast<int>(sceneRect().height())),
+                 QPageSize::Point);
     pdfwriter.setPageMargins( QMarginsF(0., 0., 0., 0.),QPageLayout::Point );
     pdfwriter.setPageSize(    ps);
     pdfwriter.setCreator(     QApplication::applicationName() );
@@ -256,8 +259,8 @@ void MainScene::export_view_as_svg( QString &fileName )
 
     QSvgGenerator generator;
     generator.setFileName(fileName);
-    generator.setSize(     QSize( int(width()), int(height()))      );
-    generator.setViewBox(  QRect(0, 0, int(width()), int(height())) );
+    generator.setSize(QSize(static_cast<int>(width()), static_cast<int>(height())));
+    generator.setViewBox(QRect(0, 0, static_cast<int>(width()), static_cast<int>(height())));
     generator.setTitle(    QApplication::applicationName() );
     generator.setDescription( "scalable vector graphics" );
 

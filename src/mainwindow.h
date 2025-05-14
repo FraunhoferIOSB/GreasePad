@@ -21,6 +21,7 @@
 
 #include <QMainWindow>
 #include <QStatusBar>
+#include <memory>
 
 #include "state.h"
 
@@ -149,7 +150,7 @@ private:
     bool fileSaveAs();
     QString fileName_;
 
-    void slotAbout();
+    static void slotAbout();
     void slotAboutQt();
     void slotBackgroundImageLoad();
     void slotBackgroundImageRemove();
@@ -186,10 +187,10 @@ private:
     void slotUpdateLineStyle(  int s);
     void slotUpdateColor(      const QColor & col);
     void slotUpdateLineWidth(  int w);
-    void slotUpdateMarkerSize( int sz);
-    void slotValueChangedAlphaSnap( double);
-    void slotValueChangedOpacity(   double );
-    void slotValueChangedAlphaRecognition( double );
+    void slotUpdateMarkerSize(int sz);
+    static void slotValueChangedAlphaSnap( double);
+    void slotValueChangedOpacity(double);
+    static void slotValueChangedAlphaRecognition( double );
 };
 
 } // namespace GUI

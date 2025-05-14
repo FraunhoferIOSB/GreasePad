@@ -24,7 +24,7 @@
 #include <QDebug>
 #include <QGraphicsItem>
 #include <QPen>
-
+#include <utility>
 
 namespace Uncertain {
 class uPoint;
@@ -84,10 +84,9 @@ private:
     void setShape( const uPoint &ux,
                    const uPoint &uy ); // with new or adjusted endpoints.
 
-    double getSelectionOffset( const uPoint &,
-                               const uPoint &) const;
-    QLineF line() const { return line_;}
-    QPolygonF toPoly( std::pair<Eigen::VectorXd, Eigen::VectorXd> p);
+    static double getSelectionOffset(const uPoint &, const uPoint &);
+    QLineF line() const { return line_; }
+    static QPolygonF toPoly(std::pair<Eigen::VectorXd, Eigen::VectorXd> p);
 
     QLineF line_;                               // straight line segment
     std::pair<QPolygonF, QPolygonF>  branch_;   // hyperbola branches

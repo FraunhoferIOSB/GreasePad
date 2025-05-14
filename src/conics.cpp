@@ -17,10 +17,14 @@
  */
 
 #include "conics.h"
+#include "qlogging.h"
 #include "upoint.h"
 #include "ustraightline.h"
 
 #include <QDebug>
+#include <cassert>
+#include <cmath>
+#include <utility>
 
 namespace Conic {
 
@@ -38,7 +42,7 @@ ConicBase::ConicBase( const Matrix3d& other) : Matrix3d(other)
     assert( isSymmetric()==true );
 }
 
-Matrix3d ConicBase::skew( const Vector3d &x) const
+Matrix3d ConicBase::skew(const Vector3d &x)
 {
     return (Matrix3d() << 0.,-x(2),x(1), x(2),0.,-x(0), -x(1),x(0),0.).finished();
 }
@@ -60,7 +64,7 @@ ConicBase & ConicBase::operator=( const Matrix3d & other )
     return *this;
 }
 
-Matrix3d ConicBase::cof3( const Matrix3d &MM ) const
+Matrix3d ConicBase::cof3(const Matrix3d &MM)
 {
     Matrix3d Cof;
 
@@ -79,19 +83,17 @@ Matrix3d ConicBase::cof3( const Matrix3d &MM ) const
     return Cof;
 }
 
-Ellipse::Ellipse( const uPoint & ux, const double k2 )
+Ellipse::Ellipse(const uPoint &ux, const double k2)
 {
-    uPoint uy = ux.euclidean();
+    uPoint const uy = ux.euclidean();
 
     // cofactor matrix is adjugate due to symmetry
     *this = cof3( k2*uy.Cov() -uy.v()*uy.v().adjoint() );
 }
 
-
-
-Hyperbola::Hyperbola( const uStraightLine & ul, const double k2 )
+Hyperbola::Hyperbola(const uStraightLine &ul, const double k2)
 {
-    uStraightLine um = ul.euclidean();
+    uStraightLine const um = ul.euclidean();
     *this = k2*um.Cov() -um.v()*um.v().adjoint();
 }
 
@@ -121,12 +123,12 @@ std::pair<double,double>
 Hyperbola::lengthsSemiAxes() const
 {
     auto ev = eigenvalues();
-    double Delta = determinant();
-    double D = topLeftCorner(2,2).determinant();
+    double const Delta = determinant();
+    double const D = topLeftCorner(2, 2).determinant();
     assert( -Delta/( ev.first*D ) >= 0. );
     assert( +Delta/( ev.second*D) >= 0. );
-    double a = std::sqrt( -Delta/( ev.first*D) );
-    double b = std::sqrt( +Delta/( ev.second*D) );
+    double const a = std::sqrt(-Delta / (ev.first * D));
+    double const b = std::sqrt(+Delta / (ev.second * D));
 
     return {a,b};
 }
@@ -166,13 +168,13 @@ bool ConicBase::isParabola() const
 
 std::pair<double, double> Hyperbola::eigenvalues() const
 {
-    double p =  -topLeftCorner(2,2).trace();
-    double q =   topLeftCorner(2,2).determinant();
+    double const p = -topLeftCorner(2, 2).trace();
+    double const q = topLeftCorner(2, 2).determinant();
 
     Q_ASSERT_X( q<0.0, Q_FUNC_INFO, "no hyperbola");
     assert( q<0.0 );
-    double ev0 = -p/2 -std::sqrt( p*p/4 -q);
-    double ev1 = -p/2 +std::sqrt( p*p/4 -q);
+    double const ev0 = -p / 2 - std::sqrt(p * p / 4 - q);
+    double const ev1 = -p / 2 + std::sqrt(p * p / 4 - q);
 
     return {ev0,ev1};
 }
@@ -182,8 +184,8 @@ Vector3d ConicBase::center() const
 {
     Vector3d xh;
     if ( isCentral() ) {
-        Matrix2d C33 = topLeftCorner(2,2);
-        Vector2d ch0 = topRightCorner(2,1);
+        Matrix2d const C33 = topLeftCorner(2, 2);
+        Vector2d const ch0 = topRightCorner(2, 1);
         Vector2d x0 = -C33.ldlt().solve(ch0);
         xh << x0(0), x0(1), 1.0;
     }
@@ -198,11 +200,11 @@ Vector3d ConicBase::center() const
 std::pair<Vector3d,Vector3d>
 ConicBase::intersect( const Vector3d &l) const
 {
-    Matrix3d MM = skew(l);
+    Matrix3d const MM = skew(l);
     Matrix3d BB = MM.adjoint()*(*this)*MM;
 
     int idx = 0;       // [den,idx] = max( abs(l) );
-    double den = l.array().abs().maxCoeff(&idx);
+    double const den = l.array().abs().maxCoeff(&idx);
 
     // minors ...............................................
     double alpha=0;
@@ -228,8 +230,8 @@ ConicBase::intersect( const Vector3d &l) const
     int r = 0;
     int c = 0;
     DD.array().abs().maxCoeff( &r, &c);
-    Vector3d p = DD.row(r);
-    Vector3d q = DD.col(c);
+    Vector3d const p = DD.row(r);
+    Vector3d const q = DD.col(c);
 
     return {p,q};
 }
@@ -259,16 +261,16 @@ void Ellipse::scale( const double s )
 std::pair<Eigen::VectorXd, Eigen::VectorXd>
 Ellipse::poly( const int N) const
 {
-    Matrix2d Chh = topLeftCorner(2,2);
-    Vector2d ch0 = topRightCorner(2,1);
+    Matrix2d const Chh = topLeftCorner(2, 2);
+    Vector2d const ch0 = topRightCorner(2, 1);
     Vector2d x0 = -Chh.ldlt().solve(ch0);  // centre point
-    double c00q =  coeff(2,2) -ch0.dot( Chh.ldlt().solve(ch0));
+    double const c00q = coeff(2, 2) - ch0.dot(Chh.ldlt().solve(ch0));
 
     assert( std::fabs(c00q)>0. );
 
-    Eigen::EigenSolver<Matrix2d> eig( -Chh/c00q, true);
+    Eigen::EigenSolver<Matrix2d> const eig(-Chh / c00q, true);
     Vector2d ev = eig.eigenvalues().real();
-    Matrix2d RR = eig.eigenvectors().real();
+    Matrix2d const RR = eig.eigenvectors().real();
 
     if ( ev(0)<0.0 ) {
         ev *= -1;

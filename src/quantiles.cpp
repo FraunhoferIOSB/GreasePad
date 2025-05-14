@@ -17,6 +17,7 @@
  */
 
 #include "quantiles.h"
+#include <cassert>
 
 void Quantiles::Recognition::setAlpha( const double alpha )
 {

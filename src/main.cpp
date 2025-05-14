@@ -22,7 +22,7 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+    QApplication const a(argc, argv);
 
     QApplication::setApplicationName(    "GreasePad" );
     QApplication::setApplicationVersion( "1.2.0" );
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     win.show();
 
     // binary file as optional program argument
-    QStringList args = QApplication::arguments();
+    QStringList const args = QApplication::arguments();
     if ( args.length()>1 ) {
         win.readBinaryFile( args.at(1));
     }

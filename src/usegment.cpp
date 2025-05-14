@@ -16,13 +16,18 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "upoint.h"
 #include "usegment.h"
+#include "qassert.h"
+#include "qlogging.h"
+#include "uncertain.h"
+#include "upoint.h"
 
+#include <cassert>
 #include <math.h>
 #include "ustraightline.h"
 
 #include <QDebug>
+#include <memory>
 
 using Eigen::Matrix3d;
 using Eigen::VectorXi;
@@ -42,23 +47,21 @@ class uPoint;
 QDataStream & operator<< (QDataStream & out, const Aabb & bbox);
 
 //! Output operator
-QDataStream & operator>> (QDataStream & in, Aabb & bbox);
-
+QDataStream &operator>>(QDataStream &in, Aabb &bbox);
 
 //! Diag([1,1,0])
 Matrix3d uStraightLineSegment::CC()
 {
-    static Matrix3d tmp = ( Matrix3d() << 1,0,0,0,1,0,0,0,0 ).finished();
+    static Matrix3d const tmp = ( Matrix3d() << 1,0,0,0,1,0,0,0,0 ).finished();
     return tmp;
 }
-
 
 //! Get uncertain endpoint x in homogeneous coordinates
 uPoint uStraightLineSegment::ux() const
 {
-    Matrix<double, 3,6> JJ;
-    Matrix<double, 6,6> Cov = m_Cov_tt.topLeftCorner(6,6);
-    Matrix3d Sl = skew( hl() );
+    Matrix<double, 3, 6> JJ;
+    Matrix<double, 6,6> const Cov = m_Cov_tt.topLeftCorner(6,6);
+    Matrix3d const Sl = skew( hl() );
 
     JJ.leftCols(3) = -skew( hm() );
     JJ.rightCols(3) = Sl;
@@ -67,12 +70,11 @@ uPoint uStraightLineSegment::ux() const
     return { Sl*hm(), JJ*Cov*JJ.adjoint() };
 }
 
-
 //! Get uncertain endpoint y in homogeneous coordinates
 uPoint uStraightLineSegment::uy() const
 {
     Matrix<double,3,9> JJ;
-    Matrix3d Sl = skew( hl() );
+    Matrix3d const Sl = skew( hl() );
 
     JJ << -skew( hn() ),  Matrix3d::Zero(), Sl;
 
@@ -94,10 +96,10 @@ uStraightLineSegment::uStraightLineSegment( const uPoint & ux,
 
     const Vector3d l = Sx*uy.v();
     Q_ASSERT( fabs( l.norm() ) > T_ZERO );
-    assert( fabs( l.norm() ) > T_ZERO && "identical points.");
+    assert(fabs(l.norm()) > T_ZERO && "identical points.");
 
-    double xh = ux.v()(2);
-    double yh = uy.v()(2);
+    double const xh = ux.v()(2);
+    double const yh = uy.v()(2);
     // Vector9d t;
     m_t.segment( 0, 3) = l;
     m_t.segment( 3, 3) = +sign(yh)*UUx*uy.v();
@@ -107,11 +109,11 @@ uStraightLineSegment::uStraightLineSegment( const uPoint & ux,
     //Matrix3d JJlx = -Sy;
     //Matrix3d JJly = Sx;
 
-    Matrix3d JJmx = -sign(yh)*(  Sx*CC()*Sy  + skew( CC()*l ));
-    Matrix3d JJmy = +sign(yh)*UUx;
+    Matrix3d const JJmx = -sign(yh) * (Sx * CC() * Sy + skew(CC() * l));
+    Matrix3d const JJmy = +sign(yh) * UUx;
 
-    Matrix3d JJnx = -sign(xh)*UUy;
-    Matrix3d JJny = +sign(xh)*( Sy*CC()*Sx -skew( CC()*l ));
+    Matrix3d const JJnx = -sign(xh)*UUy;
+    Matrix3d const JJny = +sign(xh)*( Sy*CC()*Sx -skew( CC()*l ));
 
     /* JJ = [ ...
         JJlx, JJly; ...
@@ -137,16 +139,16 @@ uStraightLineSegment::uStraightLineSegment( const uPoint & ux,
 
 
 //! Check if the 'this' and the uncertain straight line segment 'ut' intersect (deterministic)
-bool uStraightLineSegment::intersects( const uStraightLineSegment & ut) const
+bool uStraightLineSegment::intersects(const uStraightLineSegment &ut) const
 {
-    double d1 = ut.hx().dot( hl() );
-    double d2 = ut.hy().dot( hl() );
-    if ( sameSign(d1,d2) ) {
+    double const d1 = ut.hx().dot( hl() );
+    double const d2 = ut.hy().dot( hl() );
+    if (sameSign(d1, d2)) {
         return false;
     }
 
-    double d3 = hx().dot( ut.hl() );
-    double d4 = hy().dot( ut.hl() );
+    double const d3 = hx().dot( ut.hl() );
+    double const d4 = hy().dot( ut.hl() );
 
     // redundant boolean literal in conditional return statement:
     /* if ( sameSign( d3,d4) )
@@ -177,16 +179,16 @@ bool uStraightLineSegment::touchedBy( const uPoint & ux,
                                       const double T_dist,
                                       const double T_in) const
 {
-    if ( !ux.isIncidentWith( ul(), T_in ) ) {      // dist(x,l)
+    if (!ux.isIncidentWith(ul(), T_in)) { // dist(x,l)
         return false;
     }
 
-    uDistance ud1 = ux.distanceAlgebraicTo( um() );  // dist(x,m)
+    uDistance const ud1 = ux.distanceAlgebraicTo( um() );  // dist(x,m)
     if ( !ud1.isLessThanZero(T_dist) ) {
         return false;
     }
 
-    uDistance ud2 = ux.distanceAlgebraicTo( un() );  // dist(x,n)
+    uDistance const ud2 = ux.distanceAlgebraicTo( un() );  // dist(x,n)
     if ( !ud2.isGreaterThanZero(T_dist) ) {
         return false;
     }
@@ -197,7 +199,7 @@ bool uStraightLineSegment::touchedBy( const uPoint & ux,
 //! Get the endpoints connecting uncertain straight line l = S(x)*y
 uStraightLine uStraightLineSegment::ul() const
 {
-    Matrix3d Cov_ll = m_Cov_tt.topLeftCorner(3,3);
+    Matrix3d const Cov_ll = m_Cov_tt.topLeftCorner(3,3);
     return { m_t.head(3), Cov_ll };
 }
 
@@ -205,7 +207,7 @@ uStraightLine uStraightLineSegment::ul() const
 //! Get the delimiting uncertain straight line m in homogeneous coordinates.
 uStraightLine uStraightLineSegment::um() const
 {
-  Matrix3d Cov_mm = m_Cov_tt.block(3,3,3,3);
+  Matrix3d const Cov_mm = m_Cov_tt.block(3,3,3,3);
   return { m_t.segment(3,3), Cov_mm};
 }
 
@@ -213,7 +215,7 @@ uStraightLine uStraightLineSegment::um() const
 //! Get the delimiting uncertain straight line n in homogeneous coordinates.
 uStraightLine uStraightLineSegment::un() const
 {
-    Matrix3d Cov_nn = m_Cov_tt.bottomRightCorner(3,3);
+    Matrix3d const Cov_nn = m_Cov_tt.bottomRightCorner(3,3);
     return { m_t.tail(3), Cov_nn};
 }
 
@@ -221,8 +223,8 @@ uStraightLine uStraightLineSegment::un() const
 //! Get the endpoint x in homogeneous coordinates
 Vector3d uStraightLineSegment::hx() const
 {
-    Vector3d l = m_t.head(3);
-    Vector3d m = m_t.segment(3,3);
+    Vector3d const l = m_t.head(3);
+    Vector3d const m = m_t.segment(3,3);
     return skew( l )*m;
 }
 
@@ -230,8 +232,8 @@ Vector3d uStraightLineSegment::hx() const
 //! Get the endpoint y in homogeneous coordinates
 Vector3d uStraightLineSegment::hy() const
 {
-    Vector3d l = m_t.head(3);
-    Vector3d n = m_t.tail(3);
+    Vector3d const l = m_t.head(3);
+    Vector3d const n = m_t.tail(3);
     return skew( l )*n;
 }
 
@@ -277,17 +279,17 @@ bool uStraightLineSegment::straightLineIsIdenticalTo( const uStraightLine & um,
 }
 
 //! Move endpoint x along l to intersection point of m and l.
-bool uStraightLineSegment::move_x_to( const Vector3d & m)
+bool uStraightLineSegment::move_x_to(const Vector3d &m)
 {
-    Vector3d l = hl().normalized();
+    Vector3d const l = hl().normalized();
     Vector3d z = l.cross( m.normalized() );     // intersection point z
     if ( z.norm()<T_ZERO ) {
         return false; // l==m
     }
     // Q_ASSERT_X( z.norm() > T_ZERO, "move x", "l == m.");
 
-    Vector2d dx = x() -z.head(2)/z(2);
-    Matrix3d HH = ( Matrix3d() << 1,0,dx(0), 0,1,dx(1), 0,0,1).finished();
+    Vector2d dx = x() - z.head(2) / z(2);
+    Matrix3d const HH = ( Matrix3d() << 1,0,dx(0), 0,1,dx(1), 0,0,1).finished();
     Matrix9d TT = Matrix9d::Identity();
     TT.block(3,3,3,3) = HH.adjoint();  // m
     transform( TT);
@@ -298,15 +300,15 @@ bool uStraightLineSegment::move_x_to( const Vector3d & m)
 bool uStraightLineSegment::move_y_to( const Vector3d & n )
 {
     // intersection point z ............................
-    Vector3d l = hl().normalized();
+    Vector3d const l = hl().normalized();
     Vector3d z = l.cross( n.normalized() );
     if ( z.norm() < T_ZERO) {
         return false; // l==n
     }
     // Q_ASSERT_X( z.norm() > T_ZERO,  "move y", "l == n.");
 
-    Vector2d dx = y() -z.head(2)/z(2);
-    Matrix3d HH = (Matrix3d() << 1,0,dx(0), 0,1,dx(1), 0,0,1).finished();
+    Vector2d dx = y() - z.head(2) / z(2);
+    Matrix3d const HH = (Matrix3d() << 1,0,dx(0), 0,1,dx(1), 0,0,1).finished();
     Matrix9d TT = Matrix9d::Identity();
     TT.block(6,6,3,3) = HH.adjoint();  // n
     transform( TT);

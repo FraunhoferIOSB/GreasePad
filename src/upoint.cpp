@@ -21,6 +21,8 @@
 #include "ustraightline.h"
 
 #include <QDebug>
+#include <cmath>
+#include <cstdlib>
 
 namespace Uncertain {
 
@@ -39,22 +41,22 @@ uPoint::uPoint( const Vector3d &x,
 //! Get axis-aligned bounding box
 Aabb uPoint::bbox() const
 {
-    double u = m_val(0);
-    double v = m_val(1);
-    double w = m_val(2);
+    double const u = m_val(0);
+    double const v = m_val(1);
+    double const w = m_val(2);
     Eigen::Matrix<double,2,3> JJ;
     JJ.col(0) << 1/w, 0;
     JJ.col(1) << 0, 1/w;
     JJ.col(2) << -u/(w*w), -v/(w*w);
-    Eigen::Matrix2d Cov_xx = JJ*m_cov*JJ.transpose();
+    Eigen::Matrix2d Cov_xx = JJ * m_cov * JJ.transpose();
 
-    double x = m_val(0)/m_val(2);
-    double y = m_val(1)/m_val(2);
+    double const x = m_val(0) / m_val(2);
+    double const y = m_val(1) / m_val(2);
 
-    double x_min = x -sqrt(Cov_xx(0,0));
-    double x_max = x +sqrt(Cov_xx(0,0));
-    double y_min = y -sqrt(Cov_xx(1,1));
-    double y_max = y +sqrt(Cov_xx(1,1));
+    double const x_min = x - sqrt(Cov_xx(0, 0));
+    double const x_max = x + sqrt(Cov_xx(0, 0));
+    double const y_min = y - sqrt(Cov_xx(1, 1));
+    double const y_max = y +sqrt(Cov_xx(1,1));
 
     return Aabb{ x_min, x_max, y_min, y_max} ;
 }
@@ -77,7 +79,7 @@ uDistance uPoint::distanceEuclideanTo( const uStraightLine & ul) const
     JJl(1) = x(1)/(abs(x(2))*n) -x.dot(l)*l(1) / (abs(x(2)) *n*n*n);
     JJl(2) = x(2)/(abs(x(2))*n);
 
-    double var_d = JJx.dot(m_cov*JJx) +JJl.dot(ul.Cov()*JJl);
+    double const var_d = JJx.dot(m_cov * JJx) + JJl.dot(ul.Cov() * JJl);
 
     return {d,var_d};
 }
@@ -85,9 +87,9 @@ uDistance uPoint::distanceEuclideanTo( const uStraightLine & ul) const
 //! Get uncertain point in homogeneous coordinates, Euclidean normalized
 uPoint uPoint::euclidean() const
 {
-    double u = m_val(0); // w'=u/w
-    double v = m_val(1); // v'=v/w
-    double w = m_val(2); // w'=w/w=1
+    double const u = m_val(0); // w'=u/w
+    double const v = m_val(1); // v'=v/w
+    double const w = m_val(2); // w'=w/w=1
     Matrix3d JJ;
     JJ.row(0) << 1/w,   0, -u/(w*w);
     JJ.row(1) <<   0, 1/w, -v/(w*w);
@@ -110,23 +112,22 @@ uPoint uPoint::transformed( const Matrix3d & TT) const
 bool uPoint::isIncidentWith( const uStraightLine & ul,
                              const double T) const
 {
-    double d = m_val.dot(ul.v());    //  d = x'*l
-    double var_d = ul.v().dot( m_cov*ul.v())
-            +m_val.dot( ul.Cov()*m_val);       // uncorrelated
+    double const d = m_val.dot(ul.v());                                            //  d = x'*l
+    double const var_d = ul.v().dot(m_cov * ul.v()) + m_val.dot(ul.Cov() * m_val); // uncorrelated
     Q_ASSERT( var_d>0. );
-    double T_in = (d*d)/var_d;
+    double const T_in = (d * d) / var_d;
     return (T_in < T);
 }
 
 //! Get algebraic distance of 'this' and straight line of 'ul'
 uDistance uPoint::distanceAlgebraicTo( const uStraightLine & ul ) const
 {
-    double d = sign( m_val(2) )*m_val.dot( ul.v() );
-    Vector3d JJx = ul.v().adjoint();
-    Vector3d JJl = sign(m_val(2))*m_val.adjoint();
+    double const d = sign(m_val(2)) * m_val.dot(ul.v());
+    Vector3d const JJx = ul.v().adjoint();
+    Vector3d const JJl = sign(m_val(2)) * m_val.adjoint();
     // JJ = [l', sign(x(3))*x'];
 
-    double var_d = JJx.dot(m_cov*JJx) +JJl.dot( ul.Cov()*JJl );  // uncorrelated
+    double const var_d = JJx.dot(m_cov * JJx) + JJl.dot(ul.Cov() * JJl); // uncorrelated
 
     return {d, var_d};
 }

@@ -17,9 +17,12 @@
  */
 
 #include "constraints.h"
-#include "matrix.h"
 
 #include <QDebug>
+#include <cassert>
+#include <cmath>
+#include <cstdlib>
+#include <memory>
 
 namespace Constraint {
 
@@ -52,13 +55,11 @@ MatrixXd ConstraintBase::null( const VectorXd & xs )
     //    qDebug() << xs;
 
 #ifdef QT_DEBUG
-    QString what = QStringLiteral("norm(x) = %1").arg( QString::number(xs.norm()) );
-    Q_ASSERT_X( fabs(xs.norm()-1.) <= T_ZERO,
-                "null(x)",
-                what.toStdString().data() ) ;
+    QString const what = QStringLiteral("norm(x) = %1").arg( QString::number(xs.norm()) );
+    Q_ASSERT_X(fabs(xs.norm() - 1.) <= T_ZERO, "null(x)", what.toStdString().data());
 #endif
 
-    Eigen::Index  N = xs.size();
+    Eigen::Index  const N = xs.size();
 
     VectorXd x0 = xs.head(N-1);
     double   xN = xs(N-1);
@@ -71,7 +72,7 @@ MatrixXd ConstraintBase::null( const VectorXd & xs )
     JJ.topRows(N-1)  = MatrixXd::Identity(N-1,N-1) -x0*x0.adjoint()/(1.+xN);
     JJ.bottomRows(1) = -x0.adjoint();
 
-    VectorXd check = JJ.adjoint()*xs;
+    VectorXd const check = JJ.adjoint() * xs;
 #ifdef QT_DEBUG
     Q_ASSERT_X( check.norm() <= T_ZERO, Q_FUNC_INFO, "not a zero vector");
 #endif
@@ -101,11 +102,11 @@ MatrixXd Orthogonal::Jacobian( const VectorXi & idxx,
                                const VectorXd &l0,
                                const VectorXd &l) const
 {
-    Vector3d a0 =  l0.segment( 3*idxx(0), 3);
-    Vector3d b0 =  l0.segment( 3*idxx(1), 3);
+    Vector3d const a0 = l0.segment(3 * idxx(0), 3);
+    Vector3d const b0 = l0.segment(3 * idxx(1), 3);
 
-    Vector3d a =  l.segment( 3*idxx(0), 3);
-    Vector3d b =  l.segment( 3*idxx(1), 3);
+    Vector3d const a = l.segment(3 * idxx(0), 3);
+    Vector3d const b = l.segment(3 * idxx(1), 3);
 
     Matrix<double,1,2> JJa;
     Matrix<double,1,2> JJb;
@@ -121,8 +122,8 @@ MatrixXd Orthogonal::Jacobian( const VectorXi & idxx,
 VectorXd Orthogonal::contradict( const VectorXi &idx,
                                  const VectorXd &l0) const
 {
-    Vector3d a =  l0.segment (3*idx(0), 3);
-    Vector3d b =  l0.segment (3*idx(1), 3);
+    Vector3d const a = l0.segment(3 * idx(0), 3);
+    Vector3d const b = l0.segment(3 * idx(1), 3);
 
     VectorXd tmp(1);
     tmp << a.dot( CC()*b );
@@ -147,20 +148,17 @@ std::shared_ptr<ConstraintBase> Orthogonal::doClone() const
     return T;
 }
 
-
-MatrixXd Copunctual::Jacobian( const VectorXi & idx,
-                               const VectorXd & l0,
-                               const VectorXd & l) const
+MatrixXd Copunctual::Jacobian(const VectorXi &idx, const VectorXd &l0, const VectorXd &l) const
 {
-    Vector3d a0 = l0.segment( 3*idx(0),3);
-    Vector3d b0 = l0.segment( 3*idx(1),3);
-    Vector3d c0 = l0.segment( 3*idx(2),3);
+    Vector3d const a0 = l0.segment(3 * idx(0), 3);
+    Vector3d const b0 = l0.segment(3 * idx(1), 3);
+    Vector3d const c0 = l0.segment(3 * idx(2), 3);
 
-    Vector3d a = l.segment( 3*idx(0),3);
-    Vector3d b = l.segment( 3*idx(1),3);
-    Vector3d c = l.segment( 3*idx(2),3);
+    Vector3d const a = l.segment(3 * idx(0), 3);
+    Vector3d const b = l.segment(3 * idx(1), 3);
+    Vector3d const c = l.segment(3 * idx(2), 3);
 
-    Matrix3d MM = (Matrix3d() << a0,b0,c0 ).finished(); // [a0,b0,c0]
+    Matrix3d const MM = (Matrix3d() << a0,b0,c0 ).finished(); // [a0,b0,c0]
     Matrix3d Adju = cof3(MM).adjoint(); // adjugate(MM)
 
     MatrixXd Tmp(1,6);
@@ -171,16 +169,13 @@ MatrixXd Copunctual::Jacobian( const VectorXi & idx,
     return Tmp;
 }
 
-
-
-VectorXd Copunctual::contradict( const VectorXi & idx,
-                                 const VectorXd & l0) const
+VectorXd Copunctual::contradict(const VectorXi &idx, const VectorXd &l0) const
 {
-    Vector3d a = l0.segment( 3*idx(0), 3 );
-    Vector3d b = l0.segment( 3*idx(1), 3 );
-    Vector3d c = l0.segment( 3*idx(2), 3 );
+    Vector3d const a = l0.segment(3 * idx(0), 3);
+    Vector3d const b = l0.segment(3 * idx(1), 3);
+    Vector3d const c = l0.segment(3 * idx(2), 3);
 
-    Matrix3d MM = (Matrix3d() << a,b,c).finished();  // [a0,b0,c0]
+    Matrix3d const MM = (Matrix3d() << a,b,c).finished();  // [a0,b0,c0]
 
     VectorXd tmp(1);
     tmp << MM.determinant();
@@ -189,7 +184,7 @@ VectorXd Copunctual::contradict( const VectorXi & idx,
 
 
 //! 3x3 cofactor matrix, i.e., transposed adjugate
-Matrix3d Copunctual::cof3( const Matrix3d & MM ) const
+Matrix3d Copunctual::cof3(const Matrix3d &MM)
 {
     Matrix3d Cof;
     Cof(0,0) = +MM(1,1)*MM(2,2) -MM(2,1)*MM(1,2);
@@ -220,10 +215,10 @@ MatrixXd Identical::Jacobian( const VectorXi & idx,
                               const VectorXd & l) const
 {
     Vector3d a0 = l0.segment( 3*idx(0),3 );
-    Vector3d b0 = l0.segment( 3*idx(1),3 );
+    Vector3d b0 = l0.segment(3 * idx(1), 3);
 
-    Vector3d a = l.segment( 3*idx(0),3 );
-    Vector3d b = l.segment( 3*idx(1),3 );
+    Vector3d const a = l.segment(3 * idx(0), 3);
+    Vector3d const b = l.segment( 3*idx(1),3 );
 
     Eigen::FullPivLU<MatrixXd> LU;  // identical
     Matrix<double,3,2> JJ;   // identical
@@ -240,8 +235,8 @@ MatrixXd Identical::Jacobian( const VectorXi & idx,
     JJ = LU.kernel();               //  JJ = null( a');
     // d2 = JJ.adjoint()*(a -b);       //  (10.141)
 
-    Matrix<double,2,3> JJa = null(a0).adjoint() * Rot_ab(a,a0);
-    Matrix<double,2,3> JJb = null(b0).adjoint() * Rot_ab(b,b0);
+    Matrix<double, 2, 3> const JJa = null(a0).adjoint() * Rot_ab(a, a0);
+    Matrix<double, 2, 3> const JJb = null(b0).adjoint() * Rot_ab(b, b0);
 
     MatrixXd Tmp(2,4);
     Tmp << JJ.adjoint()*JJa.adjoint(), -JJ.adjoint()*JJb.adjoint();
@@ -253,7 +248,7 @@ VectorXd Identical::contradict( const VectorXi & idx,
 {
     Vector3d a0 = l0.segment( 3*idx(0),3 );
     Vector3d b0 = l0.segment( 3*idx(1),3 );
-    Eigen::FullPivLU<MatrixXd> LU;
+    Eigen::FullPivLU<MatrixXd> const LU;
 
     // check sign ............................................
     int idx1 = 0;
@@ -264,8 +259,8 @@ VectorXd Identical::contradict( const VectorXi & idx,
     Q_ASSERT( sameSign(a0(idx1), b0(idx2)) );
     // LU.compute( a0.adjoint() );
     // Matrix<double,3,2> JJ = LU.kernel();  //  JJ = null( a0');
-    Matrix<double,3,2> JJ = null(a0);
-    Eigen::Vector2d d2 = JJ.adjoint()*(a0 -b0);    //  (10.141)
+    Matrix<double, 3, 2> const JJ = null(a0);
+    Eigen::Vector2d const d2 = JJ.adjoint() * (a0 - b0); //  (10.141)
 
     return d2;
 }
@@ -278,33 +273,29 @@ std::shared_ptr<ConstraintBase> Identical::doClone() const
     return T;
 }
 
-MatrixXd Parallel::Jacobian( const VectorXi & idx,
-                             const VectorXd & l0,
-                             const VectorXd & l) const
+MatrixXd Parallel::Jacobian(const VectorXi &idx, const VectorXd &l0, const VectorXd &l) const
 {
-    Vector3d a0 = l0.segment( 3*idx(0),3 );
-    Vector3d b0 = l0.segment( 3*idx(1),3 );
+    Vector3d const a0 = l0.segment(3 * idx(0), 3);
+    Vector3d const b0 = l0.segment(3 * idx(1), 3);
 
-    Vector3d a =  l.segment( 3*idx(0),3 );
-    Vector3d b =  l.segment( 3*idx(1),3 );
+    Vector3d const a = l.segment(3 * idx(0), 3);
+    Vector3d const b =  l.segment( 3*idx(1),3 );
 
     // Matrix<double,1,2> JJa;
     // Matrix<double,1,2> JJb;
 
-    Matrix<double,1,2> JJa = -b0.adjoint()*S3()*Rot_ab(a0,a)*null(a0);
-    Matrix<double,1,2> JJb =  a0.adjoint()*S3()*Rot_ab(b0,b)*null(b0);
+    Matrix<double, 1, 2> const JJa = -b0.adjoint() * S3() * Rot_ab(a0, a) * null(a0);
+    Matrix<double, 1, 2> const JJb = a0.adjoint() * S3() * Rot_ab(b0, b) * null(b0);
 
     MatrixXd Tmp(1,4);
     Tmp << JJa, JJb;
     return Tmp;
 }
 
-
-VectorXd Parallel::contradict( const VectorXi & idx,
-                               const VectorXd & l0) const
+VectorXd Parallel::contradict(const VectorXi &idx, const VectorXd &l0) const
 {
-    Vector3d a = l0.segment( 3*idx(0),3 );
-    Vector3d b = l0.segment( 3*idx(1),3 );
+    Vector3d const a = l0.segment(3 * idx(0), 3);
+    Vector3d const b = l0.segment( 3*idx(1),3 );
 
     VectorXd tmp(1,1);
     tmp << a.dot( S3()*b );
@@ -348,12 +339,10 @@ Vector3d Vertical::e2()
     return tmp;
 }
 
-MatrixXd Vertical::Jacobian( const VectorXi &idx,
-                             const VectorXd &l0,
-                             const VectorXd &l) const
+MatrixXd Vertical::Jacobian(const VectorXi &idx, const VectorXd &l0, const VectorXd &l) const
 {
-    Vector3d a0 =  l0.segment( 3*idx(0), 3);
-    Vector3d a   =  l.segment( 3*idx(0), 3);
+    Vector3d const a0 = l0.segment(3 * idx(0), 3);
+    Vector3d const a   =  l.segment( 3*idx(0), 3);
 
     // returns a scalar, not a 1-vector:
     //    return e2().dot(  Rot_ab(a0,a)*null(a0) );
@@ -393,8 +382,8 @@ MatrixXd Diagonal::Jacobian( const VectorXi &idx,
 {
     // abs(a)-abs(b) = 0,  l=[a,b,c]',  J = [ sign(a), -sign(b), 0]
     Vector3d a0 = l0.segment( 3*idx(0), 3);
-    Vector3d a =  l.segment(  3*idx(0), 3);
-    Eigen::RowVector3d JJ = (Eigen::RowVector3d() << sign(a0(0)),-sign(a0(1)),0).finished();
+    Vector3d const a = l.segment(3 * idx(0), 3);
+    Eigen::RowVector3d const JJ = (Eigen::RowVector3d() << sign(a0(0)), -sign(a0(1)), 0).finished();
     return JJ * Rot_ab(a0,a) * null(a0);
 }
 
@@ -427,8 +416,8 @@ MatrixXd Horizontal::Jacobian( const VectorXi &idx,
                                const VectorXd &l0,
                                const VectorXd &l) const
 {
-    Vector3d a0 = l0.segment( 3*idx(0), 3);
-    Vector3d a  =  l.segment( 3*idx(0), 3);
+    Vector3d const a0 = l0.segment(3 * idx(0), 3);
+    Vector3d const a = l.segment(3 * idx(0), 3);
 
     return e1().adjoint()*Rot_ab(a0,a)*null(a0);
 }

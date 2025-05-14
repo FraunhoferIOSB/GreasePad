@@ -16,10 +16,11 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "qformattool.h"
 #include "global.h"
 #include "mainscene.h"
 #include "qconstraints.h"
-#include "qformattool.h"
+#include "qlogging.h"
 #include "qsegment.h"
 #include "qstroke.h"
 
@@ -32,7 +33,7 @@
 #include <QFrame>
 #include <QPushButton>
 #include <QSpinBox>
-
+#include <memory>
 
 namespace GUI {
 
@@ -129,7 +130,7 @@ void FormatTool::showColorDialog()
     m_colorDialog->show();
     m_colorDialog->exec();
 
-    QColor color = m_colorDialog->selectedColor();
+    QColor const color = m_colorDialog->selectedColor();
 
     if ( color.isValid() ) {
         QPalette pal = palette();
@@ -202,7 +203,7 @@ void FormatTool::slotApply()
          p.setWidth( m_lineWidthSpinBox->value() );
          p.setStyle( Qt::PenStyle( m_styleCombo->currentIndex() ));
 
-         int s = m_markerSizeSpinBox->value();
+         int const s = m_markerSizeSpinBox->value();
          QConstraint::QConstraintBase::setDefaultMarkerSize( s); // TODO(meijoc) req./red.
          QConstraint::QConstraintBase::setDefaultPenReq( p);
      }
@@ -214,7 +215,7 @@ void FormatTool::slotApply()
          p.setWidth( m_lineWidthSpinBox->value() );
          p.setStyle( Qt::PenStyle( m_styleCombo->currentIndex() ));
 
-         int s = m_markerSizeSpinBox->value();
+         int const s = m_markerSizeSpinBox->value();
          QConstraint::QConstraintBase::setDefaultMarkerSize( s); // TODO(meijoc) req./red.
          QConstraint::QConstraintBase::setDefaultPenRed( p);
      }

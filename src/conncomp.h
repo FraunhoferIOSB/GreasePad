@@ -19,6 +19,7 @@
 #ifndef CONNCOMP_H
 #define CONNCOMP_H
 
+#include <Eigen/Dense>
 #include <Eigen/Sparse>
 
 //! Sparse incidence matrix and connected components

@@ -25,6 +25,10 @@
 #include <QDebug>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <utility>
 
 namespace QEntity {
 
@@ -64,12 +68,11 @@ QSegment::QSegment( QGraphicsItem * parent )
     setFlag( ItemClipsChildrenToShape, true );
 }
 
-QSegment::QSegment( const uPoint & ux,
-                    const uPoint & uy)
+QSegment::QSegment(const uPoint &ux, const uPoint &uy)
 {
     // qDebug() << Q_FUNC_INFO;
-    Vector3d xh = ux.v().normalized();
-    Vector3d yh = uy.v().normalized();
+    Vector3d const xh = ux.v().normalized();
+    Vector3d const yh = uy.v().normalized();
     Q_ASSERT_X( xh.cross(yh).norm() >  T_ZERO,
                 Q_FUNC_INFO,
                 "identical end-points");   // TODO(meijoc)
@@ -78,10 +81,10 @@ QSegment::QSegment( const uPoint & ux,
     setFlag( ItemIsSelectable,         true);
     setFlag( ItemIsMovable,            false);
     setFlag( ItemSendsGeometryChanges, false);
-    setFlag( ItemClipsChildrenToShape, true );
+    setFlag(ItemClipsChildrenToShape, true);
     setShape( ux, uy );
 
-    qreal halfWidth = getSelectionOffset( ux, uy);
+    qreal const halfWidth = getSelectionOffset( ux, uy);
     createSelectionPolygon( halfWidth);
 }
 
@@ -147,11 +150,9 @@ QPainterPath QSegment::shape() const
     return ret;
 }
 
-
-
 QPolygonF QSegment::toPoly(std::pair<Eigen::VectorXd, Eigen::VectorXd> p)
 {
-    int N = static_cast<int>( p.first.size() );
+    int const N = static_cast<int>( p.first.size() );
     QPolygonF poly( N );
     for ( int i=0; i<N; i++) {
         poly[i] = QPointF( p.first(i), p.second(i));
@@ -159,17 +160,16 @@ QPolygonF QSegment::toPoly(std::pair<Eigen::VectorXd, Eigen::VectorXd> p)
     return poly;
 }
 
-double QSegment::getSelectionOffset( const uPoint & ux,
-                                     const uPoint & uy) const
+double QSegment::getSelectionOffset(const uPoint &ux, const uPoint &uy)
 {
     double m = 0;
 
-    uPoint u1 = ux.euclidean();
-    Eigen::EigenSolver<Eigen::Matrix2d> eig1( u1.Cov().topLeftCorner(2,2) );
-    m = std::max( m, eig1.eigenvalues().real().cwiseAbs().maxCoeff() );
+    uPoint const u1 = ux.euclidean();
+    Eigen::EigenSolver<Eigen::Matrix2d> const eig1(u1.Cov().topLeftCorner(2, 2));
+    m = std::max(m, eig1.eigenvalues().real().cwiseAbs().maxCoeff());
 
-    uPoint u2 = uy.euclidean();
-    Eigen::EigenSolver<Eigen::Matrix2d> eig2( u2.Cov().topLeftCorner(2,2) );
+    uPoint const u2 = uy.euclidean();
+    Eigen::EigenSolver<Eigen::Matrix2d> const eig2(u2.Cov().topLeftCorner(2, 2));
     m = std::max( m, eig2.eigenvalues().real().cwiseAbs().maxCoeff() );
 
     return 1000*sqrt(4.6052*m);  // chi2inv(0.9, 2)
@@ -202,26 +202,26 @@ void QSegment::setShape( const uPoint &ux,
     }
 
     // unconditioning .........................................
-    const Matrix3d TT = ( Matrix3d() << 1000,0,0, 0,1000,0, 0,0,1 ).finished();
-    uPoint x2 = ux.transformed(TT);
-    uPoint y2 = uy.transformed(TT);
+    const Matrix3d TT = (Matrix3d() << 1000, 0, 0, 0, 1000, 0, 0, 0, 1).finished();
+    uPoint const x2 = ux.transformed(TT);
+    uPoint const y2 = uy.transformed(TT);
 
     Q_ASSERT( x2.v().norm() > T_ZERO );
     Q_ASSERT( y2.v().norm() > T_ZERO );
     Q_ASSERT( x2.v().cross( y2.v() ).norm()  > T_ZERO );
 
     // two ellipses ...............................................
-    Conic::Ellipse ell_x( x2, k2);
-    Conic::Ellipse ell_y( y2, k2);
+    Conic::Ellipse const ell_x(x2, k2);
+    Conic::Ellipse const ell_y(y2, k2);
     ellipse_.first  = toPoly( ell_x.poly( 64 ) );
     ellipse_.second = toPoly( ell_y.poly( 64 ) );
 
     // hyperbola ..................................................
-    Conic::Hyperbola hyp( uStraightLine( x2,y2 ),  k2);
+    Conic::Hyperbola const hyp(uStraightLine(x2, y2), k2);
 
     // Two polar lines ............................................
-    Vector3d lx = ell_y.polar( x2.v() ).normalized();
-    Vector3d ly = ell_x.polar( y2.v() ).normalized();
+    Vector3d const lx = ell_y.polar(x2.v()).normalized();
+    Vector3d const ly = ell_x.polar( y2.v() ).normalized();
 
     // Four tangent points ........................................
     std::pair<Vector3d,Vector3d> pair1 = hyp.intersect( lx );
@@ -289,8 +289,8 @@ void QSegment::setShape( const uPoint &ux,
 
     // hyperbola: branches to plot
     auto ab = hyp.lengthsSemiAxes();
-    double aa = ab.first*ab.first;
-    double bb = ab.second*ab.second;
+    double const aa = ab.first * ab.first;
+    double const bb = ab.second * ab.second;
 
     // transformation branches (motion) ..........................
     QTransform t;
@@ -423,12 +423,11 @@ void QSegment::createSelectionPolygon( const qreal halfWidth)
 {
     // qDebug() << Q_FUNC_INFO;
 
-    QRectF rect(
-                -line().length()/2-halfWidth,
-                -halfWidth,
-                line().length()+2*halfWidth,
-                2*halfWidth );
-    QPolygonF poly(rect);
+    QRectF const rect(-line().length() / 2 - halfWidth,
+                      -halfWidth,
+                      line().length() + 2 * halfWidth,
+                      2 * halfWidth);
+    QPolygonF const poly(rect);
 
     QTransform t;
     t.translate( line().center().x(),

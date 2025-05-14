@@ -23,6 +23,8 @@
 #include "qformattool.h"
 
 #include "qconstraints.h"
+#include "qgraphicsitem.h"
+#include "qlogging.h"
 #include "qsegment.h"
 #include "qstroke.h"
 
@@ -51,6 +53,7 @@
 #include <QWheelEvent>
 
 #include <QFontDialog>
+#include <memory>
 // #include <Eigen/Dense>
 
 
@@ -81,7 +84,7 @@ MainWindow::MainWindow(QWidget *parent)
     // curr_state = std::make_unique<State>();
     // curr_state = new State();
 
-    double alpha = 0.1;
+    double const alpha = 0.1;
     State::setAlphaRecognition( alpha );
     State::setAlphaSnapping(    alpha );
 
@@ -708,12 +711,13 @@ bool MainWindow::maybeSave()
     }
 
     const QMessageBox::StandardButton ret
-            = QMessageBox::warning( this, QCoreApplication::applicationName(),
-                                    tr("The sketch has been modified.\n"
-                                       "Do you want to save your changes?"),
-                                    QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+        = QMessageBox::warning(this,
+                               QCoreApplication::applicationName(),
+                               tr("The sketch has been modified.\n"
+                                  "Do you want to save your changes?"),
+                               QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 
-    switch ( int(ret)) {
+    switch ( static_cast<int>(ret)) {
     case QMessageBox::Save:
         return fileSaveAs();
     case QMessageBox::Cancel:
@@ -783,7 +787,7 @@ void MainWindow::readBinaryFile( const QString & fileName)
     }
 
     file.close();
-    QFileInfo fileInfo( file.fileName() );
+    QFileInfo const fileInfo( file.fileName() );
 
 
     std::unique_ptr<State> next_state
@@ -876,7 +880,7 @@ bool MainWindow::slotExportSaveAs()
 {
     qDebug() << Q_FUNC_INFO;
 
-    QString filter = "all formats (*.pdf *.svg);;"
+    QString const filter = "all formats (*.pdf *.svg);;"
             "scalable vector graphics (*.svg);;"
             "portable document format (*.pdf)";
 
@@ -940,7 +944,7 @@ void MainWindow::slotDeselectAll()
 void MainWindow::slotSetFont()
 {
     bool ok = false;
-    QFont font  = QFontDialog::getFont( &ok, QApplication::font(), this);
+    QFont const font  = QFontDialog::getFont( &ok, QApplication::font(), this);
     // QApplication::setFont(QFontDialog::getFont(0, QApplication::font(), this));
     if (ok) {
         spinBoxAlphaRecognition->setFont( font );
@@ -979,11 +983,11 @@ void MainWindow::slotBackgroundImageLoad()
     }
     filter += QString(")");
     for ( auto & item : barray) {
-        filter += QString(";; *.%1").arg( item.data() );
+        filter += QString(";; *.%1").arg(item.data());
     }
 
 
-    QString fileName = QFileDialog::getOpenFileName( this,   "Open Image File",
+    QString const fileName = QFileDialog::getOpenFileName( this,   "Open Image File",
                                                      QDir::currentPath(), filter);
     if ( !fileName.isEmpty() ) {
         if ( openImageFile( fileName ) ) {
@@ -1018,8 +1022,8 @@ void MainWindow::slotFitInView()
 void MainWindow::slotFileOpen()
 {
     // qDebug() << Q_FUNC_INFO;
-    if ( maybeSave() ) {
-        QString fileName = QFileDialog::getOpenFileName(
+    if (maybeSave()) {
+        QString const fileName = QFileDialog::getOpenFileName(
                     this,                 "GReasePad file",
                     QDir::currentPath(),  "GReasePad files (*.grp)" );
 
@@ -1033,7 +1037,7 @@ void MainWindow::slotFileOpen()
 bool MainWindow::fileSaveAs()
 {
     // qDebug() << Q_FUNC_INFO;
-    QString fileName = QFileDialog::getSaveFileName(
+    QString const fileName = QFileDialog::getSaveFileName(
                 this,                 "Save file",
                 QDir::currentPath(),  "GReasePad files (*.grp)");
 

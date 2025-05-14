@@ -73,7 +73,8 @@ HEADERS += \
 FORMS +=
 
 # Eigen
-INCLUDEPATH += C:/Eigen/eigen-3.4.0/source
+# INCLUDEPATH += C:/Eigen/eigen-3.4.0/source
+INCLUDEPATH += C:/clone/eigen
 
 # Option
 INCLUDEPATH += "C:/Program Files (x86)/Visual Leak Detector/include/"

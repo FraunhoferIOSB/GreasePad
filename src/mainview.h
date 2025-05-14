@@ -26,8 +26,6 @@
 
 #include <memory>
 
-#include "global.h"
-
 namespace GUI {
 
 //! Graphics view

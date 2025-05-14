@@ -18,6 +18,11 @@
 
 #include "statistics.h"
 
+#include <cassert>
+#include <cfloat>
+#include <cmath>
+#include <cstdlib>
+#include <limits>
 #include <math.h>
 
 namespace Stats {
@@ -33,16 +38,15 @@ double StandardNormal::icdf( const double P ) const
     assert( P >= 0.0 );
     assert( P <= 1.0 );
 
-    if ( P < DBL_EPSILON ) {
+    if (P < DBL_EPSILON) {
         return -DBL_MAX;
     }
 
-    double alpha0 = 1.0-P;
+    double const alpha0 = 1.0-P;
     // K-R Koch, (241.8), alpha > 0.5
-    const double alpha = (alpha0<0.5) ? 1.-alpha0 : alpha0;
+    const double alpha = (alpha0 < 0.5) ? 1. - alpha0 : alpha0;
 
-
-    double t = sqrt( log( 1./ ( (1.-alpha)*(1.-alpha) )) );
+    double const t = sqrt( log( 1./ ( (1.-alpha)*(1.-alpha) )) );
 
     constexpr double c0 =  2.653962002601684482;
     constexpr double c1 =  1.561533700212080345;
@@ -131,8 +135,8 @@ double ChiSquared::GammaFctHalfInt( const double x)
     if ( std::fabs( std::fmod(x, 1) ) < DBL_EPSILON ) {
         return  factorial( static_cast<unsigned int>(x)-1); // x \in N, x>0
     }
-    if ( std::fabs(std::fmod(2*x, 1)) < DBL_EPSILON ) {
-        int p = int( x-0.5 );
+    if (std::fabs(std::fmod(2 * x, 1)) < DBL_EPSILON) {
+        int const p = static_cast<int>(x - 0.5);
         int pr = 1; // product
         for ( int i=1; i<=2*p-1; i+=2 ) {
             pr = pr*i;
@@ -159,9 +163,9 @@ double ChiSquared::cdf( const double x) const
     double sum  = 0.0;
     double prod = 1.0;
     constexpr int num_iter_max = 20;
-    for ( int i=1; i<num_iter_max; i++ ) {
-        prod *= double(m_nu+2*i);
-        double summand = pow(x,i)/double(prod);
+    for (int i = 1; i < num_iter_max; i++) {
+        prod *= static_cast<double>(m_nu + 2 * i);
+        double const summand = pow(x, i) / (prod);
         sum += summand;
         if ( summand < DBL_MIN ) {
             break;
@@ -219,15 +223,15 @@ double ChiSquared::icdf( const double P) const
     // approx., K.-R. Koch (261.11)
     const StandardNormal snd;
     const double xa = snd.icdf(P);
-    const auto df  = double(m_nu);
+    const auto df = static_cast<double>(m_nu);
     const double t = 2.0/(9.0*df);
     double q = df* pow(  xa*sqrt( t )+1.0-t,  3 );
 
     // iterative refinement, K.-R. Koch (261.13)
     constexpr int num_iter_max = 10;
     for ( int i=0; i<num_iter_max; i++) {
-        double alpha_n = 1.0-cdf(q);
-        double summand = (alpha_n-alpha) / pdf(q);
+        double const alpha_n = 1.0 - cdf(q);
+        double const summand = (alpha_n - alpha) / pdf(q);
         q += summand;
         if ( abs(summand) < DBL_EPSILON ) {
             break;
@@ -240,7 +244,7 @@ double ChiSquared::icdf( const double P) const
 
 double ChiSquared::rnd() const
 {
-    Stats::Gamma d( m_nu/2.0, 2.0 );
+    Stats::Gamma const d(m_nu / 2.0, 2.0);
     return d.rnd();
 }
 
@@ -256,7 +260,7 @@ unsigned int ChiSquared::factorial( unsigned int n)
 double Exponential::rnd() const
 {
     // u ~ U[0,1]
-    double u = (std::rand()+1)/static_cast<double>(RAND_MAX);
+    double const u = (std::rand() + 1) / static_cast<double>(RAND_MAX);
     // assert( u>0.0) ;
     return -log(u)/m_lambda;
 }
@@ -297,7 +301,7 @@ double Gamma::cdf( const double x) const
     for ( int j=1; j<100; j++) {
         // (alpha+1)*(alpha+2)* ...*(alpha+j)
         den *= m_alpha+j;
-        double Delta = pow( m_beta*x, j) / den;
+        double const Delta = pow(m_beta * x, j) / den;
         sum += Delta;
         if ( Delta < 1e-6) {
             break;
@@ -316,7 +320,7 @@ double Gamma::icdf( const double P ) const
     double y_old = mean();
     double y_new = NAN;
     for ( int i=0; i<100; i++) {
-        double h = ( cdf(y_old) -P ) / pdf( y_old );
+        double const h = (cdf(y_old) - P) / pdf(y_old);
         y_new = y_old -h;
         if ( std::fabs( h ) < 1e-7 ) {
             return y_new;
@@ -332,14 +336,15 @@ double Gamma::icdf( const double P ) const
 double Gamma::rnd() const
 {
     // Marsaglia's simple transformation-rejection method
-    Stats::StandardNormal rng;
+    Stats::StandardNormal const rng;
     const double d = m_alpha -1.0/3.0;
     double v = NAN;
     while ( true ) {
-        double x = rng.rnd();
+        double const x = rng.rnd();
 
         // rand(): [0,RANDMAX] (int)
-        double u = static_cast<double>(rand()+1)/static_cast<double>(RAND_MAX +1); // (0,1]
+        double const u = static_cast<double>(rand() + 1)
+                         / static_cast<double>(RAND_MAX + 1); // (0,1]
         v = pow( 1.0 + x/sqrt(9.0*d), 3.0);
         if  ( v>0.0  &&  log(u) > x*x/2.0 +d -d*v +d*log(v) ) {
             break;
