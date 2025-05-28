@@ -75,7 +75,7 @@ public:
     Ellipse( const Uncertain::uPoint &ux, double k2=1.0 ); //!< Value constructor (uncertain point)
 
     std::pair<Eigen::VectorXd,Eigen::VectorXd> poly( int N ) const;  //!< Get N points on ellipse
-    void scale( double s ); //!< Scale (enlarge, shrink) the ellipse (not required)
+    // void scale( double s ); //!< Scale (enlarge, shrink) the ellipse (not required)
 
     using ConicBase::operator=;
 };

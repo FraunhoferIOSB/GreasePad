@@ -245,7 +245,7 @@ void ConicBase::transform( const Matrix3d &HH )
 
 
 
-void Ellipse::scale( const double s )
+/* void Ellipse::scale( const double s )
 {
     Q_ASSERT( s>=0.0 );
     Vector3d c = center();
@@ -255,7 +255,7 @@ void Ellipse::scale( const double s )
                           0.0,   s,  c(1)-s*c(1),
                           0.0, 0.0,          1.0 ).finished();
     this->transform(HH);
-}
+} */
 
 
 std::pair<Eigen::VectorXd, Eigen::VectorXd>
