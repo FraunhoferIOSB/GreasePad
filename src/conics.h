@@ -19,7 +19,7 @@
 #ifndef CONICS_H
 #define CONICS_H
 
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <utility>
 
 namespace Uncertain {
@@ -48,23 +48,18 @@ public:
     ConicBase( const Matrix3d & other);               //!< Value constructor
     ConicBase & operator= ( const Matrix3d & other);  //!< Assignment operator
 
-    bool isEllipse()   const;  //!< Check if conic is an ellipse (not required)
-    bool isHyperbola() const;  //!< Check if conic is a hyperbola (not required)
-    bool isParabola()  const;  //!< Check if conic is a parabola (not required)
     bool isCentral()   const;  //!< Check if conic has a central point
-    bool isProper()    const;  //!< Check if conic is non-degenerated
 
     Vector3d center() const;   //!< Get center point of conic
     Vector3d polar( const Vector3d & x ) const;                          //!< Compute polar l (straight line) for point x, i.e., l=C*x
     std::pair<Vector3d,Vector3d> intersect( const Vector3d & l ) const;  //!< Two intersection points with a straight line
 
 protected:
-    void transform( const Matrix3d & HH );        //!< Transformtion of conic according to x'=H*x
     static Matrix3d cof3(const Matrix3d &MM);     //!< 3x3 cofactor matrix, i.e., transposed adjunct
 
 private:
     static Matrix3d skew(const Vector3d &x);
-    bool isSymmetric() const;
+    bool isSymmetric() const;  // for debugging only
 };
 
 
