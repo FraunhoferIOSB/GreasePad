@@ -19,6 +19,7 @@
 #ifndef USTRAIGHTLINE_H
 #define USTRAIGHTLINE_H
 
+#include "Eigen/Core"
 #include "uncertain.h"
 #include <cmath>
 
@@ -57,7 +58,6 @@ public:
     double signedDistanceToOrigin() const { return v().z()/v().head(2).norm(); }
 
     uPoint project( const uPoint & ux) const;
-    uPoint cross(   const uStraightLine & um ) const;  // not required
     double acute(   const uStraightLine & um ) const;
 
     // unary relations ..................................................

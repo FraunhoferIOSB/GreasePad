@@ -309,15 +309,5 @@ Matrix3d uStraightLine::cof3(const Matrix3d &MM)
     return Cof;
 }
 
-//! Intersection point of uncertain straight lines 'um' and 'this' (not required)
-uPoint uStraightLine::cross( const uStraightLine & um) const
-{
-    Matrix3d const JJl = -skew(um.v());
-    Matrix3d const JJm = skew(v());
-
-    // 'this' and 'um' uncorrelated:
-    return { JJm*um.v(),
-             JJl*Cov()*JJl.adjoint() + JJm*um.Cov()*JJm.adjoint() };
-}
 
 } // namespace Uncertain
