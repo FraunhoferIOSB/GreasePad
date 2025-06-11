@@ -73,7 +73,7 @@ public:
     BasicEntity2D ( const BasicEntity2D &) = default;              //!< Copy constructor
     BasicEntity2D( BasicEntity2D &&) = delete;                     //!< Move constructor
 
-    virtual ~BasicEntity2D() = default;
+    ~BasicEntity2D() = default;
 
     void normalizeSpherical();
     void transform( const Eigen::Matrix3d &TT);    // point or line transformation
