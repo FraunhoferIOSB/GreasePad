@@ -32,21 +32,19 @@ class uStraightLine;
 class uPoint : public BasicEntity2D
 {
 public:
-    uPoint() = delete; // default;
+    uPoint() = delete;
     uPoint( const Vector3d & x,
-            const Matrix3d & Cov_xx);
-    // uPoint( const uPoint &ux ) = default;
-    // ~uPoint() override = default;
+            const Matrix3d & Sigma_xx);
 
-    Aabb bbox() const;
-    /* nodiscard */ uPoint euclidean() const;
-    /* nodiscard */ uPoint sphericalNormalized() const;
-    /* nodiscard */ uPoint transformed( const Matrix3d & TT) const;
+    [[nodiscard]] Aabb bbox() const;
+    [[nodiscard]] uPoint euclidean() const;
+    [[nodiscard]] uPoint sphericalNormalized() const;
+    [[nodiscard]] uPoint transformed( const Matrix3d & TT) const;
 
-    uDistance distanceAlgebraicTo( const uStraightLine & ul) const;
-    uDistance distanceEuclideanTo( const uStraightLine & ul) const;
+    [[nodiscard]] uDistance distanceAlgebraicTo( const uStraightLine & ul) const;
+    [[nodiscard]] uDistance distanceEuclideanTo( const uStraightLine & ul) const;
 
-    bool isIncidentWith( const uStraightLine & ul, double T) const;
+    [[nodiscard]] bool isIncidentWith( const uStraightLine & ul, double T) const;
 };
 
 } // namespace Uncertain

@@ -17,19 +17,21 @@
  */
 
 #include "aabb.h"
+#include "uncertain.h"
 #include "upoint.h"
 #include "ustraightline.h"
-
+#include <Eigen/Core>
 #include <QDebug>
+#include <qassert.h>
 #include <cmath>
 #include <cstdlib>
 
 namespace Uncertain {
 
 //! Construction of uncertain point vai 3-vector x and its covariance matrix
-uPoint::uPoint( const Vector3d &x,
-                const Matrix3d &Cov_xx)
-    : BasicEntity2D (x, Cov_xx)
+uPoint::uPoint(const Vector3d &x,
+               const Matrix3d &Sigma_xx)
+    : BasicEntity2D (x, Sigma_xx)
 {
     // qDebug() << Q_FUNC_INFO;
     Q_ASSERT_X( isCovMat(m_cov),
@@ -56,7 +58,7 @@ Aabb uPoint::bbox() const
     double const x_min = x - sqrt(Cov_xx(0, 0));
     double const x_max = x + sqrt(Cov_xx(0, 0));
     double const y_min = y - sqrt(Cov_xx(1, 1));
-    double const y_max = y +sqrt(Cov_xx(1,1));
+    double const y_max = y + sqrt(Cov_xx(1, 1));
 
     return Aabb{ x_min, x_max, y_min, y_max} ;
 }
