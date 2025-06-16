@@ -20,6 +20,7 @@
 #define UNCERTAIN_H
 
 #include <Eigen/Dense>
+#include <Eigen/Core>
 
 #include <cfloat>
 #include <cmath>
@@ -43,16 +44,16 @@ public:
     uDistance( const double d, const double var_d) : m_d(d), m_var_d(var_d) {}
 
     //! Get variance of distance
-    double var_d() const { return m_var_d; }
+    [[nodiscard]] double var_d() const { return m_var_d; }
 
     //! Get distance
-    double d() const { return m_d; }
+    [[nodiscard]] double d() const { return m_d; }
 
     //! Check if distance is greater than zero.
-    bool isGreaterThanZero( const double T) const { return m_d/sqrt(m_var_d) > -T;  }
+    [[nodiscard]] bool isGreaterThanZero( const double T) const { return m_d/sqrt(m_var_d) > -T;  }
 
     //! Check if distance is less than zero.
-    bool isLessThanZero(    const double T) const { return m_d/sqrt(m_var_d) < +T;  }
+    [[nodiscard]] bool isLessThanZero(    const double T) const { return m_d/sqrt(m_var_d) < +T;  }
 
 private:
     const double     m_d;
