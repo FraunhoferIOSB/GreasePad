@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,15 +23,14 @@
 #include "uncertain.h"
 #include <cmath>
 
-// #include <QDebug>  // Q_REQUIRED_RESULT
+namespace Uncertain {
 
 using Eigen::VectorXd;
-
-namespace Uncertain {
 
 class uPoint;
 
 Matrix3d skew( const Vector3d & x);
+
 
 //! Uncertain straight line
 class uStraightLine : public BasicEntity2D
@@ -39,40 +38,37 @@ class uStraightLine : public BasicEntity2D
 public:
     uStraightLine() = default;
     uStraightLine( const Vector3d & l,
-                   const Matrix3d & Cov_ll);
+                   const Matrix3d & Sigma_ll);
     uStraightLine( const VectorXd & xi,
                    const VectorXd & yi);
     uStraightLine( const uPoint & ux,
                    const uPoint & uy);
-    // uStraightLine( const uStraightLine &other) = default;
-    // uStraightLine( const BasicEntity2D &other) : BasicEntity2D(other) {}
-    // ~uStraightLine() override = default;
 
-    /* nodiscard */ uStraightLine euclidean() const;
-    /* nodiscard */ uStraightLine sphericalNormalized() const;
+    [[nodiscard]] uStraightLine euclidean() const;
+    [[nodiscard]] uStraightLine sphericalNormalized() const;
 
     //! Angle between this straight line and the x-axis in radians
-    double angle_rad()  const { return atan2( m_val(1),m_val(0) ); }
+    [[nodiscard]] double angle_rad()  const { return atan2( m_val(1),m_val(0) ); }
 
     //! Signed distance between (0,0) and this straight line
-    double signedDistanceToOrigin() const { return v().z()/v().head(2).norm(); }
+    [[nodiscard]] double signedDistanceToOrigin() const { return v().z()/v().head(2).norm(); }
 
-    uPoint project( const uPoint & ux) const;
-    double acute(   const uStraightLine & um ) const;
+    [[nodiscard]] uPoint project( const uPoint & ux) const;
+    [[nodiscard]] double acute(   const uStraightLine & um ) const;
 
     // unary relations ..................................................
-    bool isVertical(   double T) const;
-    bool isHorizontal( double T) const;
-    bool isDiagonal(   double T) const;
+    [[nodiscard]] bool isVertical(   double T) const;
+    [[nodiscard]] bool isHorizontal( double T) const;
+    [[nodiscard]] bool isDiagonal(   double T) const;
 
     // binary relations ..................................................
-    bool isOrthogonalTo(const uStraightLine & um, double T) const;
-    bool isParallelTo(  const uStraightLine & um, double T) const;
+    [[nodiscard]] bool isOrthogonalTo(const uStraightLine & um, double T) const;
+    [[nodiscard]] bool isParallelTo(  const uStraightLine & um, double T) const;
 
     // ternary relation ..................................................
-    bool isCopunctualWith( const uStraightLine & um,
-                           const uStraightLine & un,
-                           double T) const;
+    [[nodiscard]] bool isCopunctualWith( const uStraightLine & um,
+                                         const uStraightLine & un,
+                                         double T) const;
 
 private:
     using Matrix6d    = Eigen::Matrix<double,6,6>;

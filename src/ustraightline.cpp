@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,18 @@
  */
 
 #include <cassert>
+#define _USE_MATH_DEFINES // definition before importing the library
+#include <cmath>
 #include <math.h>
-#define _USE_MATH_DEFINES
 
+#include "uncertain.h"
 #include "upoint.h"
 #include "ustraightline.h"
 
-#include <cmath>
+#include <Eigen/Core>
 
 #include <QDebug>
+#include "qassert.h"
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -51,12 +54,12 @@ Matrix3d uStraightLine::S3()
 
 
 //! Uncertain straight line, defined by a 3-vector and its covariance matrix
-uStraightLine::uStraightLine( const Vector3d & l,
-                              const Matrix3d & Cov_ll)
-    : BasicEntity2D( l, Cov_ll )
+uStraightLine::uStraightLine(const Vector3d & l,
+                             const Matrix3d & Sigma_ll)
+    : BasicEntity2D( l, Sigma_ll )
 {
     // TODO(meijoc)  check: null(Cov) = l ?
-    assert( l.size()==Cov_ll.cols() );
+    assert( l.size()==Sigma_ll.cols() );
     // assert( isCovMat( Cov_ll) );
 }
 
@@ -74,13 +77,13 @@ uStraightLine::uStraightLine( const VectorXd & xi,
     // 2nd moments .........................................
     Eigen::Index const I = xi.rows();  //qDebug() << "I = " << I;
     Eigen::Matrix2d MM;
-    MM(0,0) = xi.dot(xi)  -I*x0*x0;
-    MM(0,1) = xi.dot(yi)  -I*x0*y0;
-    MM(1,1) = yi.dot(yi)  -I*y0*y0;
+    MM(0,0) = xi.dot(xi)  -static_cast<double>(I)*x0*x0;
+    MM(0,1) = xi.dot(yi)  -static_cast<double>(I)*x0*y0;
+    MM(1,1) = yi.dot(yi)  -static_cast<double>(I)*y0*y0;
     MM(1,0) = MM(0,1);
 
     // SVD .....................................................
-    Eigen::JacobiSVD<Eigen::Matrix2d> svd( MM, Eigen::ComputeFullU );//| ComputeThinV);
+    const Eigen::JacobiSVD<Eigen::Matrix2d> svd( MM, Eigen::ComputeFullU );//| ComputeThinV);
     Eigen::Vector2d sv = svd.singularValues();
     Eigen::Matrix2d UU = svd.matrixU();
     Eigen::Vector2d n  = UU.col(1);
@@ -99,15 +102,15 @@ uStraightLine::uStraightLine( const VectorXd & xi,
     // cov. mat. for l = [0 1 0], (10.166) ........................
     // Cov_ll = diag( [1/lambda(2), 0, 1/(I*wq)]);
 
-    Vector3d const t = (Vector3d() << 1. / sv(0), 0, 1. / I).finished();
-    Matrix3d const Cov_ll  = I*t.asDiagonal(); // TODO(meijoc)
+    Vector3d const t = (Vector3d() << 1. / sv(0), 0, 1. / static_cast<double>(I)).finished();
+    Matrix3d const Sigma_ll  = static_cast<double>(I)*t.asDiagonal(); // TODO(meijoc)
 
     // variance propagation .......................................
     Matrix3d HH = Matrix3d::Identity(3,3);
     HH.topLeftCorner(2,2) = UU;
     HH(0,2) = x0;
     HH(1,2) = y0;      //  HH = [UU, x0; 0 0 1]
-    m_cov = evar0*(HH.inverse()).transpose()*Cov_ll* HH.inverse();
+    m_cov = evar0*(HH.inverse()).transpose()*Sigma_ll* HH.inverse();
 
     // TODO(meijoc): warning
     Q_ASSERT_X( isCovMat(m_cov), Q_FUNC_INFO, "invalid covariance matrix");
@@ -253,18 +256,18 @@ bool uStraightLine::isCopunctualWith( const uStraightLine & um,
     Matrix3d const MM = (Matrix3d() << m_val, um.v(), un.v()).finished();
 
     double const d = MM.determinant(); // distance, dof = 1
-    Eigen::Matrix<double,9,9> Cov_lmn;
-    Cov_lmn.fill(0);
-    Cov_lmn.block(0,0,3,3) = m_cov;
-    Cov_lmn.block(3,3,3,3) = um.Cov();
-    Cov_lmn.bottomRightCorner(3,3) = un.Cov();
+    Eigen::Matrix<double,9,9> Sigma_lmn;
+    Sigma_lmn.fill(0);
+    Sigma_lmn.block(0,0,3,3) = m_cov;
+    Sigma_lmn.block(3,3,3,3) = um.Cov();
+    Sigma_lmn.bottomRightCorner(3,3) = un.Cov();
 
     Matrix3d cofMM = cof3( MM);
     Eigen::Matrix<double,1,9> JJ;
     JJ.segment( 0, 3) = cofMM.col(0);
     JJ.segment( 3, 3) = cofMM.col(1);
     JJ.segment( 6, 3) = cofMM.col(2);
-    double const var_d = JJ * Cov_lmn * JJ.adjoint(); // error propagation
+    double const var_d = JJ * Sigma_lmn * JJ.adjoint(); // error propagation
 
     return d*d/var_d < T_d;                  // test statistic T
 }
