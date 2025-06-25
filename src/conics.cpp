@@ -21,7 +21,12 @@
 #include "upoint.h"
 #include "ustraightline.h"
 
+#include <Eigen/Core>
+#include <Eigen/Eigenvalues>
+
 #include <QDebug>
+#include <qassert.h>
+
 #include <cassert>
 #include <cmath>
 #include <utility>

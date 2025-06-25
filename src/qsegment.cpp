@@ -25,12 +25,16 @@
 #include <QDebug>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <utility>
 
 namespace QEntity {
+
+using Eigen::Matrix3d;
+using Eigen::Vector3d;
 
 using Uncertain::uStraightLine;
 using Uncertain::uPoint;

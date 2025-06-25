@@ -35,6 +35,9 @@
 
 namespace QConstraint {
 
+using Eigen::Matrix3d;
+using Eigen::Vector3d;
+
 bool QConstraintBase::s_show     =  !false; // TODO(meijoc) change later
 bool QConstraintBase::s_showColor =  false;
 int  QConstraintBase::s_defaultMarkerSize = 10;
