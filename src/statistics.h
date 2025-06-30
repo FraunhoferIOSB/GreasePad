@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,17 +32,19 @@ class Distribution
 public:
     Distribution (const Distribution & other) = delete;   //!< Copy constructor
     Distribution & operator = (const Distribution & other) = delete;  //!< Assignment constructor
+    Distribution (const Distribution && other) = delete;  //!< Move constructor
+    Distribution & operator = (const Distribution && other) = delete;  //!< Move assignment constructor
 
-    virtual double pdf( double x) const = 0;   //!< Probability density function
-    virtual double cdf( double x) const = 0;   //!< Cumulative distribution function
-    virtual double icdf( double P) const = 0;  //!< Inverse cumulative distribution function
-    virtual double mean()   const = 0;         //!< Mean
-    virtual double var()    const = 0;         //!< Variance
-    virtual double mode()   const = 0;         //!< Mode of distribution
-    virtual double rnd()    const = 0;         //!< Random number
+    [[nodiscard]] virtual double pdf( double x) const = 0;   //!< Probability density function
+    [[nodiscard]] virtual double cdf( double x) const = 0;   //!< Cumulative distribution function
+    [[nodiscard]] virtual double icdf( double P) const = 0;  //!< Inverse cumulative distribution function
+    [[nodiscard]] virtual double mean()   const = 0;         //!< Mean
+    [[nodiscard]] virtual double var()    const = 0;         //!< Variance
+    [[nodiscard]] virtual double mode()   const = 0;         //!< Mode of distribution
+    [[nodiscard]] virtual double rnd()    const = 0;         //!< Random number
 
 protected:
-    virtual ~Distribution() = default;
+    ~Distribution() = default;
     Distribution() = default;
 };
 
@@ -52,15 +54,20 @@ class StandardNormal : private Distribution
 {
 public:
     StandardNormal() = default;
-    ~StandardNormal() override = default;
+    StandardNormal (const StandardNormal & other) = delete;   //!< Copy constructor
+    StandardNormal (const StandardNormal && other) = delete;  //!< Move constructor
+    StandardNormal & operator = (const StandardNormal & other) = delete;  //!< Assignment constructor
+    StandardNormal & operator = (const StandardNormal && other) = delete;  //!< Move assignment constructor
 
-    double pdf(  double x ) const override;    //!< Probability density function
-    double cdf(  double x ) const override;    //!< Cumulative distribution function
-    double icdf( double P) const override;     //!< Inverse cumulative distribution function
-    double mean()   const override { return 0.0; }  //!< Mean
-    double var()    const override { return 1.0; }  //!< Variance
-    double mode()   const override { return 0.0; }  //!< Mode of distribution
-    double rnd()    const override;            //!< Random number
+    virtual ~StandardNormal() = default;
+
+    [[nodiscard]] double pdf(  double x ) const override;    //!< Probability density function
+    [[nodiscard]] double cdf(  double x ) const override;    //!< Cumulative distribution function
+    [[nodiscard]] double icdf( double P) const override;     //!< Inverse cumulative distribution function
+    [[nodiscard]] double mean()   const override { return 0.0; }  //!< Mean
+    [[nodiscard]] double var()    const override { return 1.0; }  //!< Variance
+    [[nodiscard]] double mode()   const override { return 0.0; }  //!< Mode of distribution
+    [[nodiscard]] double rnd()    const override;            //!< Random number
 
 private:
     constexpr static const double s_normalizing_constant =  0.398942280401433; // = 1/sqrt(2*pi);
@@ -72,23 +79,23 @@ class Gamma : private Distribution
 {
 public:
     Gamma( double alpha, double beta);        //!< Value constructor
-    ~Gamma() override = default;
+    Gamma (const Gamma & other) = delete;   //!< Copy constructor
+    Gamma (const Gamma && other) = delete;  //!< Move constructor
+    Gamma & operator = (const Gamma & other) = delete;  //!< Assignment constructor
+    Gamma & operator = (const Gamma && other) = delete;  //!< Move assignment constructor
 
-    double pdf(  double x ) const override;   //!< Probability density function
-    double cdf(  double x ) const override;   //!< Cumulative distribution function
-    double icdf( double P ) const override;   //!< Inverse cumulative distribution function
+    virtual ~Gamma() = default;
 
-    // Mean
-    double mean()   const override { return m_alpha/m_beta;  }
-
-    // Variance
-    double var()    const override { return m_alpha/(m_beta*m_beta); }
-    double mode()   const override;   //!< Mode of distribution
-    double rnd()    const override;   //!< Random number
-
-    double shape() const { return m_alpha;   }  //!< Get value of shape parameter
-    double rate()  const { return m_beta;    }  //!< Get rate (inverse scale)
-    double scale() const { return 1./m_beta; }  //!< Get value of scale parameter (inverse rate)
+    [[nodiscard]] double pdf(  double x ) const override;   //!< Probability density function
+    [[nodiscard]] double cdf(  double x ) const override;   //!< Cumulative distribution function
+    [[nodiscard]] double icdf( double P ) const override;   //!< Inverse cumulative distribution function
+    [[nodiscard]] double mean()   const override { return m_alpha/m_beta;  }
+    [[nodiscard]] double var()    const override { return m_alpha/(m_beta*m_beta); }
+    [[nodiscard]] double mode()   const override;   //!< Mode of distribution
+    [[nodiscard]] double rnd()    const override;   //!< Random number
+    [[nodiscard]] double shape() const { return m_alpha;   }  //!< Get value of shape parameter
+    [[nodiscard]] double rate()  const { return m_beta;    }  //!< Get rate (inverse scale)
+    [[nodiscard]] double scale() const { return 1./m_beta; }  //!< Get value of scale parameter (inverse rate)
 
 private:
     const double m_alpha;  //  > 0 shape
@@ -100,20 +107,22 @@ private:
 class ChiSquared : private Distribution
 {
 public:
-    ChiSquared( int df );                    //!< Value Constructor
-    ~ChiSquared() override = default;
+    explicit ChiSquared( int df );                    //!< Value Constructor
+    ChiSquared( const ChiSquared &  other) = delete;   //!< Copy constructor
+    ChiSquared (const ChiSquared && other) = delete;  //!< Move constructor
+    ChiSquared & operator = (const ChiSquared & other) = delete;  //!< Assignment constructor
+    ChiSquared & operator = (const ChiSquared && other) = delete;  //!< Move assignment constructor
 
-    double pdf( double x) const override;    //!< Probability density function
-    double cdf( double x) const override;    //!< Cumulative distribution function
-    double icdf( double P) const override;   //!< Inverse cumulative distribution function
-    double mean()   const override { return m_nu;   }    //!< Mean
-    double var()    const override { return 2*m_nu; }    //!< Variance
+    virtual ~ChiSquared() = default;
 
-    //! Mode of distribution
-    double mode()   const override { return std::fmax( m_nu-2.0, 0.0); }
-    double rnd()    const override;    //!< Random number
-
-    int dof() const { return m_nu; }   //!< Get degrees of freedom
+    [[nodiscard]] double pdf( double x) const override;    //!< Probability density function
+    [[nodiscard]] double cdf( double x) const override;    //!< Cumulative distribution function
+    [[nodiscard]] double icdf( double P) const override;   //!< Inverse cumulative distribution function
+    [[nodiscard]] double mean()   const override { return m_nu;   }    //!< Mean
+    [[nodiscard]] double var()    const override { return 2*m_nu; }    //!< Variance
+    [[nodiscard]] double mode()   const override { return std::fmax( m_nu-2.0, 0.0); } //!< mode
+    [[nodiscard]] double rnd()    const override;    //!< Random number
+    [[nodiscard]] int dof() const { return m_nu; }   //!< Get degrees of freedom
 
 private:
     static double GammaFctHalfInt( double x);
@@ -127,41 +136,38 @@ private:
 class Exponential : private Distribution
 {
 public:
-    Exponential( double lambda);         //!< Value constructor
-    ~Exponential() override = default;
+    explicit Exponential( double lambda);         //!< Value constructor
+    Exponential( const Exponential &  other) = delete;   //!< Copy constructor
+    Exponential( const Exponential && other) = delete;  //!< Move constructor
+    Exponential & operator = (const Exponential &  other) = delete;  //!< Assignment constructor
+    Exponential & operator = (const Exponential && other) = delete;  //!< Move assignment constructor
+
+    virtual ~Exponential() = default;
 
     //! Probability density function
-    double pdf( double x) const override {
+    [[nodiscard]] double pdf( double x) const override {
         return x>=0.0 ? m_lambda*exp(-m_lambda*x) : 0.0;
     }
 
     //! Cumulative distribution function
-    double cdf( double x) const override {
+    [[nodiscard]] double cdf( double x) const override {
         return x>=0.0 ? 1.0-exp(-m_lambda*x) : 0.0;
     }
 
     //! Inverse cumulative distribution function
-    double icdf( double P) const override {
+    [[nodiscard]]  double icdf( double P) const override {
         assert( P>=0.0 );
         assert( P<1.0 );
         return -log(1.0 -P)/m_lambda;
     }
 
-    //! Mean
-    double mean()   const override { return 1.0/m_lambda; }
+    [[nodiscard]]  double mean()   const override { return 1.0/m_lambda; }  //!< mean
+    [[nodiscard]]  double var()    const override { return 1.0/(m_lambda*m_lambda); } //!< Variance
+    [[nodiscard]] double mode()   const override { return 0.0; }  //!< mode
+    [[nodiscard]] double rnd()    const override;  //!< Random number
 
-    //! Variance
-    double var()    const override { return 1.0/(m_lambda*m_lambda); }
-
-    //! Mode of distributiion
-    double mode()   const override { return 0.0; }
-    double rnd()    const override;  //!< Random number
-
-    //! Get rate (inverse scale)
-    double rate()  const {return m_lambda; }
-
-    //! Get scale (inverse ratse)
-    double scale() const {return 1./m_lambda;}
+    [[nodiscard]] double rate()  const {return m_lambda; }  //!< Get rate (inverse scale)
+    [[nodiscard]] double scale() const {return 1./m_lambda;}   //!< Get scale (inverse ratse)
 
 private:
     const double m_lambda;  // rate, inverse scale
