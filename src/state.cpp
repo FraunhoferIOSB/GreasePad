@@ -47,12 +47,18 @@
 #include <QDebug>
 #include <QMessageBox>
 
+#include <Eigen/Core>
+
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
+using Eigen::VectorXi;
 using Eigen::Vector3d;
+using Eigen::Matrix3d;
 using Eigen::Index;
 using Eigen::SparseMatrix;
 using Eigen::RowVectorXi;
+using Eigen::ColMajor;
+
 
 using Constraint::ConstraintBase;
 using Constraint::Parallel;
