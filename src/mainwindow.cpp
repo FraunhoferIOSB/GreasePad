@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -305,7 +305,7 @@ void MainWindow::createActions()
     actionBasicDocumentation->setToolTip( "Basic Documentation" );
     actionBasicDocumentation->setIcon( style()->standardIcon( QStyle::SP_MessageBoxQuestion ));
 
-    actionAbout = std::make_unique<QAction>( "About" );
+    actionAbout = std::make_unique<QAction>( "About GreasePad" );
     actionAbout->setIcon( style()->standardIcon( QStyle::SP_MessageBoxInformation )); // _FileDialogInfoView) );
 
     actionAboutQt = std::make_unique<QAction>( "About Qt" );
@@ -1187,18 +1187,18 @@ void MainWindow::slotAbout()
     msgBox.setTextFormat( Qt::RichText );
     msgBox.setText( QStringLiteral(
                         "<b>%1 %2: Freehand Drawing guided by Geometric Reasoning</b><br><br>"
-                        "<b>Copyright.</b> \xa9 2022-2023 <a href=\"mailto:jochen.meidow@iosb.fraunhofer.de\">Jochen Meidow</a>, <a href=\"https://www.iosb.fraunhofer.de/en.html\">%3</a>, Germany.<br><br>"
+                        "<b>Copyright.</b> \xa9 2022-2025 <a href=\"mailto:jochen.meidow@iosb.fraunhofer.de\">Jochen Meidow</a>, <a href=\"https://www.iosb.fraunhofer.de/en.html\">%3</a>, Germany.<br><br>"
                         "<b>Licensing.</b> Distributed under the <a href=\"https://www.gnu.org/licenses/gpl-3.0.en.html\">GNU General Public Licence</a>, Version 3.<br /><br />"
                         "<b>Dependencies.</b> This software uses the C++ template library <a href=\"https://eigen.tuxfamily.org\">Eigen</a>, version %4.%5.%6, "
                         "and the <a href=\"https://www.qt.io\">Qt</a> widget toolkit, version %7.<br /><br />"
-                        "<b>Credits.</b> The author thanks Wolfgang F\xF6rstner and Horst Hammer for their inspiring collaboration.<br /><br />"
-                        "<b>References</b>. Details of the implemented methods can be found in the following paper:"
+                        "<b>Credits.</b> The author thanks Wolfgang Förstner and Horst Hammer for their inspiring collaboration.<br /><br />"
+                        "<b>Reference</b>. Details of the implemented methods can be found in the following paper:"
                         "<blockquote>"
                         "J. Meidow (2023) Geometric Reasoning for the freehand-drawn Delineation of 2D Geometries, ISPRS Journal of Photogrammetry and Remote Sensing, vol. 201, pp. 67-77.</li>"
                         // "<li>J. Meidow and L. Lucks (2019) Draw and Order - Modeless Interactive Acquisition of Outlines, ISPRS - Annals of Photogrammetry, Remote Sensing and Spatial Information Sciences, vol. IV-2/W7, pp. 103-110.</li>"
                         // "<li>J. Meidow, H. Hammer and L. Lucks (2020) Delineation and Construction of 2D Geometries by Freehand Drawing and Geometric Reasoning, ISPRS - Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences, vol. V-5-2020, pp. 77-84.</li>"
                         "</blockquote>"
-                        "Please cite these papers when using %1 or parts of it in an academic publication.")
+                        "Please cite this papers when using %1 or parts of it in an academic publication.")
                     .arg( QApplication::applicationName() )
                     .arg( QApplication::applicationVersion())
                     .arg( QApplication::organizationName())
