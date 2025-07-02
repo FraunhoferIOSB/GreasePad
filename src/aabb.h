@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,22 +23,23 @@
 class Aabb {
 
 public:
-    Aabb( double x_min=0, double x_max=0,
-          double y_min=0, double y_max=0 );  //!< Value constructor
+    explicit Aabb( double x_min, double x_max,
+                   double y_min, double y_max );  //!< Value constructor
+    Aabb() = default;
 
-    double x_min() const { return m_x_min; } //!< Get minimum x-value
-    double x_max() const { return m_x_max; } //!< Get maximum x-value
-    double y_min() const { return m_y_min; } //!< Get minimum y-value
-    double y_max() const { return m_y_max; } //!< Get maximum y-value
+    [[nodiscard]] double x_min() const { return m_x_min; } //!< Get minimum x-value
+    [[nodiscard]] double x_max() const { return m_x_max; } //!< Get maximum x-value
+    [[nodiscard]] double y_min() const { return m_y_min; } //!< Get minimum y-value
+    [[nodiscard]] double y_max() const { return m_y_max; } //!< Get maximum y-value
 
-    bool overlaps( const Aabb & other) const;    //!< Check if the other box overlaps
-    /* nodiscard */ Aabb united( const Aabb & other) const;  //!< Get united box of this and the other box
+    [[nodiscard]] bool overlaps( const Aabb & other) const;   //!< Check if the other box overlaps
+    [[nodiscard]] Aabb united( const Aabb & other) const;     //!< Get united box of this and the other box
 
 private:
-    double m_x_min;
-    double m_x_max;
-    double m_y_min;
-    double m_y_max;
+    double m_x_min = 0;
+    double m_x_max = 0;
+    double m_y_min = 0;
+    double m_y_max = 0;
 };
 
 #endif // AABB_H

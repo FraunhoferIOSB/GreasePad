@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,8 +40,12 @@ bool Aabb::overlaps( const Aabb & other) const
 
 Aabb Aabb::united( const Aabb & other) const
 {
-   return { std::fmin( m_x_min, other.m_x_min),
+    /* return { std::fmin( m_x_min, other.m_x_min),
             std::fmax( m_x_max, other.m_x_max),
             std::fmin( m_y_min, other.m_y_min),
-            std::fmax( m_y_max, other.m_y_max) };
+            std::fmax( m_y_max, other.m_y_max) };*/
+    return Aabb( std::fmin( m_x_min, other.m_x_min),
+                std::fmax( m_x_max, other.m_x_max),
+                std::fmin( m_y_min, other.m_y_min),
+                std::fmax( m_y_max, other.m_y_max) );
 }
