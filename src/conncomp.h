@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,9 @@
 #ifndef CONNCOMP_H
 #define CONNCOMP_H
 
+#include <Eigen/Core>
 #include <Eigen/Dense>
-#include <Eigen/Sparse>
+#include <Eigen/SparseCore>
 
 //! Sparse incidence matrix and connected components
 namespace Graph {
@@ -36,16 +37,16 @@ using Eigen::VectorXi;
 class ConnComp
 {
 public:
-    ConnComp( const SparseMatrix<int, ColMajor> & BB);  //!< Value constructor with sparse matrix
+    explicit ConnComp( const SparseMatrix<int, ColMajor> & BB);  //!< Value constructor with sparse matrix
 
-    VectorXi mapHead( int cc, int n) const;  //!< Get linear indices of the elements in 1...n with label 'cc'.
-    VectorXi mapTail( int cc, int n) const;  //!< Get linear indices of the elements in n-1...end with label 'cc'.
-    int label( Index i) const;     //!< Get label/index) of i-th element
-    VectorXi head( int n) const;   //!< Get labels/indices of first n elements
-    VectorXi tail( int n) const;   //!< Get labels/indices of last n elements
+    [[nodiscard]] VectorXi mapHead( int cc, Index n) const;  //!< Get linear indices of the elements in 1...n with label 'cc'.
+    [[nodiscard]] VectorXi mapTail(int cc, Index n) const;  //!< Get linear indices of the elements in n-1...end with label 'cc'.
+    [[nodiscard]] int label( Index i) const;     //!< Get label/index of i-th element
+    [[nodiscard]] VectorXi head( int n) const;   //!< Get labels/indices of first n elements
+    [[nodiscard]] VectorXi tail( int n) const;   //!< Get labels/indices of last n elements
 
     //! Get number of connected components
-    int number() const {  return m_comp.size()>0 ? m_comp.maxCoeff()+1 : 0; }
+    [[nodiscard]] int number() const {  return m_comp.size()>0 ? m_comp.maxCoeff()+1 : 0; }
 
 private:
     void dfs( const SparseMatrix<int,ColMajor> & CC,
