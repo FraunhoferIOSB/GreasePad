@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,15 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
+#include <Eigen/Core>
 #include <Eigen/Dense>
-#include <Eigen/Sparse>
+#include <Eigen/SparseCore>
 
 namespace Graph {
 
 using Eigen::ColMajor;
 using Eigen::SparseMatrix;
 using Eigen::VectorXi;
-// using Eigen::IOFormat;
 
 //! Sparse incidence matrix to encode relationships
 class IncidenceMatrix : public SparseMatrix<int, ColMajor, int>
@@ -41,9 +41,9 @@ public:
         return *this;
     }
 
-    VectorXi findInColumn( int c ) const;    //!< Matlab: find(A(:,c))
-    bool isSet( Index r, Index c) const;     //!< Check if r and c are related
-    SparseMatrix<int> biadjacency() const;   //!< Create biadjacency matrix [O, A; A', O]
+    [[nodiscard]] VectorXi findInColumn( int c ) const;    //!< Matlab: find(A(:,c))
+    [[nodiscard]] bool isSet( Index r, Index c) const;     //!< Check if r and c are related
+    [[nodiscard]] SparseMatrix<int> biadjacency() const;   //!< Create biadjacency matrix [O, A; A', O]
 
     void   set( Index r, Index c)  { coeffRef(r,c) = 1; }  //!< Set relation (row r, column c)
     void unset( Index r, Index c)  { coeffRef(r,c) = 0; }  //!< Delete relation (row r, column c)
@@ -54,9 +54,6 @@ public:
 
     //! Augment matrix by one row and one column
     void augment() { conservativeResize( rows()+1, cols()+1); }
-
-private:
-    // static const IOFormat fmt;
 };
 
 } // namespace Graph

@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,68 +18,20 @@
 
 #include "matrix.h"
 
-#include<QDataStream>
+#include <QDataStream>
+#include <QtCompilerDetection>
+#include <qassert.h>
+
+#include <Eigen/Core>
+#include <Eigen/SparseCore>
+
 #include <vector>
 
 namespace Graph {
 
-// using Eigen::IOFormat;
-// using Eigen::DontAlignCols;
 using Eigen::Triplet;
 using Eigen::Index;
 
-// const IOFormat IncidenceMatrix::fmt = IOFormat( 4, DontAlignCols, ", ", "\n", "| ", "|", "", ".\n");
-
-
-
- /* void IncidenceMatrix::serialize( QDataStream &out ) const
-{
-    // qDebug() << Q_FUNC_INFO
-
-    out <<  uint( rows() );
-    out <<  uint( cols() );
-    out <<  uint( nonZeros() );
-
-    for( Index c=0; c<outerSize(); ++c) {
-        SparseMatrix<int,ColMajor>::InnerIterator it( *this, c);
-        for( ; it; ++it) {
-            out << int(it.row()) << int(it.col());
-        }
-    }
-}
-
-
-bool IncidenceMatrix::deserialize( QDataStream &in )
-{
-    // qDebug() << Q_FUNC_INFO;
-
-    uint nrows;
-    uint ncols;
-    uint nnz;
-    int r;
-    int c;
-    in >> nrows >> ncols >> nnz;
-
-    if ( nnz> UINT_MAX  ) {
-        return false;
-    }
-
-    std::vector< Triplet<int> > tripletList;
-    tripletList.reserve( nnz );
-    for ( uint i=0; i<nnz; i++ ) {
-        in >> r >> c;
-        tripletList.emplace_back( Triplet<int>(r, c, 1) );
-    }
-    if ( in.status() != 0 ) {
-        return false;
-    }
-
-    resize( int(nrows), int(ncols) );
-    setFromTriplets( tripletList.begin(),
-                     tripletList.end() );
-
-    return true;
-}*/
 
 
 bool IncidenceMatrix::isSet( const Index r, const Index c) const
@@ -102,8 +54,10 @@ SparseMatrix<int> IncidenceMatrix::biadjacency() const {
     for ( Index k = 0; k < outerSize(); ++k) {
         for (SparseMatrix<int>::InnerIterator it(*this,k); it; ++it)
         {
-            tripletList.emplace_back( Triplet<int, Index>( it.row(),   it.col() +R_,  it.value() ));
-            tripletList.emplace_back( Triplet<int, Index>( it.col() +R_,   it.row(),  it.value() ));
+            // tripletList.emplace_back( Triplet<int, Index>( it.row(),   it.col() +R_,  it.value() ));
+            // tripletList.emplace_back( Triplet<int, Index>( it.col() +R_,   it.row(),  it.value() ));
+            tripletList.emplace_back( it.row(),   it.col() +R_,  it.value() );
+            tripletList.emplace_back( it.col() +R_,   it.row(),  it.value() );
         }
     }
     AA.setFromTriplets( tripletList.begin(), tripletList.end() );
