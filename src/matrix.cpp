@@ -66,7 +66,7 @@ SparseMatrix<int> IncidenceMatrix::biadjacency() const {
 }
 
 
-VectorXi IncidenceMatrix::findInColumn( const int c ) const
+VectorXi IncidenceMatrix::findInColumn( const Index c ) const
 {
     Eigen::Index const nnz = innerVector(c).nonZeros();
 
@@ -81,7 +81,7 @@ VectorXi IncidenceMatrix::findInColumn( const int c ) const
 
 
 
-void IncidenceMatrix::remove_column( const int c) {
+void IncidenceMatrix::remove_column( const Index c) {
 
     // qDebug() << Q_FUNC_INFO;
 
@@ -100,7 +100,7 @@ void IncidenceMatrix::remove_column( const int c) {
     *this = (*this)*TT;
 }
 
-void IncidenceMatrix::remove_row(const int r)
+void IncidenceMatrix::remove_row( const Index r)
 {
     // qDebug() << QString("remove row #%1").arg(r);
 
@@ -122,7 +122,7 @@ void IncidenceMatrix::remove_row(const int r)
 
 
 // remove i-th column and i-th row.....................................
-void IncidenceMatrix::reduce(const int i)
+void IncidenceMatrix::reduce( const Index i)
 {
     // qDebug() << QString("reduce %1").arg(i);
 

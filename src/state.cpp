@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,16 @@
  */
 
 #include "global.h"
+
+#include "qassert.h"
+#include "qcolor.h"
+#include "qcontainerfwd.h"
 #include "qlogging.h"
+#include "qstringliteral.h"
 #include "qtypes.h"
+
+#include <QtCompilerDetection>
+
 #include "quantiles.h"
 #include "uncertain.h"
 #include <algorithm>
@@ -27,14 +35,14 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#define _USE_MATH_DEFINES
+// #define _USE_MATH_DEFINES
 
 
 #include "adjustment.h"
 #include "conncomp.h"
-#include "matrix.h"
 #include "constraints.h"
 #include "mainscene.h"
+#include "matrix.h"
 #include "qconstraints.h"
 #include "qsegment.h"
 #include "qstroke.h"
@@ -46,8 +54,10 @@
 #include <QApplication>
 #include <QDebug>
 #include <QMessageBox>
+#include <QPolygonF>
 
 #include <Eigen/Core>
+#include <Eigen/SparseCore>
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
@@ -87,16 +97,18 @@ Quantiles::Recognition State::recogn_;
 Quantiles::Snapping    State::snap_;
 
 
+namespace {
+
 //! Serialization of sparse incidence matrix
-QDataStream & operator<< ( QDataStream & out, const IncidenceMatrix & AA);
+static QDataStream & operator<< ( QDataStream & out, const IncidenceMatrix & AA);
 //! Deserialization of sparse incidence matrix
-QDataStream & operator>> ( QDataStream & in,  IncidenceMatrix & AA);
+static QDataStream & operator>> ( QDataStream & in,  IncidenceMatrix & AA);
 
 //! Serialization of geometric constraint
-QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c);
+static QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c);
 //! Deserialization of geometric constraint
-QDataStream & operator>> ( QDataStream & in,  ConstraintBase & c);
-
+static QDataStream & operator>> ( QDataStream & in,  ConstraintBase & c);
+} // namespace
 
 
 
@@ -107,7 +119,7 @@ public:
     bool deserialize( QDataStream & in  );        //!< Serialization
     void serialize(   QDataStream & out ) const;  //!< Deserialization
 
-    QString StatusMsg() const;           //!< Create message for status bar
+    [[nodiscard]] QString StatusMsg() const;           //!< Create message for status bar
 
     void toggleVisibilityStrokes();        //!< Toggle the visibility of strokes (point sequences)
     void toggleVisibilityConstraints();    //!< Toggle the visibility of markers depicting geometric constraints
@@ -130,16 +142,16 @@ public:
 
 private:
     // augment
-    int find_new_constraints();
-    static VectorXi find_in_sparse_column( const SparseMatrix<int> &AA, int k);
+    Index find_new_constraints();
+    static VectorXi find_in_sparse_column( const SparseMatrix<int> &AA, Index k);
     void find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap);
-    void merge_segment ( int a);
+    void merge_segment ( Index a );
     bool identities_removed();
-    void snap_endpoints( int nnc);
+    void snap_endpoints( Index nnc);
 
     // reduce
-    void remove_constraint( int i );
-    void remove_segment( int i );
+    void remove_constraint( Index i );
+    void remove_segment(    Index i );
 
     // augment & reduce
     void search_subtask( const Eigen::RowVectorXi & mapc_,
@@ -149,30 +161,30 @@ private:
 
     void setAltColors() const;
 
-    bool is_vertical(    int a);
-    bool is_horizontal(  int a);
-    bool is_diagonal(    int a);
+    bool is_vertical(   Index a);
+    bool is_horizontal( Index a);
+    bool is_diagonal(   Index a);
 
-    bool are_parallel(   int a, int b);
-    bool are_orthogonal( int a, int b);
-    bool are_identical(  int a, int b);
+    bool are_parallel(   Index a, Index b);
+    bool are_orthogonal( Index a, Index b);
+    bool are_identical(  Index a, Index b);
 
-    bool are_copunctual( int a, int b, int c);
+    bool are_copunctual( Index a, Index b, Index c);
 
-    void establish_vertical(   int a);
-    void establish_horizontal( int a);
-    void establish_diagonal(   int a);
+    void establish_vertical(   Index a);
+    void establish_horizontal( Index a);
+    void establish_diagonal(   Index a);
 
-    void establish_parallel(   int a, int b );
-    void establish_orthogonal( int a, int b );
-    void establish_identical(  int a, int b );
+    void establish_parallel(   Index a, Index b );
+    void establish_orthogonal( Index a, Index b );
+    void establish_identical(  Index a, Index b );
 
-    void establish_copunctual( int a, int b, int c );
+    void establish_copunctual( Index a, Index b, Index c );
 
-    std::pair<Eigen::VectorXd, SparseMatrix<double> >
+    [[nodiscard]] std::pair<Eigen::VectorXd, SparseMatrix<double> >
     a_Maker( const Eigen::RowVectorXi & maps_ ) const;
 
-    int number_of_required_constraints() const; // for statistics only
+    [[nodiscard]] Index number_of_required_constraints() const; // for statistics only
 
 
     QVector< std::shared_ptr< const uStraightLineSegment> >   m_segm;
@@ -191,12 +203,12 @@ private:
     static VectorXi unique( const VectorXi &x) ;
 
     template <typename T>
-    inline int sign( T val) const { return (T(0) <= val) - (val < T(0)); }   // sign(0) := 1
+    [[nodiscard]] int sign( T val) const { return (T(0) <= val) - (val < T(0)); }   // sign(0) := 1
 };
 
 
 
-VectorXi impl::find_in_sparse_column( const SparseMatrix<int> &AA, const int k)
+VectorXi impl::find_in_sparse_column( const SparseMatrix<int> &AA, const Index k)
 {
     int nnz=0;
     for ( SparseMatrix<int>::InnerIterator it(AA,k); it; ++it ) {
@@ -244,7 +256,7 @@ VectorXi impl::unique(const VectorXi &x)
 
 
 State::State( const State & other)
-    : m_pImpl( std::make_unique<impl>(*other.m_pImpl) ) //  new impl( *other.m_pImpl))
+    : m_pImpl( std::make_unique<impl>(*other.m_pImpl) )
 {
     // qDebug() << Q_FUNC_INFO;
 }
@@ -255,7 +267,7 @@ State::~State()
     clearAll();
 }
 
-State::State() : m_pImpl( std::make_unique<impl>()) // new impl() ){
+State::State() : m_pImpl( std::make_unique<impl>())
 {
     // qDebug() << Q_FUNC_INFO;
 }
@@ -507,7 +519,7 @@ void impl::serialize( QDataStream &out ) const
     }
 
     // (3) graphics
-    for ( auto & item : m_qConstraint) {
+    for ( const auto & item : m_qConstraint) {
         item->serialize( out );
     }
     for ( const auto & item : m_qStroke) {
@@ -527,7 +539,7 @@ void impl::find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap)
 {
     // qDebug() << Q_FUNC_INFO;
 
-    int const N = m_segm.length();
+    const Index N = m_segm.length();
 
     for ( int i=0; i<N-1; i++)
     {
@@ -579,7 +591,7 @@ void impl::find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap)
 }
 
 
-void impl::remove_segment(const int i)
+void impl::remove_segment(const Index i)
 {
     // qDebug() << "removing segment #" << i+1;
     // qDebug() << Q_FUNC_INFO;
@@ -604,10 +616,10 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
     }
 
     // (1) find constraints .....................................
-    int const num_new_constraints_ = find_new_constraints();
+    const Index num_new_constraints_ = find_new_constraints();
     assert( num_new_constraints_ >= 0 );
 
-    qDebug().noquote() << QString("%1 new constraint%2 found.")
+    qDebug().noquote() << QStringLiteral("%1 new constraint%2 found.")
                 .arg(num_new_constraints_)
                 .arg(num_new_constraints_==1 ? "" : "s");
 
@@ -625,7 +637,7 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
             Eigen::RowVectorXi const mapc_ = CoCoBi.mapTail( cc, m_constr.length());
 
             assert( mapc_.size()> 0);
-            qDebug().noquote() << blue << QString("Reasoning for connected component #%1/%2...")
+            qDebug().noquote() << blue << QStringLiteral("Reasoning for connected component #%1/%2...")
                         .arg(cc).arg(LabelsNewConstrUnique.size())
                      << black;
 
@@ -638,12 +650,12 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
     snap_endpoints( num_new_constraints_ );
 }
 
-int impl::find_new_constraints()
+Index impl::find_new_constraints()
 {
     // qDebug() <<  Q_FUNC_INFO;
-    const int previously = m_constr.length();
+    const Index previously = m_constr.length();
 
-    const int c = static_cast<int>(Adj.rows()-1);
+    const Index c = Adj.rows()-1;
 
     // orthogonality & identity .......................................
     /* if ( considerOrthogonality | considerIdentity ) {
@@ -783,7 +795,7 @@ void impl::search_subtask( const Eigen::RowVectorXi & mapc_,
         if ( m_constr.at( mapc_(c) )->unevaluated() )
         {
             qDebug().noquote().nospace() << blue
-                                         << QString("Greedy search: adding constraint #%1 (%2) tentatively.")
+                                         << QStringLiteral("Greedy search: adding constraint #%1 (%2) tentatively.")
                                             .arg(c+1).arg( m_constr.at(mapc_(c))->type_name()) << black;
 
             // add constraint tentative and  check dependency/consistency:
@@ -804,8 +816,8 @@ void impl::search_subtask( const Eigen::RowVectorXi & mapc_,
 
     // adjustment with consistent set of constraints ..................
     if ( !last_constraint_required ) {
-        const int C = number_of_required_constraints();
-        qDebug().noquote() << blue << QString("final adjustment with *%1* %2.")
+        const Index C = number_of_required_constraints();
+        qDebug().noquote() << blue << QStringLiteral("final adjustment with *%1* %2.")
                               .arg( C)
                               .arg( C==1 ? "constraint" : "consistent constraints" ) << black;
         // number of equations (not constraints!):
@@ -816,10 +828,10 @@ void impl::search_subtask( const Eigen::RowVectorXi & mapc_,
     // Q_ASSERT_X( last_constraint_required, "greedy search", "final adjustment with inconsistent set");
     if ( !last_constraint_required ) {
         qDebug().noquote() << "-> final adjustment with inconsistent set";
-        QMessageBox msg;
+        QMessageBox msg(nullptr);
         msg.setIcon(            QMessageBox::Warning );
         msg.setWindowTitle(     QApplication::applicationName() );
-        msg.setText(            "Ooops, final adjustment with inconsistent set." );
+        msg.setText(            QStringLiteral("Ooops, final adjustment with inconsistent set." ));
         msg.setStandardButtons( QMessageBox::Ok );
         msg.exec();
     }
@@ -847,7 +859,7 @@ void impl::search_subtask( const Eigen::RowVectorXi & mapc_,
     }
 }
 
-void impl::snap_endpoints( const int nnc)
+void impl::snap_endpoints( const Index nnc)
 {
     // qDebug() << Q_FUNC_INFO;
 
@@ -875,7 +887,7 @@ void impl::snap_endpoints( const int nnc)
             for ( Index n=0; n<x_touches_l.cols(); n++) // but ColMajor
             {
                 if ( x_touches_l.isSet( s, n) && !y_touches_l.isSet( s, n) ) {
-                    if (useg.move_x_to(m_segm.at(static_cast<int>(n))->hl())) {
+                    if (useg.move_x_to(m_segm.at(n)->hl())) {
                         changed = true;
                         break;
                     }
@@ -884,7 +896,7 @@ void impl::snap_endpoints( const int nnc)
 
             for ( Index n=0; n<y_touches_l.cols(); n++) {
                 if ( y_touches_l.isSet( s, n)  && !x_touches_l.isSet( s, n) ) {
-                    if (useg.move_y_to(m_segm.at(static_cast<int>(n))->hl())) {
+                    if (useg.move_y_to(m_segm.at(n)->hl())) {
                         changed = true;
                         break;
                     }
@@ -900,10 +912,9 @@ void impl::snap_endpoints( const int nnc)
             for ( SparseMatrix<int,ColMajor>::InnerIterator it( x_touches_l, s) ; it; ++it) {
                 Index const n = it.row(); // neighbor of segment s
                 if ( ( CoCoBi.label(n) != cc) && ( !y_touches_l.isSet(it.index(),s) ) ) {
-                    auto us = std::make_shared<uStraightLineSegment>(
-                        *m_segm.at(static_cast<int>(n)));
+                    auto us = std::make_shared<uStraightLineSegment>(  *m_segm.at(n));
                     if (us->move_x_to(m_segm.at(s)->hl())) {
-                        m_segm.replace( static_cast<int>(n), us);
+                        m_segm.replace( n, us);
                     }
                 }
             }
@@ -912,9 +923,9 @@ void impl::snap_endpoints( const int nnc)
                 Index const n = it.row() ; // neighbor of segment s
                 if ( (CoCoBi.label(n) != cc) && ( !x_touches_l.isSet(it.index(),s) )) {
                     auto us = std::make_shared<uStraightLineSegment>(
-                        *m_segm.at(static_cast<int>(n)));
+                        *m_segm.at(n)); // static_cast<int>(n)));
                     if (us->move_y_to(m_segm.at(s)->hl())) {
-                        m_segm.replace( static_cast<int>(n), us);
+                        m_segm.replace( n, us);
                     }
                 }
             }
@@ -922,67 +933,67 @@ void impl::snap_endpoints( const int nnc)
     }
 }
 
-bool impl::is_vertical( const int a)
+bool impl::is_vertical( const Index a)
 {
     return m_segm.at(a)->isVertical(
                 State::recogn_.quantile_chi2_1dof()
                 );
 }
 
-bool impl::is_horizontal( const int a)
+bool impl::is_horizontal( const Index a)
 {
     return m_segm.at(a)->isHorizontal(
                 State::recogn_.quantile_chi2_1dof()
                 );
 }
 
-bool impl::is_diagonal( const int a)
+bool impl::is_diagonal( const Index a)
 {
     return m_segm.at(a)->isDiagonal(
                 State::recogn_.quantile_chi2_1dof() )
             ;
 }
 
-bool impl::are_copunctual( const int a,
-                           const int b,
-                           const int c)
+bool impl::are_copunctual( const Index a,
+                           const Index b,
+                           const Index c)
 {
     return  m_segm.at(c)->isCopunctualWith( m_segm.at(a)->ul(),
                                             m_segm.at(b)->ul(),
                                             State::recogn_.quantile_chi2_1dof() );
 }
 
-bool impl::are_parallel( const int a,
-                         const int b)
+bool impl::are_parallel( const Index a,
+                         const Index b)
 {
     return  m_segm.at(a)->isParallelTo( m_segm.at(b)->ul(),
                                         State::recogn_.quantile_chi2_1dof() );
 }
 
-bool impl::are_orthogonal( const int a,
-                           const int b)
+bool impl::are_orthogonal( const Index a,
+                           const Index b)
 {
     return  m_segm.at(a)->isOrthogonalTo( m_segm.at(b)->ul(),
                                           State::recogn_.quantile_chi2_1dof() );
 }
 
 
-bool impl::are_identical( const int i,
-                          const int j)
+bool impl::are_identical( const Index a,
+                          const Index b)
 {
     // pre-check with acute angle
-    double const alpha = m_segm.at(i)->ul().acute( m_segm.at(j)->ul() );
+    double const alpha = m_segm.at(a)->ul().acute( m_segm.at(b)->ul() );
     if ( alpha*57.2958 > 20.0 ) {  // 180°/pi = 57.2958°
         return false;
     }
 
     // statistical test
-    return  m_segm.at(i)->straightLineIsIdenticalTo( m_segm.at(j)->ul(),
+    return  m_segm.at(a)->straightLineIsIdenticalTo( m_segm.at(b)->ul(),
                                                      State::recogn_.quantile_chi2_2dof() );
 }
 
-void impl::establish_parallel( const int a,
-                               const int b)
+void impl::establish_parallel( const Index a,
+                               const Index b)
 {
     if ( PP.isSet(a,b) ) {
         // qDebug() << "already parallel!";
@@ -1001,7 +1012,7 @@ void impl::establish_parallel( const int a,
     Bi.set( b, Bi.cols()-1 ); // B(b,end) = 1;
 }
 
-void impl::establish_vertical( const int a)
+void impl::establish_vertical( const Index a)
 {
     m_qConstraint.append( QConstraint::QAligned::create());
     m_constr.append( std::make_shared<Vertical>() );
@@ -1010,7 +1021,7 @@ void impl::establish_vertical( const int a)
     Bi.set( a, Bi.cols()-1 );   // B(a,end)  = 1;
 }
 
-void impl::establish_horizontal( const int a)
+void impl::establish_horizontal( const Index a)
 {
     m_qConstraint.append( QConstraint::QAligned::create());
     m_constr.append( std::make_shared<Horizontal>() );
@@ -1019,7 +1030,7 @@ void impl::establish_horizontal( const int a)
     Bi.set( a, Bi.cols()-1 );   // B(a,end)  = 1;
 }
 
-void impl::establish_diagonal( const int a)
+void impl::establish_diagonal( const Index a)
 {
     m_qConstraint.append( QConstraint::QAligned::create());
     m_constr.append( std::make_shared<Diagonal>() );
@@ -1028,8 +1039,8 @@ void impl::establish_diagonal( const int a)
     Bi.set( a, Bi.cols()-1 );   // B(a,end)  = 1;
 }
 
-void impl::establish_orthogonal( const int a,
-                                 const int b)
+void impl::establish_orthogonal( const Index a,
+                                 const Index b)
 {
     m_qConstraint.append( QConstraint::QOrthogonal::create());
     m_constr.append( std::make_shared<Orthogonal>() );
@@ -1041,9 +1052,9 @@ void impl::establish_orthogonal( const int a,
 }
 
 
-void impl::establish_copunctual( const int a,
-                                  const int b,
-                                  const int c)
+void impl::establish_copunctual( const Index a,
+                                 const Index b,
+                                 const Index c)
 {
     m_qConstraint.append( QConstraint::QCopunctual::create() );
     m_constr.append( std::make_shared<Copunctual>() );
@@ -1055,7 +1066,7 @@ void impl::establish_copunctual( const int a,
 }
 
 
-void impl::establish_identical( const int a,  const int b)
+void impl::establish_identical( const Index a,  const Index b)
 {
     m_qConstraint.append( QConstraint::QIdentical::create() );
     m_constr.append( std::make_shared<Identical>() );
@@ -1100,7 +1111,7 @@ impl::a_Maker( const Eigen::RowVectorXi & maps_) const
 }
 
 
-void impl::remove_constraint( const int i )
+void impl::remove_constraint( const Index i )
 {
 
     Q_ASSERT( i>=0 );
@@ -1121,7 +1132,7 @@ void impl::remove_constraint( const int i )
 }
 
 
-int impl::number_of_required_constraints() const
+Index impl::number_of_required_constraints() const
 {
     auto predicate = []( auto & i){return (*i).required();};
     return std::count_if( m_constr.begin(), m_constr.end(), predicate);
@@ -1136,11 +1147,11 @@ bool impl::identities_removed()
 
     bool found = false;
 
-    for ( int a=static_cast<int>(Adj.rows()-1); a>=0 ; a-- )   // ! decrement
+    for ( Index a=Adj.rows()-1; a>=0 ; a-- )   // ! decrement
     {
         // if a and c are neighbors, check for identity
         if ( Adj.isSet( a,Adj.cols()-1 ) ) {
-            if (are_identical(a, static_cast<int>(Adj.cols() - 1))) {
+            if ( are_identical(a, Adj.cols()-1)) {
                 found = true;
 
                 // merge segment "a" with last segment in list
@@ -1154,13 +1165,13 @@ bool impl::identities_removed()
     return found;
 }
 
-void impl::merge_segment( const int a)
+void impl::merge_segment( const Index a)
 {
     // qDebug() << Q_FUNC_INFO << a;
 
-    const int idx = m_segm.size()-1;  // zero-based
+    const Index idx = m_segm.size()-1;  // zero-based
 
-    QPolygonF merged_track
+    const QPolygonF merged_track
             = m_qStroke.at(a)->polygon()
             + m_qStroke.last()->polygon();
 
@@ -1205,8 +1216,7 @@ void impl::merge_segment( const int a)
     }
 
     // delete constraints of segment [a] to be deleted.
-    for (int ic = static_cast<int>(Bi.cols() - 1); ic >= 0;
-         ic--) { // hint: Bi is sparse, but *ColMajor*, loop is inefficient...
+    for (Index ic = Bi.cols()-1; ic >= 0; ic--) { // hint: Bi is sparse, but *ColMajor*, loop is inefficient...
         if ( Bi.isSet(a,ic) ) {
             remove_constraint(ic);
             m_qConstraint.removeAt(ic);
@@ -1242,9 +1252,9 @@ QString State::StatusMsg() const
 
 QString impl::StatusMsg() const
 {
-    int const S = m_segm.length();
-    int const C = m_constr.length();
-    int const R = number_of_required_constraints();
+    const Index S = m_segm.length();
+    const Index C = m_constr.length();
+    const Index R = number_of_required_constraints();
 
     Graph::ConnComp const CoCoBi(Bi.biadjacency()); // TODO(meijoc)
     int const CC = CoCoBi.number();
@@ -1291,17 +1301,17 @@ void impl::reasoning_reduce_and_adjust() {
 
 void impl::remove_elements()
 {
-    for ( int i=m_qConstraint.size()-1; i>=0; i--) {
+    for ( Index i=m_qConstraint.size()-1; i>=0; i--) {
         if ( m_qConstraint.at(i)->isSelected() ) {
             remove_constraint( i );
             m_qConstraint.removeAt( i );
         }
     }
-    for ( int i=m_qConstrained.size()-1; i>=0; i--) {
+    for ( Index i=m_qConstrained.size()-1; i>=0; i--) {
         if ( m_qConstrained.at(i)->isSelected()
              || m_qStroke.at(i)->isSelected()
              || m_qUnconstrained.at(i)->isSelected() ) {
-            for (int c = 0; c < static_cast<int>(Bi.cols());
+            for (int c = 0; c < /*static_cast<int>(*/Bi.cols();
                  c++) { // Bi is sparse, but ColMajor, loop is inefficient...
                 if ( Bi.isSet(i,c) ) {
                     remove_constraint(c);
@@ -1418,7 +1428,7 @@ void impl::setAltColors() const
         // (0) color ...
         int const hue = 359 * cc / N;
         assert( hue>=0 && hue<= 359 );
-        QColor col =  QColor::fromHsv( hue,255,255,   255);
+        const QColor col =  QColor::fromHsv( hue,255,255,   255);
 
         // (1) segments ...
         VectorXi idx_s = CoCoBi.mapHead(cc, m_qConstrained.length());
@@ -1507,7 +1517,7 @@ void impl::clearAll()
 
 std::pair<VectorXd, VectorXd> impl::trackCoords(const QPolygonF &poly)
 {
-    const int N = poly.length();
+    const Index N = poly.length();
     Eigen::VectorXd xi(N);
     Eigen::VectorXd yi(N);
     for ( int i=0; i<N; i++ ) {
@@ -1518,6 +1528,9 @@ std::pair<VectorXd, VectorXd> impl::trackCoords(const QPolygonF &poly)
     yi /= 1000;
     return {xi, yi};
 }
+
+
+namespace {
 
 QDataStream & operator<< (QDataStream & out, const IncidenceMatrix & AA)
 {
@@ -1552,7 +1565,8 @@ QDataStream & operator>> (QDataStream & in,  IncidenceMatrix & AA)
     int c = 0;
     for ( uint i=0; i<nnz; i++ ) {
         in >> r >> c;
-        tripletList.emplace_back( Eigen::Triplet<int>(r, c, 1) );
+        // tripletList.emplace_back( Eigen::Triplet<int>(r, c, 1) );
+        tripletList.emplace_back( r, c, 1 );
     }
 
     AA.resize(static_cast<int>(nrows), static_cast<int>(ncols));
@@ -1561,7 +1575,6 @@ QDataStream & operator>> (QDataStream & in,  IncidenceMatrix & AA)
 
     return in;
 }
-
 
 
 QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c)
@@ -1586,4 +1599,5 @@ QDataStream & operator>> ( QDataStream &in, ConstraintBase &c )
 
     return in;
 }
+} // namespace
 

@@ -44,7 +44,7 @@ ConnComp::ConnComp( const SparseMatrix<int, ColMajor> &BB)
 
 
 
-VectorXi ConnComp::head(const int n) const
+VectorXi ConnComp::head( const Index n) const
 {
    assert( n>=0 );
    if ( n==0) {
@@ -53,7 +53,7 @@ VectorXi ConnComp::head(const int n) const
    return m_comp.head(n);
 }
 
-VectorXi ConnComp::tail( const int n) const
+VectorXi ConnComp::tail( const Index n) const
 {
    assert( n>=0 );
    if ( n==0) {

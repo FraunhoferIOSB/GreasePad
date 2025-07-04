@@ -42,8 +42,8 @@ public:
     [[nodiscard]] VectorXi mapHead( int cc, Index n) const;  //!< Get linear indices of the elements in 1...n with label 'cc'.
     [[nodiscard]] VectorXi mapTail(int cc, Index n) const;  //!< Get linear indices of the elements in n-1...end with label 'cc'.
     [[nodiscard]] int label( Index i) const;     //!< Get label/index of i-th element
-    [[nodiscard]] VectorXi head( int n) const;   //!< Get labels/indices of first n elements
-    [[nodiscard]] VectorXi tail( int n) const;   //!< Get labels/indices of last n elements
+    [[nodiscard]] VectorXi head( Index n) const;   //!< Get labels/indices of first n elements
+    [[nodiscard]] VectorXi tail( Index n) const;   //!< Get labels/indices of last n elements
 
     //! Get number of connected components
     [[nodiscard]] int number() const {  return m_comp.size()>0 ? m_comp.maxCoeff()+1 : 0; }

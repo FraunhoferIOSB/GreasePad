@@ -41,16 +41,16 @@ public:
         return *this;
     }
 
-    [[nodiscard]] VectorXi findInColumn( int c ) const;    //!< Matlab: find(A(:,c))
+    [[nodiscard]] VectorXi findInColumn( Index c ) const;    //!< Matlab: find(A(:,c))
     [[nodiscard]] bool isSet( Index r, Index c) const;     //!< Check if r and c are related
     [[nodiscard]] SparseMatrix<int> biadjacency() const;   //!< Create biadjacency matrix [O, A; A', O]
 
     void   set( Index r, Index c)  { coeffRef(r,c) = 1; }  //!< Set relation (row r, column c)
     void unset( Index r, Index c)  { coeffRef(r,c) = 0; }  //!< Delete relation (row r, column c)
 
-    void remove_row(    int r );  //!< Remove r-th row
-    void remove_column( int c );  //!< Remove c-th column
-    void reduce( int i);          //!< Remove i-th column and i-th row
+    void remove_row(    Index r );  //!< Remove r-th row
+    void remove_column( Index c );  //!< Remove c-th column
+    void reduce( Index i);          //!< Remove i-th column and i-th row
 
     //! Augment matrix by one row and one column
     void augment() { conservativeResize( rows()+1, cols()+1); }

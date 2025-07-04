@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@
 #include "quantiles.h"
 
 #include <QDataStream>
+#include <QPolygonF>
+
 
 class QString;
 class QGraphicsScene;
@@ -38,10 +40,12 @@ public:
     ~State();
     State & operator= ( const State & other);     //!< Copy assignment operator
     State( const State & other);                  //!< Copy constructor
+    State & operator= ( const State && other) = delete;     //!< Move assignment operator
+    State( const State && other) = delete;                  //!< Move constructor
 
     void serialize(   QDataStream & out ) const;  //!< Serialization
     bool deserialize( QDataStream & in);          //!< Deserialization
-    QString StatusMsg() const;                    //!< Create message for status bar
+    [[nodiscard]] QString StatusMsg() const;                    //!< Create message for status bar
 
     bool augment( const QPolygonF & track);  //!< Augment the state by adding a stroke (segment)
     bool reduce();                           //!< Reduce the state by deleteting selected segments and/or constraints
@@ -104,7 +108,7 @@ private:
     static bool considerDiagonal_;
 
     impl* pImpl() { return m_pImpl.get(); }
-    const impl* pImpl() const { return m_pImpl.get(); }
+    [[nodiscard]] const impl* pImpl() const { return m_pImpl.get(); }
 
     std::unique_ptr<impl> m_pImpl;
 };
