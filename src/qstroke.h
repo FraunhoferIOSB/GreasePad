@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,11 @@
 
 #include "global.h"
 
+#include <QColor>
 #include <QGraphicsItem>
+#include <QObject>
 #include <QPen>
+#include <QPolygonF>
 
 
 namespace QEntity {
@@ -32,11 +35,14 @@ class QStroke :  public QGraphicsPolygonItem
 {
 public:
     QStroke();
-    QStroke( const QPolygonF & p);  //!< Copy constructor
+    explicit QStroke( const QPolygonF & p);
+    QStroke( const QStroke &) = delete;    //!< Copy constructor
+    QStroke( const QStroke &&) = delete;   //!< Move constructor
+    QStroke & operator= (const QStroke & ) = delete; //!< Copy assignemt constructor
+    QStroke & operator= (const QStroke &&) = delete; //!< Move assignemt constructor
+
     ~QStroke() override = default;
 
-    // enum {Type = UserType +264};
-    // int type() const override { return Type; }
 
     void serialize( QDataStream & out ) const;  //!< serialization
     bool deserialize( QDataStream &in );        //!< deserialization
@@ -55,6 +61,7 @@ protected:
     void paint( QPainter *painter,
                 const QStyleOptionGraphicsItem *option,
                 QWidget *widget) override;  //!< Plot point sequence
+
 private:
     QPen m_pen;
 

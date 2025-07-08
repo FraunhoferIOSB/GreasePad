@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,10 +17,18 @@
  */
 
 #include "global.h"
+
+
 #include "qstroke.h"
 
+#include <QGraphicsItem>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
+#include <QPolygonF>
+#include <QtPreprocessorSupport>
+
+#include "qnamespace.h"
+
 
 namespace QEntity {
 
@@ -78,15 +86,6 @@ void QStroke::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
     // ?? QGraphicsPolygonItem::paint(painter,option,widget);
 }
 
-
-/*QStroke & QStroke::operator=( const QStroke &other)
-{
-    // qDebug() << Q_FUNC_INFO;
-    if ( &other != this ) {
-        m_pen      = other.m_pen;
-    }
-    return *this;
-}*/
 
 void QStroke::mousePressEvent( QGraphicsSceneMouseEvent * event )
 {
