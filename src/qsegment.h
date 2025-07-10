@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,25 @@
 #ifndef QSEGMENT_H
 #define QSEGMENT_H
 
+#include <Eigen/Core>
 #include <Eigen/Dense>
 
+#include <QColor>
 #include <QDebug>
 #include <QGraphicsItem>
+#include <QLineF>
+#include <QPainterPath>
 #include <QPen>
+#include <QWidget>
+
+#include "qnamespace.h"
+#include "qtypes.h"
+
 #include <utility>
 
 namespace Uncertain {
 class uPoint;
-}
+} // namespace Uncertain
 
 
 //! Graphics: Strokes and straight line segments
@@ -42,12 +51,16 @@ class QSegment : public QGraphicsItem
 public:
     QSegment( const uPoint & ux,
               const uPoint & uy);         //!< Value constructor (two uncorrelated uncertain points)
+
     QSegment( const QSegment & other) = delete;               //!< Copy constructor
     QSegment & operator= ( const QSegment & other ) = delete; //!< Copy assignment constructor
+    QSegment( const QSegment && other) = delete;   //!< Move constructor
+    QSegment & operator= ( const QSegment && other ) = delete; //!< Move assignment constructor
 
     enum {Type = UserType +164};                //!< Definition graphics type (id)
-    int type() const override { return Type; }  //!< Get graphics type (id)
-    QPen pen() const { return pen_;}            //!< Get pen
+
+    [[nodiscard]] int type() const override { return Type; }  //!< Get graphics type (id)
+    [[nodiscard]] QPen pen() const { return pen_;}            //!< Get pen
 
     void setPen( const QPen & p) { pen_ = p;}   //!< Set pen
     void setColor( const QColor & c) { pen_.setColor(c); }  //!< Set color
@@ -67,12 +80,13 @@ public:
 
 protected:
     //! Standard constructor
-    QSegment( QGraphicsItem *parent= nullptr );
+    explicit QSegment( QGraphicsItem *parent = nullptr );
     ~QSegment() override = default;
 
-    QPainterPath shape() const override;    //!< Get bounding shape
+    [[nodiscard]] QPainterPath shape() const override;    //!< Get bounding shape
+    [[nodiscard]] QRectF boundingRect() const override;   //!< Get axis-aligned bounding box
+
     void mousePressEvent( QGraphicsSceneMouseEvent * /* event */) override; //!< Handle mouse press event
-    QRectF boundingRect() const override;   //!< Get axis-aligned bounding box
 
     //! Plot uncertain straight line segment (base class)
     void paint( QPainter *painter,
@@ -85,12 +99,12 @@ private:
                    const uPoint &uy ); // with new or adjusted endpoints.
 
     static double getSelectionOffset(const uPoint &, const uPoint &);
-    QLineF line() const { return line_; }
+    [[nodiscard]] QLineF line() const { return line_; }
     static QPolygonF toPoly(std::pair<Eigen::VectorXd, Eigen::VectorXd> p);
 
-    QLineF line_;                               // straight line segment
-    std::pair<QPolygonF, QPolygonF>  branch_;   // hyperbola branches
-    std::pair<QPolygonF, QPolygonF>  ellipse_;  // ellipses of end-points
+    QLineF line_;                               //!< straight line segment
+    std::pair<QPolygonF, QPolygonF>  branch_;   //!< hyperbola branches
+    std::pair<QPolygonF, QPolygonF>  ellipse_;  //!< ellipses of end-points
     QPen pen_;
     QPolygonF minBBox;   // used in shape() und paint()
 
@@ -106,8 +120,6 @@ public:
     QConstrained();
     QConstrained( const uPoint & ux,
                   const uPoint & uy);  //!< Value constructor
-
-    // using QSegment::operator=;
 
     void setAltColor( const QColor &); //!< Set color for automatic colorization (subtasks)
 
@@ -137,19 +149,17 @@ private:
 class QUnconstrained : public QSegment
 {
 public:
-    QUnconstrained( QGraphicsItem *parent=nullptr);  //!< Standard Constructor
+    explicit QUnconstrained( QGraphicsItem *parent=nullptr);  //!< Standard Constructor
     QUnconstrained( const uPoint & ux,
                     const uPoint & uy);  //!< Value constructor (two uncorrelated uncertain points)
-
-    // using QSegment::operator=;
 
     static void toggleShow() { s_show = !s_show; }  //!< Toggle visibility
     static bool show() { return s_show; }           //!< Get status visibility
 
     static void setPenDefault( const QPen &p) { s_defaultPen = p; }  //!< Set default pen
     static QPen defaultPen() { return s_defaultPen; }  //!< Get current default pen
+
 protected:
-    // QRectF boundingRect() const override { return QSegment::boundingRect(); }
     //! Plot unconstrained uncertain straight line segment
     void paint( QPainter *painter,
                 const QStyleOptionGraphicsItem *option,

@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,14 +22,26 @@
 #include "upoint.h"
 #include "ustraightline.h"
 
+#include <Eigen/Core>
+#include <Eigen/Eigenvalues>
+
 #include <QDebug>
+#include <QGraphicsItem>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 
+#include "qassert.h"
+#include "qnamespace.h"
+#include "qtdeprecationdefinitions.h"
+#include "qtpreprocessorsupport.h"
+#include "qtypes.h"
+
 #include <algorithm>
 #include <cassert>
+#include <cfloat>
 #include <cmath>
 #include <utility>
+
 
 namespace QEntity {
 
@@ -47,6 +59,7 @@ bool QSegment::s_showUncertainty = false;
 
 QPen QSegment::s_penSelected = QPen();
 
+namespace {
 QPen & myQPen();
 
 //! Initialized pen upon first call to the function
@@ -56,10 +69,12 @@ QPen & myQPen()
     return p;
 }
 
+} // namespace
+
 QPen QUnconstrained::s_defaultPen = myQPen();
 QPen   QConstrained::s_defaultPen = QPen();
 
-static const double T_ZERO = 1e-7;
+// static const double T_ZERO = 1e-7;
 
 QSegment::QSegment( QGraphicsItem * parent )
     : QGraphicsItem(parent)
@@ -77,7 +92,7 @@ QSegment::QSegment(const uPoint &ux, const uPoint &uy)
     // qDebug() << Q_FUNC_INFO;
     Vector3d const xh = ux.v().normalized();
     Vector3d const yh = uy.v().normalized();
-    Q_ASSERT_X( xh.cross(yh).norm() >  T_ZERO,
+    Q_ASSERT_X( xh.cross(yh).norm() > FLT_EPSILON,
                 Q_FUNC_INFO,
                 "identical end-points");   // TODO(meijoc)
 
@@ -132,8 +147,7 @@ void QSegment::paint( QPainter *painter,
 QRectF QSegment::boundingRect() const
 {
     // qDebug() << Q_FUNC_INFO;
-    //    QRectF result = ellipse_.first.boundingRect().united(
-    //                ellipse_.second.boundingRect()).normalized();
+
     QRectF result = minBBox.boundingRect();
     result.adjust( -pen_.width(),
                    -pen_.width(),
@@ -156,7 +170,8 @@ QPainterPath QSegment::shape() const
 
 QPolygonF QSegment::toPoly(std::pair<Eigen::VectorXd, Eigen::VectorXd> p)
 {
-    int const N = static_cast<int>( p.first.size() );
+    // int const N = static_cast<int>( p.first.size() );
+    const Eigen::Index N = p.first.size();
     QPolygonF poly( N );
     for ( int i=0; i<N; i++) {
         poly[i] = QPointF( p.first(i), p.second(i));
@@ -184,12 +199,13 @@ void QSegment::setShape( const uPoint &ux,
 {
     // qDebug() << Q_FUNC_INFO;
     const double k2 = 4.6; // ch2inv(0.9,2)   TODO(meijoc)
+    const int nSupport = 64;
 
     Vector3d xh = ux.v().normalized();
     Vector3d yh = uy.v().normalized();
 
     // check .........................................
-    Q_ASSERT_X( xh.cross(yh).norm() >  T_ZERO,
+    Q_ASSERT_X( xh.cross(yh).norm() >  FLT_EPSILON,
                 Q_FUNC_INFO,
                 "identical end-points");   // TODO(meijoc)
     if ( std::fabs( xh(2) )>0.  &&  std::fabs( yh(2) )>0. ) {
@@ -210,18 +226,18 @@ void QSegment::setShape( const uPoint &ux,
     uPoint const x2 = ux.transformed(TT);
     uPoint const y2 = uy.transformed(TT);
 
-    Q_ASSERT( x2.v().norm() > T_ZERO );
-    Q_ASSERT( y2.v().norm() > T_ZERO );
-    Q_ASSERT( x2.v().cross( y2.v() ).norm()  > T_ZERO );
+    Q_ASSERT( x2.v().norm() > FLT_EPSILON );
+    Q_ASSERT( y2.v().norm() > FLT_EPSILON );
+    Q_ASSERT( x2.v().cross( y2.v() ).norm()  > FLT_EPSILON );
 
     // two ellipses ...............................................
     Conic::Ellipse const ell_x(x2, k2);
     Conic::Ellipse const ell_y(y2, k2);
-    ellipse_.first  = toPoly( ell_x.poly( 64 ) );
-    ellipse_.second = toPoly( ell_y.poly( 64 ) );
+    ellipse_.first  = toPoly( ell_x.poly( nSupport ) );
+    ellipse_.second = toPoly( ell_y.poly( nSupport ) );
 
     // hyperbola ..................................................
-    Conic::Hyperbola const hyp(uStraightLine(x2, y2), k2);
+    Conic::Hyperbola const hyp( uStraightLine(x2, y2), k2 );
 
     // Two polar lines ............................................
     Vector3d const lx = ell_y.polar(x2.v()).normalized();
@@ -302,7 +318,7 @@ void QSegment::setShape( const uPoint &ux,
     t.rotate( hyp.angle_deg(), Qt::ZAxis );
 
     // first branch of hyperbola .................................
-    Eigen::VectorXd xi = Eigen::VectorXd::LinSpaced( 64, d(0),d(1) );
+    Eigen::VectorXd xi = Eigen::VectorXd::LinSpaced( nSupport, d(0),d(1) );
     Eigen::VectorXd yi = xi;
     branch_.first.clear();
     for ( Eigen::Index i=0; i<xi.size(); i++ )
@@ -313,7 +329,7 @@ void QSegment::setShape( const uPoint &ux,
     branch_.first = t.map( branch_.first );
 
     // second branch of hyperbola .................................
-    xi = Eigen::VectorXd::LinSpaced( 64, d(3), d(2) );
+    xi = Eigen::VectorXd::LinSpaced( nSupport, d(3), d(2) );
     branch_.second.clear();
     yi =  -((xi.array().square() *aa/(bb)).array() +aa ).sqrt();
     for ( Eigen::Index i=0; i<xi.size(); i++ ) {
