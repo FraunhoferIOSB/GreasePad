@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "conics.h"
+
 #include "global.h"
 #include "qconstraints.h"
 #include "usegment.h"
@@ -26,11 +26,20 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QMenu>
 #include <QPainter>
-#include <math.h>
-#include <memory>
-#include <qstyleoption.h>
+#include <QtPreprocessorSupport>
 
+#include "qcontainerfwd.h"
+#include "qnamespace.h"
+#include "qstyleoption.h"
+#include "qtypes.h"
+
+#include <Eigen/Core>
+
+#include <cassert>
 #include <cfloat>
+#include <cmath>
+#include <memory>
+
 
 
 namespace QConstraint {
@@ -49,7 +58,6 @@ QConstraintBase::QConstraintBase()
     : m_pen_req(s_defaultPenReq)
     , m_pen_red(s_defaultPenRed)
     , m_is_required(false)
-    , m_is_enforced(false)
 {
     // qDebug() << Q_FUNC_INFO;
     setVisible(s_show);
@@ -61,8 +69,8 @@ QConstraintBase::QConstraintBase()
 }
 
 QConstraintBase::QConstraintBase(const QConstraintBase &other)
-    : QGraphicsItem()
-    , m_altColor(other.m_altColor)
+    : // QGraphicsItem(),
+    m_altColor(other.m_altColor)
     , m_pen_req(other.m_pen_req)
     , m_pen_red(other.m_pen_red)
     , m_is_required(other.m_is_required)
@@ -199,7 +207,7 @@ void QAligned::paint( QPainter *painter,
                        const QStyleOptionGraphicsItem * option,
                        QWidget * widget)
 {
-    QPen pen = QPen( m_is_required ? m_pen_req : m_pen_red);
+    QPen pen = QPen( required() ? m_pen_req : m_pen_red);
     if ( !enforced() ) {
         pen.setColor( Qt::red );
     }
@@ -290,7 +298,7 @@ void QOrthogonal::paint( QPainter *painter,
                          const QStyleOptionGraphicsItem * option,
                          QWidget * widget)
 {
-    QPen pen = QPen( m_is_required ? m_pen_req : m_pen_red);
+    QPen pen = QPen( required() ? m_pen_req : m_pen_red);
     if ( !enforced() ) {
         pen.setColor( Qt::cyan );
     }
@@ -348,7 +356,7 @@ void QOrthogonal::setGeometry( QVector<std::shared_ptr<const uStraightLineSegmen
 }
 
 QOrthogonal::QOrthogonal( const QOrthogonal & other)
-    : QConstraintBase( other), QGraphicsRectItem()
+    : QConstraintBase( other) //, QGraphicsRectItem()
 {
     // qDebug() << Q_FUNC_INFO;
 }
@@ -377,7 +385,7 @@ QCopunctual::QCopunctual()
 }
 
 QCopunctual::QCopunctual( const QCopunctual & other)
-    : QConstraintBase( other ), QGraphicsEllipseItem()
+    : QConstraintBase( other ) // QGraphicsEllipseItem()
 {
     // qDebug() << Q_FUNC_INFO;
 }
@@ -409,7 +417,7 @@ void QCopunctual::paint( QPainter *painter,
                          const QStyleOptionGraphicsItem * option,
                          QWidget * widget)
 {
-    QPen pen = QPen( m_is_required ? m_pen_req : m_pen_red);
+    QPen pen = QPen( required() ? m_pen_req : m_pen_red);
 
     if ( showColor()) {
         pen.setColor( m_altColor);
@@ -421,7 +429,7 @@ void QCopunctual::paint( QPainter *painter,
     painter->setPen( pen );
 
     QRectF R = rect();
-    if ( !m_is_required ) {
+    if ( !required() ) {
         // enlarge
         R.adjust( -m_pen_req.widthF(), -m_pen_req.widthF(),
                    m_pen_req.widthF(),  m_pen_req.widthF());
@@ -528,7 +536,7 @@ void QParallel::paint( QPainter *painter,
                        const QStyleOptionGraphicsItem * option,
                        QWidget * widget)
 {
-    QPen pen = QPen( m_is_required ? m_pen_req : m_pen_red);
+    QPen pen = QPen( required() ? m_pen_req : m_pen_red);
 
     if ( showColor() ) {
         pen.setColor( m_altColor);
@@ -611,7 +619,7 @@ void QIdentical::paint( QPainter *painter,
                         QWidget * widget)
 {
 
-    QPen pen = QPen( m_is_required ? m_pen_req : m_pen_red);
+    QPen pen = QPen( required() ? m_pen_req : m_pen_red);
     if ( !enforced() ) {
         pen.setColor( Qt::red );
     }
@@ -623,7 +631,7 @@ void QIdentical::paint( QPainter *painter,
 
 
 QIdentical::QIdentical( const QIdentical & other)
-    : QConstraintBase(other), QGraphicsPolygonItem()
+    : QConstraintBase(other) //, QGraphicsPolygonItem()
 {
     // qDebug() << Q_FUNC_INFO;
 }
