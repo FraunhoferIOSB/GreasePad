@@ -19,16 +19,16 @@
 #include "quantiles.h"
 #include <cassert>
 
-void Quantiles::Recognition::setAlpha( const double alpha )
+void Quantiles::Recognition::setAlpha( const Stats::Prob alpha )
 {
-    assert( alpha>=0. && alpha <= 1. && "invalid significance level");
-    quantile_chi2_1dof_ =  distr_chi2_1_.icdf( 1.-alpha );
-    quantile_chi2_2dof_ = distr_Exp_0p5_.icdf( 1.-alpha );
+    // assert( alpha>=0. && alpha <= 1. && "invalid significance level");
+    quantile_chi2_1dof_ =  distr_chi2_1_.icdf( alpha.complement()); //  1.-alpha );
+    quantile_chi2_2dof_ = distr_Exp_0p5_.icdf( alpha.complement() );
 }
 
-void Quantiles::Snapping::setAlpha( const double alpha )
+void Quantiles::Snapping::setAlpha( const Stats::Prob alpha )
 {
-    assert( alpha>=0. && alpha <= 1. && "invalid significance level");
-    quantile_snd_    =    distr_snd_.icdf( 1.-alpha);
-    quantile_chi2_1_ = distr_chi2_1_.icdf( 1.-alpha);
+    // assert( alpha>=0. && alpha <= 1. && "invalid significance level");
+    quantile_snd_    =    distr_snd_.icdf( alpha.complement() );
+    quantile_chi2_1_ = distr_chi2_1_.icdf( alpha.complement() );
 }

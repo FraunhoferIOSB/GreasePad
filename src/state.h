@@ -22,6 +22,7 @@
 #include <memory>
 
 #include "quantiles.h"
+#include "statistics.h"
 
 #include <QDataStream>
 #include <QPolygonF>
@@ -91,10 +92,12 @@ public:
     static bool considerDiagonal()   { return considerDiagonal_;   }
 
     //! Set significane level for recognition tasks
-    static void setAlphaRecognition( const double alpha) { recogn_.setAlpha(alpha);  }
+    static void setAlphaRecognition( const double alpha) {
+        recogn_.setAlpha( Stats::Prob(alpha) );  }
 
     //! Set significane level for snapping of end points
-    static void setAlphaSnapping(    const double alpha) {   snap_.setAlpha(alpha);  }
+    static void setAlphaSnapping(    const double alpha) {
+        snap_.setAlpha( Stats::Prob(alpha) );  }
 
     static Quantiles::Recognition recogn_;  //!< Quantiles for recognition
     static Quantiles::Snapping    snap_;    //!< Quantiles for snapping

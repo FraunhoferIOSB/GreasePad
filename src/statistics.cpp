@@ -32,16 +32,13 @@ namespace Stats {
 // National Bureau of Standards, Washington (1964).
 // Abramowitz and Stegun Approximations 26.2.23
 
-double StandardNormal::icdf( const double P ) const
+double StandardNormal::icdf( const Prob P ) const
 {
-    assert( P >= 0.0 );
-    assert( P <= 1.0 );
-
-    if (P < DBL_EPSILON) {
+    if (P() < DBL_EPSILON) {
         return -DBL_MAX;
     }
 
-    double const alpha0 = 1.0-P;
+    double const alpha0 = 1.0-P();
     // K-R Koch, (241.8), alpha > 0.5
     const double alpha = (alpha0 < 0.5) ? 1. - alpha0 : alpha0;
 
@@ -79,13 +76,13 @@ double StandardNormal::pdf( const double x) const
  * \param x real number
  * \return value of the cdf
  */
-double StandardNormal::cdf( const double x) const
+Prob StandardNormal::cdf( const double x) const
 {
     //  Koch (241.5), 1e-5
     // N.R. p. 221? 1e-7
 
     if ( x<0.0 ) {
-       return 1.0-cdf(-x);
+       return Prob( cdf(-x).complement() );  // 1-cdf()
     }
 
     constexpr double p = 0.33267;
@@ -94,7 +91,7 @@ double StandardNormal::cdf( const double x) const
     constexpr double a3 =  0.9372980;
     const double t = 1.0 / (1.0+p*x);
 
-    return 1.0-exp(-0.5*x*x)*(a1 +(a2 +a3*t)*t)*t *s_normalizing_constant;
+    return Prob( 1.0-exp(-0.5*x*x)*(a1 +(a2 +a3*t)*t)*t *s_normalizing_constant );
 }
 
 double StandardNormal::rnd() const
@@ -152,10 +149,10 @@ double ChiSquared::GammaFctHalfInt( const double x)
  * \param x real number
  * \return value of cumulative density function
  */
-double ChiSquared::cdf( const double x) const
+Prob ChiSquared::cdf( const double x) const
 {
     if ( x<0.0 ) {
-        return 0.0;
+        return Prob(0);
     }
 
     // K.-R. Koch, (261.6).
@@ -163,7 +160,7 @@ double ChiSquared::cdf( const double x) const
     double prod = 1.0;
     constexpr int num_iter_max = 20;
     for (int i = 1; i < num_iter_max; i++) {
-        prod *= static_cast<double>(m_nu + 2 * i);
+        prod *= static_cast<double>( m_nu + 2*i );
         double const summand = pow(x, i) / (prod);
         sum += summand;
         if ( summand < DBL_MIN ) {
@@ -171,7 +168,9 @@ double ChiSquared::cdf( const double x) const
         }
     }
 
-    return pow( 0.5*x, 0.5*m_nu) * exp(-0.5*x) / GammaFctHalfInt( 0.5*(m_nu+2) )*(1.0 +sum );
+    return Prob(
+        pow( 0.5*x, 0.5*m_nu) * exp(-0.5*x) / GammaFctHalfInt( 0.5*(m_nu+2) )*(1.0 +sum )
+        );
 
     //qDebug().noquote() << QString("chi2cdf(%1, %2) = %3").arg(x).arg(nu).arg(F);
 }
@@ -205,19 +204,10 @@ ChiSquared::ChiSquared(const int df ) : m_nu(df) {
  * \param P probability [0,1]
  * \return Quantile x so that cdf(x,nu) = P.
  */
-double ChiSquared::icdf( const double P) const
+double ChiSquared::icdf( const Prob P) const
 {
-    assert( P >= 0.0  );
-    assert( P <= 1.0  );
 
-    if ( P < 0.0) {
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-    if ( P >= 1.0) {
-        return std::numeric_limits<double>::infinity();
-    }
-
-    const double alpha = 1.0 -P;
+    const double alpha = 1.0 -P();
 
     // approx., K.-R. Koch (261.11)
     const StandardNormal snd;
@@ -229,7 +219,7 @@ double ChiSquared::icdf( const double P) const
     // iterative refinement, K.-R. Koch (261.13)
     constexpr int num_iter_max = 10;
     for ( int i=0; i<num_iter_max; i++) {
-        double const alpha_n = 1.0 - cdf(q);
+        double const alpha_n = 1.0 - cdf(q)();
         double const summand = (alpha_n - alpha) / pdf(q);
         q += summand;
         if ( abs(summand) < DBL_EPSILON ) {
@@ -291,7 +281,7 @@ double Gamma::pdf( const double x ) const
 
 
 
-double Gamma::cdf( const double x) const
+Prob Gamma::cdf( const double x) const
 {
     // K.R. Koch (243.11)
     assert( x>0.0 );
@@ -306,21 +296,20 @@ double Gamma::cdf( const double x) const
             break;
         }
     }
-    return (1.0+sum) * pow(m_beta,m_alpha)
+    return Prob(
+        (1.0+sum) * pow(m_beta,m_alpha)
             * pow(x,m_alpha) * exp(-m_beta*x)
-            / std::tgamma(m_alpha+1.0);
+            / std::tgamma(m_alpha+1.0)
+        );
 }
 
-double Gamma::icdf( const double P ) const
+double Gamma::icdf( const Prob P ) const
 {
-    assert( P>=0. );
-    assert( P<=1. );
-
     double y_old = mean();
-    double y_new = NAN;
+    // double y_new = NAN;
     for ( int i=0; i<100; i++) {
-        double const h = (cdf(y_old) - P) / pdf(y_old);
-        y_new = y_old -h;
+        double const h = (cdf(y_old)() - P()) / pdf(y_old);
+        const double y_new = y_old -h;
         if ( std::fabs( h ) < 1e-7 ) {
             return y_new;
         }

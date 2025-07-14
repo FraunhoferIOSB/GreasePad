@@ -34,7 +34,7 @@ public:
 
     //! Get quantile of chi-square distribution with two degeree of freedom
     double quantile_chi2_1dof() const { return quantile_chi2_1_; }
-    void setAlpha( double alpha );  //!< Set significande level alpha
+    void setAlpha( Stats::Prob alpha );  //!< Set significande level alpha
 
 private:
     double quantile_snd_{};     // Quantile of standard normal distribution N(0,1)
@@ -53,7 +53,7 @@ public:
 
     //! Get quantile of chi-square distribution with two degeree of freedom
     double quantile_chi2_2dof() const { return quantile_chi2_2dof_; }
-    void setAlpha( double alpha );  //!< Set significance level alpha
+    void setAlpha( Stats::Prob alpha );  //!< Set significance level alpha
 
 private:
     double quantile_chi2_1dof_{};
