@@ -142,7 +142,7 @@ public:
 
 private:
     static double GammaFctHalfInt( double x);
-    static unsigned int factorial( unsigned int n);
+    constexpr static unsigned int factorial( unsigned int n);
 
     const int m_nu; // degrees of freedom
 };

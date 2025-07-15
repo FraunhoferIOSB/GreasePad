@@ -18,6 +18,8 @@
 
 #include "statistics.h"
 
+#include <QDebug>
+
 #include <cassert>
 #include <cfloat>
 #include <cmath>
@@ -180,7 +182,7 @@ Prob ChiSquared::cdf( const double x) const
  * \param x real number [0,inf)
  * \return value of the probability density function (pdf)
  */
-double Stats::ChiSquared::pdf( const double x) const
+double ChiSquared::pdf( const double x) const
 {
     // qDebug() << Q_FUNC_INFO;
     if ( x < 0.0 ) {
@@ -238,13 +240,30 @@ double ChiSquared::rnd() const
 }
 
 
-unsigned int ChiSquared::factorial( unsigned int n)
+
+
+/*!
+ * \brief factorial, compile-time enabled evaluation
+ * \param n non-negative integer [0,17]
+ * \return factorial n!
+*/
+constexpr unsigned int ChiSquared::factorial( const unsigned int n)
 {
-    if ( n==0 ) {
+    // prevent silliness and overflow:
+    assert( n < 18);     // 17! =  3.5569e+14
+
+    /* if ( n==0 ) {
         return 1;
     }
-    return n * factorial(n - 1);
+    return n * factorial(n - 1); */
+
+    unsigned int x = 1;   // 0! = 1
+    for ( unsigned int i = 2; i <= n; ++i) {
+        x *= i;
+    }
+    return x;
 }
+
 
 double Exponential::rnd() const
 {
