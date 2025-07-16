@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,14 @@
  */
 
 #include "conics.h"
-#include "qlogging.h"
-#include "upoint.h"
-#include "ustraightline.h"
 
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
 #include <QDebug>
-#include <qassert.h>
+
+#include "qassert.h"
+#include "qlogging.h"
 
 #include <cassert>
 #include <cmath>
@@ -33,18 +32,16 @@
 
 namespace Conic {
 
-using Uncertain::uPoint;
-using Uncertain::uStraightLine;
-
 using Eigen::Vector2d;
 using Eigen::Vector3d;
 using Eigen::Matrix2d;
 using Eigen::Matrix3d;
 
-ConicBase::ConicBase( const Matrix3d& other) : Matrix3d(other)
+ConicBase::ConicBase(Matrix3d other)
+    : CC(std::move(other))
 {
-    // Q_ASSERT( isSymmetric()==true);
-    assert( isSymmetric()==true );
+    constexpr double T_sym = 1e-6;
+    assert( ( CC -CC.adjoint() ).norm() < T_sym );
 }
 
 Matrix3d ConicBase::skew(const Vector3d &x)
@@ -52,54 +49,37 @@ Matrix3d ConicBase::skew(const Vector3d &x)
     return (Matrix3d() << 0.,-x(2),x(1), x(2),0.,-x(0), -x(1),x(0),0.).finished();
 }
 
-bool ConicBase::isSymmetric() const
-{
-   constexpr double T_sym = 1e-6;
 
-   return (*this -this->adjoint()).norm() < T_sym ;
-}
-
-
-ConicBase & ConicBase::operator=( const Matrix3d & other )
-{
-    // qDebug() << Q_FUNC_INFO;
-    this->Matrix3d::operator= (other);
-    Q_ASSERT( isSymmetric()==true );
-    assert ( isSymmetric()==true );
-    return *this;
-}
 
 Matrix3d ConicBase::cof3(const Matrix3d &MM)
 {
     Matrix3d Cof;
 
-    Cof(0,0) = MM(1,1)*MM(2,2) -MM(2,1)*MM(1,2);
-    Cof(0,1) = -( MM(1,0)*MM(2,2) -MM(2,0)*MM(1,2) );
-    Cof(0,2) = MM(1,0)*MM(2,1) -MM(2,0)*MM(1,1);
+    Cof(0,0) = +MM(1,1)*MM(2,2) -MM(2,1)*MM(1,2);
+    Cof(0,1) = -MM(1,0)*MM(2,2) +MM(2,0)*MM(1,2);
+    Cof(0,2) = +MM(1,0)*MM(2,1) -MM(2,0)*MM(1,1);
 
-    Cof(1,0) = -( MM(0,1)*MM(2,2) -MM(2,1)*MM(0,2) );
-    Cof(1,1) = MM(0,0)*MM(2,2) -MM(2,0)*MM(0,2);
-    Cof(1,2) = -(MM(0,0)*MM(2,1) -MM(2,0)*MM(0,1));
+    Cof(1,0) = -MM(0,1)*MM(2,2) +MM(2,1)*MM(0,2);
+    Cof(1,1) = +MM(0,0)*MM(2,2) -MM(2,0)*MM(0,2);
+    Cof(1,2) = -MM(0,0)*MM(2,1) +MM(2,0)*MM(0,1);
 
-    Cof(2,0) = MM(0,1)*MM(1,2) -MM(1,1)*MM(0,2);
-    Cof(2,1) = -(MM(0,0)*MM(1,2) -MM(1,0)*MM(0,2));
-    Cof(2,2) = MM(0,0)*MM(1,1) -MM(1,0)*MM(0,1);
+    Cof(2,0) = +MM(0,1)*MM(1,2) -MM(1,1)*MM(0,2);
+    Cof(2,1) = -MM(0,0)*MM(1,2) +MM(1,0)*MM(0,2);
+    Cof(2,2) = +MM(0,0)*MM(1,1) -MM(1,0)*MM(0,1);
 
     return Cof;
 }
 
-Ellipse::Ellipse(const uPoint &ux, const double k2)
+Ellipse::Ellipse(const Matrix3d & CC) : ConicBase(CC)
 {
-    uPoint const uy = ux.euclidean();
-
-    // cofactor matrix is adjugate due to symmetry
-    *this = cof3( k2*uy.Cov() -uy.v()*uy.v().adjoint() );
+    // check if matrix represents an ellipse
+    assert( C().topLeftCorner(2,2).determinant() > 0.0 );  // PCV Table 5.8
 }
 
-Hyperbola::Hyperbola(const uStraightLine &ul, const double k2)
+Hyperbola::Hyperbola(const Matrix3d & CC) : ConicBase(CC)
 {
-    uStraightLine const um = ul.euclidean();
-    *this = k2*um.Cov() -um.v()*um.v().adjoint();
+    // check if matrix represents a hyperbola
+    assert( C().topLeftCorner(2,2).determinant() < 0.0); // PCV Table 5.8
 }
 
 
@@ -110,26 +90,27 @@ Vector3d Hyperbola::centerline() const
     const double nx = -std::sin(phi_);
     const double ny =  std::cos(phi_);
 
+    assert( fabs(x0(2)) > 0 );
     return { nx, ny, -nx*x0(0)/x0(2) -ny*x0(1)/x0(2) };
 }
 
 double Hyperbola::angle_rad() const
 {
-    return 0.5*atan2( 2.0*coeff(0,1), coeff(0,0)-coeff(1,1));
+    return 0.5*atan2( 2.0*C().coeff(0,1), C().coeff(0,0)-C().coeff(1,1));
 }
 
 double Hyperbola::angle_deg() const
 {
     constexpr double rho = 180./3.14159;
-    return rho * 0.5 * atan2( 2.0*coeff(0,1), coeff(0,0)-coeff(1,1));
+    return rho * 0.5 * atan2( 2.0*C().coeff(0,1), C().coeff(0,0)-C().coeff(1,1));
 }
 
 std::pair<double,double>
 Hyperbola::lengthsSemiAxes() const
 {
     auto ev = eigenvalues();
-    double const Delta = determinant();
-    double const D = topLeftCorner(2, 2).determinant();
+    double const Delta = C().determinant();
+    double const D = C().topLeftCorner(2, 2).determinant();
     assert( -Delta/( ev.first*D ) >= 0. );
     assert( +Delta/( ev.second*D) >= 0. );
     double const a = std::sqrt(-Delta / (ev.first * D));
@@ -139,14 +120,10 @@ Hyperbola::lengthsSemiAxes() const
 }
 
 
-Vector3d ConicBase::polar( const Vector3d &x ) const
-{
-    return (*this*x); // i.e., l = C*x
-}
 
 bool ConicBase::isCentral() const
 {
-    return topLeftCorner(2,2).determinant() !=0.;
+    return CC.topLeftCorner(2,2).determinant() !=0.;
 }
 
 
@@ -154,11 +131,9 @@ bool ConicBase::isCentral() const
 
 std::pair<double, double> Hyperbola::eigenvalues() const
 {
-    double const p = -topLeftCorner(2, 2).trace();
-    double const q = topLeftCorner(2, 2).determinant();
+    double const p = -C().topLeftCorner(2, 2).trace();
+    double const q = C().topLeftCorner(2, 2).determinant();
 
-    Q_ASSERT_X( q<0.0, Q_FUNC_INFO, "no hyperbola");
-    assert( q<0.0 );
     double const ev0 = -p / 2 - std::sqrt(p * p / 4 - q);
     double const ev1 = -p / 2 + std::sqrt(p * p / 4 - q);
 
@@ -166,12 +141,12 @@ std::pair<double, double> Hyperbola::eigenvalues() const
 }
 
 
-Vector3d ConicBase::center() const
+Vector3d Hyperbola::center() const
 {
     Vector3d xh;
     if ( isCentral() ) {
-        Matrix2d const C33 = topLeftCorner(2, 2);
-        Vector2d const ch0 = topRightCorner(2, 1);
+        Matrix2d const C33 = C().topLeftCorner(2, 2);
+        Vector2d const ch0 = C().topRightCorner(2, 1);
         Vector2d x0 = -C33.ldlt().solve(ch0);
         xh << x0(0), x0(1), 1.0;
     }
@@ -187,13 +162,13 @@ std::pair<Vector3d,Vector3d>
 ConicBase::intersect( const Vector3d &l) const
 {
     Matrix3d const MM = skew(l);
-    Matrix3d BB = MM.adjoint()*(*this)*MM;
+    Matrix3d BB = MM.adjoint()*CC*MM;
 
     int idx = 0;       // [den,idx] = max( abs(l) );
     double const den = l.array().abs().maxCoeff(&idx);
 
     // minors ...............................................
-    double alpha=0;
+    double alpha = 0;
     switch (idx) {
     case 0:
         alpha = BB(1,1)*BB(2,2) -BB(2,1)*BB(1,2);
@@ -226,10 +201,10 @@ ConicBase::intersect( const Vector3d &l) const
 std::pair<Eigen::VectorXd, Eigen::VectorXd>
 Ellipse::poly( const int N) const
 {
-    Matrix2d const Chh = topLeftCorner(2, 2);
-    Vector2d const ch0 = topRightCorner(2, 1);
+    Matrix2d const Chh = C().topLeftCorner(2, 2);
+    Vector2d const ch0 = C().topRightCorner(2, 1);
     Vector2d x0 = -Chh.ldlt().solve(ch0);  // centre point
-    double const c00q = coeff(2, 2) - ch0.dot(Chh.ldlt().solve(ch0));
+    double const c00q = C().coeff(2, 2) - ch0.dot(Chh.ldlt().solve(ch0));
 
     assert( std::fabs(c00q)>0. );
 
