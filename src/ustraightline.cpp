@@ -17,9 +17,8 @@
  */
 
 #include <cassert>
-#define _USE_MATH_DEFINES // definition before importing the library
+#include <cfloat>
 #include <cmath>
-#include <math.h>
 
 #include "uncertain.h"
 #include "upoint.h"
@@ -28,7 +27,10 @@
 #include <Eigen/Core>
 
 #include <QDebug>
+
 #include "qassert.h"
+#include "qmath.h"
+
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -75,11 +77,12 @@ uStraightLine::uStraightLine( const VectorXd & xi,
     double const y0 = yi.mean();    // qDebug() << "mean = (" << x0 << "," << y0 << ")";
 
     // 2nd moments .........................................
-    Eigen::Index const I = xi.rows();  //qDebug() << "I = " << I;
+    const auto I = static_cast<double>(xi.rows());  //qDebug() << "I = " << I;
+
     Eigen::Matrix2d MM;
-    MM(0,0) = xi.dot(xi)  -static_cast<double>(I)*x0*x0;
-    MM(0,1) = xi.dot(yi)  -static_cast<double>(I)*x0*y0;
-    MM(1,1) = yi.dot(yi)  -static_cast<double>(I)*y0*y0;
+    MM(0,0) = xi.dot(xi)  -I*x0*x0;
+    MM(0,1) = xi.dot(yi)  -I*x0*y0;
+    MM(1,1) = yi.dot(yi)  -I*y0*y0;
     MM(1,0) = MM(0,1);
 
     // SVD .....................................................
@@ -92,18 +95,18 @@ uStraightLine::uStraightLine( const VectorXd & xi,
     m_val = (Vector3d() << n(0), n(1), -n(0)*x0 -n(1)*y0).finished();
 
     // check: point-line incidence, x'l = 0
-    Q_ASSERT( std::fabs(x0*m_val(0) +y0*m_val(1) +m_val(2) ) < 1e-7);
+    Q_ASSERT( std::fabs(x0*m_val(0) +y0*m_val(1) +m_val(2) ) < FLT_EPSILON);
 
     // estimated variance factor (10.167) .........................
     Q_ASSERT(sv(0) > sv(1));
-    double const evar0 = sv(1) / static_cast<double>(I - 2);
+    double const evar0 = sv(1) / (I - 2);
     // qDebug() << "estd_0 = " << sqrt(evar0);
 
     // cov. mat. for l = [0 1 0], (10.166) ........................
     // Cov_ll = diag( [1/lambda(2), 0, 1/(I*wq)]);
 
-    Vector3d const t = (Vector3d() << 1. / sv(0), 0, 1. / static_cast<double>(I)).finished();
-    Matrix3d const Sigma_ll  = static_cast<double>(I)*t.asDiagonal(); // TODO(meijoc)
+    Vector3d const t = (Vector3d() << 1. / sv(0), 0, 1. / I).finished();
+    Matrix3d const Sigma_ll  = I*t.asDiagonal(); // TODO(meijoc)
 
     // variance propagation .......................................
     Matrix3d HH = Matrix3d::Identity(3,3);
@@ -140,8 +143,8 @@ double uStraightLine::acute(const uStraightLine &um) const
 {
     Eigen::Vector2d a = m_val.head(2);
     Eigen::Vector2d b = um.m_val.head(2);
-    assert( a.norm() > 1e-6 );
-    assert( b.norm() > 1e-6 );
+    assert( a.norm() > FLT_EPSILON );
+    assert( b.norm() > FLT_EPSILON );
     a.normalize();
     b.normalize();
 
