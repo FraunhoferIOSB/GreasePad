@@ -77,7 +77,6 @@ public:
     ~BasicEntity2D() = default;
 
     void normalizeSpherical();
-    void transform( const Eigen::Matrix3d &TT);    // point or line transformation
 
     //! Get covariance matrix
     Matrix3d Cov() const { return m_cov; }

@@ -104,9 +104,10 @@ uPoint uPoint::euclidean() const
 //! Get uncertain point, transformed via 3x3 transformation matrix
 uPoint uPoint::transformed( const Matrix3d & TT) const
 {
-    uPoint ux(*this);
-    ux.transform(TT);
-    return ux;
+    // uPoint ux(*this);
+    // ux.transform(TT);
+    // return ux;
+    return {TT*m_val, TT*m_cov*TT.adjoint() };
 }
 
 

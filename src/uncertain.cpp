@@ -66,14 +66,6 @@ Matrix<double,3,2> BasicEntity2D::null( const Vector3d &xs )
 }
 
 
-//! Transform uncertain entity via 3x3 transformation matrix
-void BasicEntity2D::transform( const Matrix3d & TT )
-{
-    m_val = TT*m_val;
-    m_cov = TT*m_cov*TT.adjoint();
-    this->normalizeSpherical();
-}
-
 
 //! Check if matrix MM is a proper covariance matrix
 bool isCovMat( const MatrixXd & MM )
