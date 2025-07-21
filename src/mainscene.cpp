@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,11 +27,23 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsView>
 #include <QKeyEvent>
+#include <QList>
 #include <QMessageBox>
+#include <QObject>
+#include <QPageLayout>
+#include <QPageSize>
 #include <QPdfWriter>
+#include <QStringLiteral>
 #include <QSvgGenerator>
 
+#include "qlogging.h"
+#include "qnamespace.h"
+#include "qtdeprecationdefinitions.h"
+#include "qtmetamacros.h"
+
+#include <Eigen/Core>
 #include <Eigen/Dense>
+
 #include <cassert>
 #include <memory>
 #include <utility>
@@ -51,7 +63,7 @@ MainScene::MainScene(QObject *parent)
 
     actionExportSaveAs = std::make_unique<QAction>( "Export as..." );
     actionExportSaveAs->setDisabled( false );
-    actionExportSaveAs->setToolTip( "export entire scene" );
+    actionExportSaveAs->setToolTip( QStringLiteral( "export entire scene" ) );
 }
 
 // MainScene::~MainScene() {  qDebug() << Q_FUNC_INFO;}
@@ -163,7 +175,7 @@ void MainScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         QMessageBox msg;
         msg.setIcon(            QMessageBox::Warning );
         msg.setWindowTitle(     QApplication::applicationName() );
-        msg.setText(            "Pen stroke too short (Not enough points)." );
+        msg.setText(QStringLiteral( "Pen stroke too short (Not enough points)." ));
         msg.setStandardButtons( QMessageBox::Ok );
         msg.exec();
 
@@ -177,7 +189,7 @@ void MainScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         QMessageBox msg;
         msg.setIcon(            QMessageBox::Warning);
         msg.setWindowTitle(     QApplication::applicationName() );
-        msg.setText(            "Not a straight pen stroke. Try again, please." );
+        msg.setText(            QStringLiteral( "Not a straight pen stroke. Try again, please." ));
         msg.setStandardButtons( QMessageBox::Ok );
         msg.exec();
 
@@ -201,6 +213,8 @@ void MainScene::keyPressEvent( QKeyEvent *event )
     case Qt::Key_Space:
         Q_EMIT signalUndoLastAction();
         break;
+    default:
+        break;
     }
     QGraphicsScene::keyPressEvent(event);
 }
@@ -209,11 +223,11 @@ void MainScene::export_view_as_pdf( QString &fileName)
 {
     qDebug() << Q_FUNC_INFO;
 
-    QRectF rectView = (views().at(0)->mapToScene(
+    const QRectF rectView = (views().at(0)->mapToScene(
                             views().at(0)->viewport()->geometry())
                         ).boundingRect();
 
-    QRectF rectScene = itemsBoundingRect();
+    const QRectF rectScene = itemsBoundingRect();
     qDebug() << rectView;
     qDebug() << rectScene;
     if ( rectView.contains( rectScene) ) {
@@ -225,7 +239,7 @@ void MainScene::export_view_as_pdf( QString &fileName)
 
 
     QPdfWriter pdfwriter( fileName );
-    QPageSize ps(QSize(static_cast<int>(sceneRect().width()),
+    const QPageSize ps(QSize(static_cast<int>(sceneRect().width()),
                        static_cast<int>(sceneRect().height())),
                  QPageSize::Point);
     pdfwriter.setPageMargins( QMarginsF(0., 0., 0., 0.),QPageLayout::Point );
@@ -244,11 +258,11 @@ void MainScene::export_view_as_svg( QString &fileName )
 
     // qDebug() << Q_FUNC_INFO;
 
-    QRectF rectView = ( views().at(0)->mapToScene(
+    const QRectF rectView = ( views().at(0)->mapToScene(
                             views().at(0)->viewport()->geometry())
                         ).boundingRect();
 
-    QRectF rectScene = itemsBoundingRect();
+    const QRectF rectScene = itemsBoundingRect();
     if ( rectView.contains( rectScene) ) {
         setSceneRect( rectScene );
     }
@@ -262,7 +276,7 @@ void MainScene::export_view_as_svg( QString &fileName )
     generator.setSize(QSize(static_cast<int>(width()), static_cast<int>(height())));
     generator.setViewBox(QRect(0, 0, static_cast<int>(width()), static_cast<int>(height())));
     generator.setTitle(    QApplication::applicationName() );
-    generator.setDescription( "scalable vector graphics" );
+    generator.setDescription( QStringLiteral( "scalable vector graphics" ) );
 
     clearSelection();
     // qDebug() << "SVG: items: " << items().size();
@@ -279,7 +293,7 @@ void MainScene::removeAllItems()
     // qDebug() << Q_FUNC_INFO;
 
     QList<QGraphicsItem*> all = items();
-    for (auto g: std::as_const(all) ) {
+    for (auto *g: std::as_const(all) ) {
         if ( g->type() == QGraphicsPixmapItem::Type) {
             continue;
         }

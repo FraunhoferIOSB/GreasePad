@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,9 @@
 #include <QDebug>
 #include <QGraphicsPathItem>
 #include <QGraphicsScene>
+#include <QObject>
+
+#include "qtmetamacros.h"
 
 #include <memory>
 
@@ -36,8 +39,7 @@ class MainScene : public QGraphicsScene
     Q_OBJECT
 
 public:
-    MainScene( QObject *parent );  //!< Value constructor
-    ~MainScene() override = default; //{ qDebug() << Q_FUNC_INFO; }
+    explicit MainScene( QObject *parent );  //!< Value constructor
 
 protected:
     void mousePressEvent(   QGraphicsSceneMouseEvent *event) override; //!< Handle mouse press event
