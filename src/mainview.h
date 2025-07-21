@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,36 +20,40 @@
 #define MAINVIEW_H
 
 #include <QAction>
-#include <QGraphicsView>
 #include <QDebug>
-// #include <QStatusBar>
+#include <QGraphicsScene>
+#include <QGraphicsView>
+#include <QObject>
+#include <QPainter>
+
+#include "qtmetamacros.h"
+#include "qwidget.h"
 
 #include <memory>
 
 namespace GUI {
 
 //! Graphics view
-class MainView :public QGraphicsView
+class MainView : public QGraphicsView
 {
     Q_OBJECT
 
 public:
-     MainView( QGraphicsScene *scene, QWidget *parent); //!< Value constructor
-     ~MainView() override { //qDebug() << Q_FUNC_INFO;
-     }
+    MainView( QGraphicsScene *scene, QWidget *parent); //!< Value constructor
 
-     std::unique_ptr<QAction> actionCopyScreenshotToClipboard{}; //!< Copy screenshot to clipboard
-     std::unique_ptr<QAction> actionCopySvgToClipboard{};        //!< Copy scalable vector graphics to clipboard
-     std::unique_ptr<QAction> actionCopyPdfToClipboard{};        //!< Copy portable document format to clipboard
-     std::unique_ptr<QAction> actionToggleShowBackgroundTiles;   //!< Toggle visibility of background tiles
-     std::unique_ptr<QAction> actionZoomIn;                      //!< Zoom in  [+]
-     std::unique_ptr<QAction> actionZoomOut;                     //!< Zoom out [-]
 
 protected:
-     void wheelEvent( QWheelEvent *event) override;                    //!< Zoom via mouse wheel
-     void drawForeground( QPainter *painter, const QRectF &) override; //!< Plot the organization name
+    void wheelEvent( QWheelEvent *event) override;                    //!< Zoom via mouse wheel
+    void drawForeground( QPainter *painter, const QRectF & /* rect */) override; //!< Plot the organization name
 
 private:
+    std::unique_ptr<QAction> actionCopyScreenshotToClipboard; //!< Copy screenshot to clipboard
+    std::unique_ptr<QAction> actionCopySvgToClipboard;        //!< Copy scalable vector graphics to clipboard
+    std::unique_ptr<QAction> actionCopyPdfToClipboard;        //!< Copy portable document format to clipboard
+    std::unique_ptr<QAction> actionToggleShowBackgroundTiles;   //!< Toggle visibility of background tiles
+    std::unique_ptr<QAction> actionZoomIn;                      //!< Zoom in  [+]
+    std::unique_ptr<QAction> actionZoomOut;                     //!< Zoom out [-]
+
     const double lod_max = 100.0;
     const double lod_min = 0.01;
     const double zoom_in = 1.25;
@@ -69,6 +73,8 @@ private:
 
 Q_SIGNALS:
     void signalShowStatus( const QString & s); //!< Send message to status bar
+
+    friend class MainWindow;
 };
 
 } // namespace GUI

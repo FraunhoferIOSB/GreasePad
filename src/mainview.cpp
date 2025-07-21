@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,18 +17,29 @@
  */
 
 #include "mainview.h"
+
 #include "qgraphicsscene.h"
 #include "qgraphicsview.h"
+#include "qnamespace.h"
+#include "qtmetamacros.h"
+#include "qtpreprocessorsupport.h"
+#include "qtypes.h"
 
 #include <QAction>
 #include <QApplication>
 #include <QBuffer>
 #include <QClipboard>
+#include <QList>
 #include <QMimeData>
+#include <QPainter>
+#include <QPalette>
 #include <QPdfWriter>
+#include <QStringLiteral>
 #include <QStyleOptionGraphicsItem>
 #include <QSvgGenerator>
 #include <QWheelEvent>
+
+
 #include <memory>
 
 namespace GUI {
@@ -95,7 +106,7 @@ void MainView::createActions()
 {
     actionZoomIn = std::make_unique<QAction>( "Zoom in" );
 
-    actionZoomIn->setToolTip(  QString("Zoom in (%1)")
+    actionZoomIn->setToolTip(  QStringLiteral("Zoom in (%1)")
                                .arg(QKeySequence(QKeySequence::ZoomIn).toString(QKeySequence::NativeText))
                                );
 
@@ -109,15 +120,15 @@ void MainView::createActions()
     // listOut << QKeySequence::ZoomOut << Qt::Key_Minus;
     listOut << Qt::Key_Minus;  // [Ctrl]+[-] : move selected items to bottom
     actionZoomOut = std::make_unique<QAction>( "Zoom out" );
-    actionZoomOut->setToolTip(    QString("Zoom out (%1)")
+    actionZoomOut->setToolTip(    QStringLiteral("Zoom out (%1)")
                                   .arg(QKeySequence(QKeySequence::ZoomOut).toString(QKeySequence::NativeText))
                                 );
     actionZoomOut->setShortcuts( listOut );
     actionZoomOut->setIcon(      QPixmap(":/icons/Tango/List-remove.svg"));
 
     actionToggleShowBackgroundTiles = std::make_unique<QAction>( "Show background tiles" );
-    actionToggleShowBackgroundTiles->setShortcut(  QKeySequence( "Ctrl+T" ) );
-    actionToggleShowBackgroundTiles->setToolTip(   "Show background tiles" );
+    actionToggleShowBackgroundTiles->setShortcut(  QKeySequence( QStringLiteral("Ctrl+T") ) );
+    actionToggleShowBackgroundTiles->setToolTip(   QStringLiteral("Show background tiles") );
     actionToggleShowBackgroundTiles->setCheckable( true );
     actionToggleShowBackgroundTiles->setChecked(   false);
     actionToggleShowBackgroundTiles->setIcon(      QPixmap(":/icons/show_checker.svg"));
@@ -135,7 +146,7 @@ void MainView::slotToggleShowBackgroundTiles()
     s_showBackgroundTiles = !s_showBackgroundTiles;
     if ( s_showBackgroundTiles ) {
         QPalette pal = palette();
-        pal.setBrush( QPalette::Base, QPixmap( ":/icons/show_checker.svg" ).scaled(480,480) );
+        pal.setBrush( QPalette::Base, QPixmap( QStringLiteral(":/icons/show_checker.svg") ).scaled(480,480) );
         setPalette( pal);
     }
     else {
@@ -162,7 +173,7 @@ void MainView::slotCopyScreenshotToClipboard()
     cb->setPixmap(pixmap);
 
     // qDebug() << QApplication::clipboard()->mimeData()->formats();
-    Q_EMIT signalShowStatus( QString("Image data copied to clipboard (%1)" )
+    Q_EMIT signalShowStatus( QStringLiteral("Image data copied to clipboard (%1)" )
             .arg(QApplication::clipboard()->mimeData()->formats().first()) );
 }
 
@@ -182,13 +193,13 @@ void MainView::slotCopyPdfToClipboard()
 
     b.seek(0);   // qDebug() << b.readAll();
 
-    const QString type = "application.pdf";
+    const QString type = QStringLiteral("application.pdf");
     auto *d = new QMimeData();    // auto d = QSharedPointer<QMimeData>();
     d->setData( type, b.buffer());
     QApplication::clipboard()->setMimeData( d, QClipboard::Clipboard );
     // delete  d; // No!
     // QApplication::clipboard()->mimeData()->formats().first()
-    Q_EMIT signalShowStatus( QString("Media type '%1' copied to clipboard." ).arg( type ) );
+    Q_EMIT signalShowStatus( QStringLiteral("Media type '%1' copied to clipboard." ).arg( type ) );
 }
 
 void MainView::slotCopySvgToClipboard()
@@ -204,7 +215,7 @@ void MainView::slotCopySvgToClipboard()
     generator.setSize(         QSize( width(), height() )         );
     generator.setViewBox(      QRect(0, 0, width(), height())   );
     generator.setTitle(        QApplication::applicationName()  );
-    generator.setDescription(  "SVG" );
+    generator.setDescription(  QStringLiteral("SVG") );
 
     QPainter painter;
     painter.begin( &generator );
@@ -214,13 +225,13 @@ void MainView::slotCopySvgToClipboard()
 
     // b.seek(0);
 
-    const QString type = "image/svg+xml";
+    const QString type = QStringLiteral("image/svg+xml");
     auto *d = new QMimeData();
     d->setData( type, b.buffer() );
     QApplication::clipboard()->setMimeData( d, QClipboard::Clipboard);
     // delete  d; // No!
 
-    Q_EMIT signalShowStatus( QString( "Media type '%1' copied to clipboard." ).arg( type));
+    Q_EMIT signalShowStatus( QStringLiteral( "Media type '%1' copied to clipboard." ).arg( type));
 }
 
 void MainView::drawForeground( QPainter* painter,
