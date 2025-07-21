@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,16 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QAction>
+#include <QColor>
+#include <QLabel>
 #include <QMainWindow>
+#include <QPainterPath>
 #include <QStatusBar>
+#include <QWidget>
+
+#include "qtmetamacros.h"
+
 #include <memory>
 
 #include "state.h"
@@ -45,14 +53,14 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow( QWidget *parent = nullptr); //!< standard constructor
+    explicit MainWindow( QWidget *parent = nullptr); //!< standard constructor
     ~MainWindow() override;
 
     // Where required, read binary file as program argument, see main.cpp
     void readBinaryFile( const QString & fileName);  //!< Read binary file
 
 protected:
-    void closeEvent( QCloseEvent *) override; //!< Handle close event
+    void closeEvent( QCloseEvent * /* event */) override; //!< Handle close event
 
 private:
     State curr_state;
@@ -103,38 +111,38 @@ private:
     std::unique_ptr<QAction>   actionSetFont;
     std::unique_ptr<QAction>   actionTabulaRasa;
 
-    std::unique_ptr<QAction>   actionToggleConsiderOrthogonal{};
-    std::unique_ptr<QAction>   actionToggleConsiderParallel{};
-    std::unique_ptr<QAction>   actionToggleConsiderCopunctual{};
-    std::unique_ptr<QAction>   actionToggleConsiderVertical{};
-    std::unique_ptr<QAction>   actionToggleConsiderHorizontal{};
-    std::unique_ptr<QAction>   actionToggleConsiderDiagonal{};
+    std::unique_ptr<QAction>   actionToggleConsiderOrthogonal;
+    std::unique_ptr<QAction>   actionToggleConsiderParallel;
+    std::unique_ptr<QAction>   actionToggleConsiderCopunctual;
+    std::unique_ptr<QAction>   actionToggleConsiderVertical;
+    std::unique_ptr<QAction>   actionToggleConsiderHorizontal;
+    std::unique_ptr<QAction>   actionToggleConsiderDiagonal;
 
     std::unique_ptr<QAction>   actionToggleSelection;
-    std::unique_ptr<QAction>   actionToggleShowConstrained{};
-    std::unique_ptr<QAction>   actionToggleShowConstraints{};
-    std::unique_ptr<QAction>   actionToggleShowColoration{};
-    std::unique_ptr<QAction>   actionToggleShowStrokes{};
+    std::unique_ptr<QAction>   actionToggleShowConstrained;
+    std::unique_ptr<QAction>   actionToggleShowConstraints;
+    std::unique_ptr<QAction>   actionToggleShowColoration;
+    std::unique_ptr<QAction>   actionToggleShowStrokes;
     std::unique_ptr<QAction>   actionToggleShowUnconstrained;
     std::unique_ptr<QAction>   actionToggleShowUncertainty;
     std::unique_ptr<QAction>   actionUndo;
 
-    std::unique_ptr<QMenu>     menuConstr{};
-    std::unique_ptr<QMenu>     menuEdit{};
-    std::unique_ptr<QMenu>     menuFile{};
-    std::unique_ptr<QMenu>     menuHelp{};
-    std::unique_ptr<QMenu>     menuShow{};
+    std::unique_ptr<QMenu>     menuConstr;
+    std::unique_ptr<QMenu>     menuEdit;
+    std::unique_ptr<QMenu>     menuFile;
+    std::unique_ptr<QMenu>     menuHelp;
+    std::unique_ptr<QMenu>     menuShow;
 
-    std::unique_ptr<QToolBar>  barBackground{};
-    std::unique_ptr<QToolBar>  barConstr{};
-    std::unique_ptr<QToolBar>  barEdit{};
-    std::unique_ptr<QToolBar>  barNavigation{};
-    std::unique_ptr<QToolBar>  barShow{};
-    std::unique_ptr<QToolBar>  barTesting{};
+    std::unique_ptr<QToolBar>  barBackground;
+    std::unique_ptr<QToolBar>  barConstr;
+    std::unique_ptr<QToolBar>  barEdit;
+    std::unique_ptr<QToolBar>  barNavigation;
+    std::unique_ptr<QToolBar>  barShow;
+    std::unique_ptr<QToolBar>  barTesting;
 
-    std::unique_ptr<QDoubleSpinBox> spinBoxAlphaRecognition{};
-    std::unique_ptr<QDoubleSpinBox> spinBoxAlphaSnap{};
-    std::unique_ptr<QDoubleSpinBox> spinBoxOpacity{};
+    std::unique_ptr<QDoubleSpinBox> spinBoxAlphaRecognition;
+    std::unique_ptr<QDoubleSpinBox> spinBoxAlphaSnap;
+    std::unique_ptr<QDoubleSpinBox> spinBoxOpacity;
 
     std::unique_ptr<FormatTool> penTool;
 

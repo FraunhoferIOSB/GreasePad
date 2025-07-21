@@ -20,13 +20,18 @@
 #include "mainscene.h"
 #include "mainview.h"
 #include "mainwindow.h"
-#include "qformattool.h"
-
 #include "qconstraints.h"
-#include "qgraphicsitem.h"
-#include "qlogging.h"
+#include "qformattool.h"
 #include "qsegment.h"
 #include "qstroke.h"
+
+#include "qgraphicsitem.h"
+#include "qlogging.h"
+#include "qnamespace.h"
+#include "qtconfiginclude.h"
+#include "qtdeprecationdefinitions.h"
+#include "qtpreprocessorsupport.h"
+#include "qtypes.h"
 
 #include <QApplication>
 #include <QBuffer>
@@ -37,24 +42,34 @@
 #include <QDoubleSpinBox>
 #include <QFile>
 #include <QFileDialog>
+#include <QFileInfo>
+#include <QFontDialog>
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsView>
 #include <QImageReader>
+#include <QKeySequence>
 #include <QLabel>
+#include <QList>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QObject>
+#include <QOverload>
 #include <QPdfWriter>
+#include <QSizePolicy>
+#include <QStringLiteral>
+#include <QStringView>
 #include <QStyleOptionGraphicsItem>
 #include <QSvgGenerator>
 #include <QToolBar>
 #include <QWheelEvent>
 
-#include <QFontDialog>
+#include <Eigen/src/Core/util/Macros.h>
+
 #include <memory>
-// #include <Eigen/Dense>
+
 
 
 namespace GUI {
@@ -189,20 +204,20 @@ void MainWindow::closeEvent( QCloseEvent * event)
 
 void MainWindow::createActions()
 {
-    actionUndo = std::unique_ptr<QAction>( m_undoStack->createUndoAction( this, "Undo") );
+    actionUndo = std::unique_ptr<QAction>( m_undoStack->createUndoAction( this, QStringLiteral("Undo")) );
     actionUndo->setShortcuts( QKeySequence::Undo );
     actionUndo->setIcon( style()->standardIcon( QStyle::SP_ArrowBack) );
 
-    actionRedo = std::unique_ptr<QAction>( m_undoStack->createRedoAction( this, "Redo") );
+    actionRedo = std::unique_ptr<QAction>( m_undoStack->createRedoAction( this, QStringLiteral("Redo")) );
     actionRedo->setShortcuts( QKeySequence::Redo );
     actionRedo->setIcon( style()->standardIcon( QStyle::SP_ArrowForward) );
 
     actionExit = std::make_unique<QAction>( "Exit" );
-    actionExit->setShortcut( QKeySequence( "Ctrl+Q" ) );
+    actionExit->setShortcut( QKeySequence( QStringLiteral("Ctrl+Q") ) );
     actionExit->setIcon( style()->standardIcon( QStyle::SP_BrowserStop));
 
     actionTabulaRasa = std::make_unique<QAction>( "Delete all" );
-    actionTabulaRasa->setToolTip(  "Make a clean sweep (blank state)" );
+    actionTabulaRasa->setToolTip(  QStringLiteral("Make a clean sweep (blank state)") );
     actionTabulaRasa->setIcon( QPixmap(":/icons/Tango/Edit-clear.svg" ) );
     actionTabulaRasa->setIcon( style()->standardIcon( QStyle::SP_DialogResetButton ) );
 
@@ -212,24 +227,24 @@ void MainWindow::createActions()
     actionDeleteSelection->setIcon( style()->standardIcon( QStyle::SP_DialogCancelButton) );
 
     actionToggleSelection = std::make_unique<QAction>( "Select all" );
-    actionToggleSelection->setToolTip(  "Select all visible items" );
+    actionToggleSelection->setToolTip(  QStringLiteral("Select all visible items") );
     actionToggleSelection->setShortcut( QKeySequence::SelectAll);
 
     actionDeselectAll = std::make_unique<QAction>( "Deselect all" );
-    actionDeselectAll->setToolTip(  "Deselect all items" );
-    actionDeselectAll->setShortcut( QKeySequence( "Ctrl+Shift+A") );
+    actionDeselectAll->setToolTip(  QStringLiteral("Deselect all items") );
+    actionDeselectAll->setShortcut( QKeySequence( QStringLiteral("Ctrl+Shift+A")) );
 
     actionBackgroundImageLoad = std::make_unique<QAction>( "Load background image..." );
-    actionBackgroundImageLoad->setToolTip( "Load background image from file" );
+    actionBackgroundImageLoad->setToolTip( QStringLiteral("Load background image from file") );
     actionBackgroundImageLoad->setIcon( QIcon( QPixmap( ":/icons/Tango/Image-x-generic.svg" )));
 
     actionBackgroundImageRemove = std::make_unique<QAction>( "Remove background image");
-    actionBackgroundImageRemove->setToolTip(  "Remove loaded background image" );
+    actionBackgroundImageRemove->setToolTip(  QStringLiteral("Remove loaded background image") );
     actionBackgroundImageRemove->setDisabled( true );
     actionBackgroundImageRemove->setIcon( style()->standardIcon( QStyle::SP_DialogCancelButton ) );
 
     actionBackgroundImageToggleShow = std::make_unique<QAction>( "Show background image");
-    actionBackgroundImageToggleShow->setToolTip(   "Show/hide loaded background image" );
+    actionBackgroundImageToggleShow->setToolTip(   QStringLiteral("Show/hide loaded background image") );
     actionBackgroundImageToggleShow->setIcon(      QPixmap( ":/icons/Tango/Image-x-generic.svg" ));
     actionBackgroundImageToggleShow->setCheckable( true );
     actionBackgroundImageToggleShow->setDisabled(  true );
@@ -237,21 +252,21 @@ void MainWindow::createActions()
     actionBackgroundImageToggleShow->setIconVisibleInMenu( false );
 
     actionToggleShowStrokes = std::make_unique<QAction>( "Show strokes" );
-    actionToggleShowStrokes->setToolTip(   "Show pen strokes (mouse tracks)" );
+    actionToggleShowStrokes->setToolTip(   QStringLiteral("Show pen strokes (mouse tracks)") );
     actionToggleShowStrokes->setCheckable( true );
     actionToggleShowStrokes->setIcon(      QPixmap( ":/icons/show_strokes.svg") );
     actionToggleShowStrokes->setChecked(   QEntity::QStroke::show() );
     actionToggleShowStrokes->setIconVisibleInMenu( false );
 
     actionToggleShowUnconstrained = std::make_unique<QAction>( "Show unconstrained segments" );
-    actionToggleShowUnconstrained->setToolTip(   "Show unconstrained segments" );
+    actionToggleShowUnconstrained->setToolTip(   QStringLiteral("Show unconstrained segments") );
     actionToggleShowUnconstrained->setCheckable( true );
     actionToggleShowUnconstrained->setChecked(   QEntity::QUnconstrained::show() );
     actionToggleShowUnconstrained->setIcon(      QPixmap(":/icons/show_unconstrained.svg") );
     actionToggleShowUnconstrained->setIconVisibleInMenu( false );
 
     actionToggleShowConstrained = std::make_unique<QAction>( "Show constrained segments" );
-    actionToggleShowConstrained->setToolTip(   "Show constrained segments" );
+    actionToggleShowConstrained->setToolTip(   QStringLiteral("Show constrained segments") );
     actionToggleShowConstrained->setCheckable( true );
     actionToggleShowConstrained->setChecked(   QEntity::QConstrained::show() );
     actionToggleShowConstrained->setIcon(      QPixmap(":/icons/show_constrained.svg"));
@@ -259,21 +274,21 @@ void MainWindow::createActions()
 
     actionToggleShowUncertainty = std::make_unique<QAction>( "Show uncertainty" );
     actionToggleShowUncertainty->setShortcut(  QKeySequence( "Ctrl+U" ) );
-    actionToggleShowUncertainty->setToolTip(   "Show confidence regions" );
+    actionToggleShowUncertainty->setToolTip(   QStringLiteral("Show confidence regions") );
     actionToggleShowUncertainty->setCheckable( true );
     actionToggleShowUncertainty->setChecked(   QEntity::QSegment::showUncertainty() );
     actionToggleShowUncertainty->setIcon(      QPixmap( ":/icons/show_uncertain.svg" ));
     actionToggleShowUncertainty->setIconVisibleInMenu(false);
 
     actionToggleShowConstraints = std::make_unique<QAction>( "Show constraints" );
-    actionToggleShowConstraints->setToolTip(   "Show constraints" );
+    actionToggleShowConstraints->setToolTip(   QStringLiteral("Show constraints") );
     actionToggleShowConstraints->setCheckable( true );
     actionToggleShowConstraints->setChecked(   QConstraint::QConstraintBase::show() );
     actionToggleShowConstraints->setIcon(      QPixmap( ":/icons/show_constraints.svg" ));
     actionToggleShowConstraints->setIconVisibleInMenu( false );
 
     actionToggleShowColoration = std::make_unique<QAction>( "Colorize connected components" );
-    actionToggleShowColoration->setToolTip(   "Colorize connected components, i.e., subtasks" );
+    actionToggleShowColoration->setToolTip(   QStringLiteral("Colorize connected components, i.e., subtasks") );
     actionToggleShowColoration->setCheckable( true );
     actionToggleShowColoration->setChecked(   QEntity::QConstrained::showColor() );
     actionToggleShowColoration->setIcon(      QPixmap( ":/icons/show_cc.svg" ));
@@ -281,28 +296,28 @@ void MainWindow::createActions()
 
     actionExportSaveAs = std::make_unique<QAction>( "Export as..." );
     actionExportSaveAs->setDisabled( false );
-    actionExportSaveAs->setToolTip(  "Export entire scene as SVG or in PDF." );
+    actionExportSaveAs->setToolTip(  QStringLiteral("Export entire scene as SVG or in PDF.") );
     actionExportSaveAs->setIcon(     style()->standardIcon( QStyle::SP_FileIcon) );
 
     actionBinaryRead = std::make_unique<QAction>( "Open..." );
     actionBinaryRead->setShortcut( QKeySequence::Open );
-    actionBinaryRead->setToolTip(  "load file content");
+    actionBinaryRead->setToolTip(  QStringLiteral("load file content"));
     actionBinaryRead->setIcon(     style()->standardIcon( QStyle::SP_DialogOpenButton) );
     actionBinaryRead->setDisabled( false);
 
     actionBinarySave = std::make_unique<QAction>( "Save" );
     actionBinarySave->setDisabled( true );
     actionBinarySave->setIcon( style()->standardIcon( QStyle::SP_DialogSaveButton) );
-    actionBinarySave->setShortcut( QKeySequence("Ctrl+S") );
+    actionBinarySave->setShortcut( QKeySequence(QStringLiteral("Ctrl+S")) );
 
     actionFitInView = std::make_unique<QAction>( "Fit in view" );
     // actionFitInView->setIcon( QIcon(QPixmap( ":/icons/fit_in_view.svg" )));
     actionFitInView->setIcon( QIcon(QPixmap( ":/icons/Tango/view-fullscreen.svg")));
     actionFitInView->setIconVisibleInMenu(   true );
-    actionFitInView->setToolTip(             "Scale scene to fit in view" );
+    actionFitInView->setToolTip(             QStringLiteral("Scale scene to fit in view") );
 
     actionBasicDocumentation = std::make_unique<QAction>( "Getting Started..." );
-    actionBasicDocumentation->setToolTip( "Basic Documentation" );
+    actionBasicDocumentation->setToolTip( QStringLiteral("Basic Documentation") );
     actionBasicDocumentation->setIcon( style()->standardIcon( QStyle::SP_MessageBoxQuestion ));
 
     actionAbout = std::make_unique<QAction>( "About GreasePad" );
@@ -312,23 +327,23 @@ void MainWindow::createActions()
     actionAboutQt->setIcon( style()->standardIcon( QStyle::SP_TitleBarMenuButton) );
 
     actionToggleConsiderOrthogonal = std::make_unique<QAction>( "Consider orthogonal" );
-    actionToggleConsiderOrthogonal->setToolTip(   "Consider orthogonal" );
+    actionToggleConsiderOrthogonal->setToolTip(   QStringLiteral("Consider orthogonal") );
     actionToggleConsiderOrthogonal->setCheckable( true );
     actionToggleConsiderOrthogonal->setChecked(   State::considerOrthogonal() );
     actionToggleConsiderOrthogonal->setIconVisibleInMenu( false );
     actionToggleConsiderOrthogonal->setIcon( QPixmap( ":/icons/consider_orthogonality.svg" ));
-    actionToggleConsiderOrthogonal->setShortcut( QKeySequence("o") );
+    actionToggleConsiderOrthogonal->setShortcut( QKeySequence(QStringLiteral("o")) );
 
     actionToggleConsiderParallel = std::make_unique<QAction>( "Consider parallel" );
-    actionToggleConsiderParallel->setToolTip(   "Consider parallel" );
+    actionToggleConsiderParallel->setToolTip(   QStringLiteral("Consider parallel") );
     actionToggleConsiderParallel->setCheckable( true );
     actionToggleConsiderParallel->setChecked(   State::considerParallel() );
     actionToggleConsiderParallel->setIconVisibleInMenu( false );
     actionToggleConsiderParallel->setIcon( QPixmap( ":/icons/consider_parallelism.svg" ));
-    actionToggleConsiderParallel->setShortcut( QKeySequence("p") );
+    actionToggleConsiderParallel->setShortcut( QKeySequence(QStringLiteral("p")) );
 
     actionToggleConsiderCopunctual = std::make_unique<QAction>( "Consider copunctual" );
-    actionToggleConsiderCopunctual->setToolTip( "Consider copunctual" );
+    actionToggleConsiderCopunctual->setToolTip( QStringLiteral("Consider copunctual") );
     actionToggleConsiderCopunctual->setCheckable( true );
     actionToggleConsiderCopunctual->setChecked( State::considerCopunctual() );
     actionToggleConsiderCopunctual->setIconVisibleInMenu( false );
@@ -336,40 +351,40 @@ void MainWindow::createActions()
     actionToggleConsiderCopunctual->setShortcut( QKeySequence("c") );
 
     actionToggleConsiderVertical = std::make_unique<QAction>( "Consider vertical" );
-    actionToggleConsiderVertical->setToolTip( "Consider vertical" );
+    actionToggleConsiderVertical->setToolTip( QStringLiteral("Consider vertical") );
     actionToggleConsiderVertical->setCheckable( true );
     actionToggleConsiderVertical->setChecked( State::considerVertical() );
     actionToggleConsiderVertical->setIconVisibleInMenu( false );
     actionToggleConsiderVertical->setIcon( QPixmap( ":/icons/consider_vert.svg" ));
-    actionToggleConsiderVertical->setShortcut( QKeySequence("v") );
+    actionToggleConsiderVertical->setShortcut( QKeySequence(QStringLiteral("v")) );
 
     actionToggleConsiderHorizontal = std::make_unique<QAction>( "Consider horizontal" );
-    actionToggleConsiderHorizontal->setToolTip( "Consider horizontal" );
+    actionToggleConsiderHorizontal->setToolTip( QStringLiteral("Consider horizontal") );
     actionToggleConsiderHorizontal->setCheckable( true );
     actionToggleConsiderHorizontal->setChecked( State::considerHorizontal() );
     actionToggleConsiderHorizontal->setIconVisibleInMenu( false );
     actionToggleConsiderHorizontal->setIcon( QPixmap( ":/icons/consider_horiz.svg" ));
-    actionToggleConsiderHorizontal->setShortcut( QKeySequence("h") );
+    actionToggleConsiderHorizontal->setShortcut( QKeySequence(QStringLiteral("h")) );
 
     actionToggleConsiderDiagonal = std::make_unique<QAction>( "Consider diagonal" );
-    actionToggleConsiderDiagonal->setToolTip( "Consider diagonal" );
+    actionToggleConsiderDiagonal->setToolTip( QStringLiteral("Consider diagonal") );
     actionToggleConsiderDiagonal->setCheckable( true );
     actionToggleConsiderDiagonal->setChecked( State::considerHorizontal() );
     actionToggleConsiderDiagonal->setIconVisibleInMenu( false );
     actionToggleConsiderDiagonal->setIcon( QPixmap( ":/icons/consider_diag.svg" ));
-    actionToggleConsiderDiagonal->setShortcut( QKeySequence("d") );
+    actionToggleConsiderDiagonal->setShortcut( QKeySequence(QStringLiteral("d")) );
 
-    actionItemMoveToBottom = std::make_unique<QAction>( "Move selected items to bottom" );
-    actionItemMoveToBottom->setToolTip( "Send items to back (visual stacking)" );
-    actionItemMoveToBottom->setShortcut( QKeySequence("Ctrl+-") );
+    actionItemMoveToBottom = std::make_unique<QAction>( QStringLiteral("Move selected items to bottom") );
+    actionItemMoveToBottom->setToolTip( QStringLiteral("Send items to back (visual stacking)") );
+    actionItemMoveToBottom->setShortcut( QKeySequence(QStringLiteral("Ctrl+-")) );
 
-    actionItemMoveToTop = std::make_unique<QAction>( "Move selected items to top" );
-    actionItemMoveToTop->setToolTip( "Bring items to front (visual stacking)" );
-    actionItemMoveToTop->setShortcut( QKeySequence("Ctrl++") );
+    actionItemMoveToTop = std::make_unique<QAction>( QStringLiteral("Move selected items to top") );
+    actionItemMoveToTop->setToolTip( QStringLiteral("Bring items to front (visual stacking)") );
+    actionItemMoveToTop->setShortcut( QKeySequence(QStringLiteral("Ctrl++")) );
 
     actionChangeFormat = std::make_unique<QAction>( "Format selected entities", this);
-    actionChangeFormat->setToolTip( "Format selected entities" );
-    actionChangeFormat->setShortcut( QKeySequence("Ctrl+F"));
+    actionChangeFormat->setToolTip( QStringLiteral("Format selected entities") );
+    actionChangeFormat->setShortcut( QKeySequence(QStringLiteral("Ctrl+F")));
 
     actionSetFont = std::make_unique<QAction>( "Set GUI Font...", this);
 }
@@ -384,8 +399,8 @@ void MainWindow::createBoxes()
     spinBoxAlphaRecognition->setDecimals(   alphaBox.decimals);
     spinBoxAlphaRecognition->setValue(      alphaBox.default_val);
     spinBoxAlphaRecognition->setPrefix(  QString::fromUtf8("α="));
-    spinBoxAlphaRecognition->setSuffix(  " ");
-    spinBoxAlphaRecognition->setToolTip( "significance level" );
+    spinBoxAlphaRecognition->setSuffix(  QStringLiteral(" "));
+    spinBoxAlphaRecognition->setToolTip( QStringLiteral("significance level") );
 
     QFont font = spinBoxAlphaRecognition->font();
     font.setPointSize( font.pointSize()+1 );
@@ -397,8 +412,8 @@ void MainWindow::createBoxes()
     spinBoxAlphaSnap->setDecimals(   alphaBox.decimals);
     spinBoxAlphaSnap->setValue(      alphaBox.default_val);
     spinBoxAlphaSnap->setPrefix(     QString::fromUtf8("α=") );
-    spinBoxAlphaSnap->setSuffix(     " " );
-    spinBoxAlphaSnap->setToolTip(    "significance level" );
+    spinBoxAlphaSnap->setSuffix(     QStringLiteral(" ") );
+    spinBoxAlphaSnap->setToolTip(    QStringLiteral("significance level") );
     spinBoxAlphaSnap->setFont( font );
 
     spinBoxOpacity = std::make_unique<QDoubleSpinBox>( this );
@@ -406,7 +421,7 @@ void MainWindow::createBoxes()
     spinBoxOpacity->setSingleStep(  opacityBox.step);
     spinBoxOpacity->setDecimals(    opacityBox.decimals);
     spinBoxOpacity->setValue(       opacityBox.default_val);
-    spinBoxOpacity->setToolTip(     "Opacity of background image");
+    spinBoxOpacity->setToolTip(     QStringLiteral("Opacity of background image"));
     spinBoxOpacity->setDisabled(    true );
     spinBoxOpacity->setFont( font);
 }
@@ -425,7 +440,7 @@ void MainWindow::createMenus()
     menuFile = std::make_unique<QMenu>( tr("File") );
     menuFile->addAction( actionBinaryRead.get()   );
     menuFile->addAction( actionBinarySave.get() );
-    menuFile->addAction( tr("Save As..."), QKeySequence("Ctrl+Shift+S"),
+    menuFile->addAction( tr("Save As..."), QKeySequence(QStringLiteral("Ctrl+Shift+S")),
                         this, &MainWindow::fileSaveAs );
     menuFile->addAction( actionExportSaveAs.get() );
 
@@ -500,7 +515,7 @@ void MainWindow::createStatusBar()
     // status bar: initial message
     // statusBar()->setStyleSheet( "Color: black; font-weight: bold; font-size: 30px" );
     statusBar()->showMessage(
-                QString("Ready. Max. %1 commands on stack. Add a single pen stroke...")
+                QStringLiteral("Ready. Max. %1 commands on stack. Add a single pen stroke...")
                 .arg( m_undoStack->undoLimit()), 0);
 }
 
@@ -569,12 +584,11 @@ void MainWindow::createToolBars()
     barBackground = std::make_unique<QToolBar>( "Background" );
     barBackground->addWidget( labelBoxOpacity.get() );
     barBackground->addWidget( spinBoxOpacity.get() );
-    barBackground->setToolTip( "Background");
+    barBackground->setToolTip( QStringLiteral("Background") );
     barBackground->setEnabled( true );
     addToolBar( barBackground.get() );
 }
 
-#include <QFontDialog>
 
 void MainWindow::establishConnections()
 {
@@ -781,8 +795,8 @@ void MainWindow::readBinaryFile( const QString & fileName)
     if ( !newState.deserialize( in ) )
     {
         file.close();
-        statusBar()->showMessage( "Data import failed." );
-        QMessageBox::warning(  this, "Data import", "Data import failed." );
+        statusBar()->showMessage( QStringLiteral("Data import failed.") );
+        QMessageBox::warning(  this, QStringLiteral("Data import"), QStringLiteral("Data import failed.") );
         return;
     }
 
@@ -886,7 +900,7 @@ bool MainWindow::slotExportSaveAs()
 
     QString fileName = QFileDialog::getSaveFileName(
                 this,
-                "Export drawing",
+                QStringLiteral("Export drawing"),
                 QDir::currentPath() + "/" + "untitled",
                 filter );
 
@@ -897,18 +911,18 @@ bool MainWindow::slotExportSaveAs()
     // check if already opened
     QFile openFile( fileName );
     if( !openFile.open( QFile::ReadWrite) ){
-        QMessageBox::critical( this, "Can't Open file",
-                               "Can't access to the file.");
+        QMessageBox::critical( this, QStringLiteral("Can't Open file"),
+                               QStringLiteral("Can't access to the file."));
         return false;
     }
     openFile.close();
 
-    if ( fileName.endsWith( ".pdf", Qt::CaseInsensitive)) {
+    if ( fileName.endsWith( QStringLiteral(".pdf"), Qt::CaseInsensitive)) {
         m_scene->export_view_as_pdf( fileName );
         return true;
     }
 
-    if ( fileName.endsWith( ".svg", Qt::CaseInsensitive)) {
+    if ( fileName.endsWith( QStringLiteral(".svg"), Qt::CaseInsensitive)) {
         m_scene->export_view_as_svg( fileName );
         return true;
     }
@@ -978,16 +992,16 @@ void MainWindow::slotBackgroundImageLoad()
 
     QString filter = "Image files (";
     const QList<QByteArray> barray ( QImageReader::supportedImageFormats() );
-    for ( auto & item : barray) {
-        filter += QString( "*.%1 ").arg( item.data() );
+    for ( const auto & item : barray) {
+        filter += QStringLiteral( "*.%1 ").arg( item.data() );
     }
-    filter += QString(")");
-    for ( auto & item : barray) {
-        filter += QString(";; *.%1").arg(item.data());
+    filter += QStringLiteral(")");
+    for ( const auto & item : barray) {
+        filter += QStringLiteral(";; *.%1").arg(item.data());
     }
 
 
-    QString const fileName = QFileDialog::getOpenFileName( this,   "Open Image File",
+    QString const fileName = QFileDialog::getOpenFileName( this,   QStringLiteral("Open Image File"),
                                                      QDir::currentPath(), filter);
     if ( !fileName.isEmpty() ) {
         if ( openImageFile( fileName ) ) {
@@ -995,8 +1009,8 @@ void MainWindow::slotBackgroundImageLoad()
             spinBoxOpacity->setEnabled( true);
         }
         else {
-            QMessageBox::warning( this,   "image import",
-                                  QString("%1: Image import failed").arg(fileName) );
+            QMessageBox::warning( this,   QStringLiteral("image import"),
+                                  QStringLiteral("%1: Image import failed").arg(fileName) );
         }
 
     }
@@ -1024,8 +1038,8 @@ void MainWindow::slotFileOpen()
     // qDebug() << Q_FUNC_INFO;
     if (maybeSave()) {
         QString const fileName = QFileDialog::getOpenFileName(
-                    this,                 "GReasePad file",
-                    QDir::currentPath(),  "GReasePad files (*.grp)" );
+                    this,                 QStringLiteral("GReasePad file"),
+                    QDir::currentPath(),  QStringLiteral("GReasePad files (*.grp)") );
 
         if ( fileName.isEmpty() ) {
             return;
@@ -1038,8 +1052,8 @@ bool MainWindow::fileSaveAs()
 {
     // qDebug() << Q_FUNC_INFO;
     QString const fileName = QFileDialog::getSaveFileName(
-                this,                 "Save file",
-                QDir::currentPath(),  "GReasePad files (*.grp)");
+                this,                 QStringLiteral("Save file"),
+                QDir::currentPath(),  QStringLiteral("GReasePad files (*.grp)"));
 
     if ( fileName.isEmpty() ) {
         return false;
@@ -1221,12 +1235,12 @@ void MainWindow::setCurrentFileName( const QString &fileName )
 
     QString shownName;
     if (fileName.isEmpty()) {
-        shownName = "untitled.grp";
+        shownName = QStringLiteral("untitled.grp");
     }
     else {
         shownName = QFileInfo(fileName).fileName();
     }
-    setWindowTitle( QString("[*]%1 - %2 %3")
+    setWindowTitle( QStringLiteral("[*]%1 - %2 %3")
                     .arg( shownName, QCoreApplication::applicationName(), QCoreApplication::applicationVersion())
                     );
     setWindowModified( false );
@@ -1321,10 +1335,10 @@ void MainWindow::slotItemMoveToBottom()
 
     constexpr double shift = -0.1;
     const auto constSelectedItems = m_scene->selectedItems();
-    for ( auto & selectedItem : constSelectedItems ) {
+    for ( const auto & selectedItem : constSelectedItems ) {
         qreal zValue =  selectedItem->zValue();
         const auto constCollidingItems = selectedItem->collidingItems();
-        for ( const auto item : constCollidingItems ) {
+        for ( auto *const item : constCollidingItems ) {
             if ( item->zValue() <= zValue ) {
                 zValue = item->zValue() +shift;
             }
@@ -1344,11 +1358,11 @@ void MainWindow::slotItemMoveToTop()
 
     const auto constSelectedItems = m_scene->selectedItems();
     constexpr double shift = +0.1;
-    for ( auto & selectedItem : constSelectedItems ) {
+    for ( const auto & selectedItem : constSelectedItems ) {
         qreal zValue =  selectedItem->zValue();
 
         const auto collidingItems = selectedItem->collidingItems();
-        for ( const auto item : collidingItems ) {
+        for ( auto *const item : collidingItems ) {
             if ( item->zValue() >= zValue ) {
                 zValue = item->zValue() +shift;
             }
@@ -1361,60 +1375,60 @@ void MainWindow::slotItemMoveToTop()
 void MainWindow::slotToggleConsiderOrthogonal() {
     State::toggleConsiderOrthogonal();
     if ( State::considerOrthogonal() ) {
-        statusBar()->showMessage("constraint 'orthogonal' enabled.");
+        statusBar()->showMessage(QStringLiteral("constraint 'orthogonal' enabled."));
     }
     else {
-        statusBar()->showMessage("constraint 'orthogonal' disabled.");
+        statusBar()->showMessage(QStringLiteral("constraint 'orthogonal' disabled."));
     }
 }
 
 void MainWindow::slotToggleConsiderParallel()   {
     State::toggleConsiderParallel();
     if ( State::considerParallel() ) {
-        statusBar()->showMessage("constraint 'parallel' enabled.");
+        statusBar()->showMessage(QStringLiteral("constraint 'parallel' enabled."));
     }
     else {
-        statusBar()->showMessage("constraint 'parallel' disabled.");
+        statusBar()->showMessage(QStringLiteral("constraint 'parallel' disabled."));
     }
 }
 
 void MainWindow::slotToggleConsiderCopunctual() {
     State::toggleConsiderCopunctual();
     if ( State::considerCopunctual() ) {
-        statusBar()->showMessage("constraint 'copunctual' enabled.");
+        statusBar()->showMessage(QStringLiteral("constraint 'copunctual' enabled."));
     }
     else {
-        statusBar()->showMessage("constraint 'copunctual' disabled.");
+        statusBar()->showMessage(QStringLiteral("constraint 'copunctual' disabled."));
     }
 }
 
 void MainWindow::slotToggleConsiderVertical()   {
     State::toggleConsiderVertical();
     if ( State::considerVertical() ) {
-        statusBar()->showMessage("constraint 'vertical' enabled.");
+        statusBar()->showMessage(QStringLiteral("constraint 'vertical' enabled."));
     }
     else {
-        statusBar()->showMessage("constraint 'vertical' disabled.");
+        statusBar()->showMessage(QStringLiteral("constraint 'vertical' disabled."));
     }
 }
 
 void MainWindow::slotToggleConsiderHorizontal() {
     State::toggleConsiderHorizontal();
     if ( State::considerHorizontal() ) {
-        statusBar()->showMessage("constraint 'horizontal' enabled.");
+        statusBar()->showMessage(QStringLiteral("constraint 'horizontal' enabled."));
     }
     else {
-        statusBar()->showMessage("constraint 'horizontal' disabled.");
+        statusBar()->showMessage(QStringLiteral("constraint 'horizontal' disabled."));
     }
 }
 
 void MainWindow::slotToggleConsiderDiagonal() {
     State::toggleConsiderDiagonal();
     if ( State::considerDiagonal() ) {
-        statusBar()->showMessage("constraint 'diagonal' enabled.");
+        statusBar()->showMessage( QStringLiteral("constraint 'diagonal' enabled."));
     }
     else {
-        statusBar()->showMessage("constraint 'diagonal' disabled.");
+        statusBar()->showMessage( QStringLiteral("constraint 'diagonal' disabled."));
     }
 }
 
