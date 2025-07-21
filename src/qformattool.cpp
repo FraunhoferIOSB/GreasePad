@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,19 +20,31 @@
 #include "global.h"
 #include "mainscene.h"
 #include "qconstraints.h"
+
 #include "qlogging.h"
+#include "qnamespace.h"
 #include "qsegment.h"
 #include "qstroke.h"
 
 #include <QCheckBox>
+#include <QColor>
 #include <QColorDialog>
 #include <QComboBox>
 #include <QDebug>
+#include <QDialog>
 #include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QFrame>
+#include <QPalette>
+#include <QPen>
 #include <QPushButton>
 #include <QSpinBox>
+#include <QStringLiteral>
+#include <QWidget>
+
+#include "qtdeprecationdefinitions.h"
+#include "qtmetamacros.h"
+
 #include <memory>
 
 namespace GUI {
@@ -62,26 +74,26 @@ FormatTool::~FormatTool()
 void FormatTool::createLayout()
 {
     m_layout = std::make_unique<QFormLayout>();
-    m_layout->addRow( "Color",       m_colorPushButton.get()      );
-    m_layout->addRow( "Line width",  m_lineWidthSpinBox.get() );
-    m_layout->addRow( "Line style",  m_styleCombo.get()       );
-    m_layout->addRow( "Marker size", m_markerSizeSpinBox.get());
+    m_layout->addRow( QStringLiteral("Color"),       m_colorPushButton.get()      );
+    m_layout->addRow( QStringLiteral("Line width"),  m_lineWidthSpinBox.get() );
+    m_layout->addRow( QStringLiteral("Line style"),  m_styleCombo.get()       );
+    m_layout->addRow( QStringLiteral("Marker size"), m_markerSizeSpinBox.get());
 
-    QFrame * line = new QFrame();
+    auto * line = new QFrame();
     line->setFrameShape(QFrame::HLine);
     line->setFrameShadow(QFrame::Sunken);
     m_layout->addRow( line );
 
-    m_layout->addRow( "segments: constrained",      m_checkBoxDefaultConstrained.get());
-    m_layout->addRow( "segments: unconstrained",    m_checkBoxDefaultUnconstrained.get());
+    m_layout->addRow( QStringLiteral("segments: constrained"),      m_checkBoxDefaultConstrained.get());
+    m_layout->addRow( QStringLiteral("segments: unconstrained"),    m_checkBoxDefaultUnconstrained.get());
     //   m_layout->addRow( line);
 
-    m_layout->addRow( "constraints: required" ,  m_checkBoxDefaultRequired.get());
-    m_layout->addRow( "constraints: redundant",  m_checkBoxDefaultRedundant.get());
+    m_layout->addRow( QStringLiteral("constraints: required") ,  m_checkBoxDefaultRequired.get());
+    m_layout->addRow( QStringLiteral("constraints: redundant"),  m_checkBoxDefaultRedundant.get());
      //  m_layout->addRow( line);
 
-    m_layout->addRow( "strokes/tracks",     m_checkBoxDefaultStroke.get());
-    m_layout->addRow( "scribble pen",       m_checkBoxScribblePen.get());
+    m_layout->addRow( QStringLiteral("strokes/tracks"),     m_checkBoxDefaultStroke.get());
+    m_layout->addRow( QStringLiteral("scribble pen"),       m_checkBoxScribblePen.get());
 
     m_layout->addRow( m_buttonBox.get() );
 
@@ -155,20 +167,20 @@ void FormatTool::createElements()
     m_colorPushButton->setText(    m_colorDialog->currentColor().name() ) ;
 
     m_lineWidthSpinBox = std::make_unique<QSpinBox>();
-    m_lineWidthSpinBox->setSuffix( " Pt." );
+    m_lineWidthSpinBox->setSuffix( QStringLiteral(" Pt.") );
     m_lineWidthSpinBox->setValue( 3 );
 
     m_styleCombo = std::make_unique<QComboBox>();
-    m_styleCombo->addItem( "NoPen"          );
-    m_styleCombo->addItem( "SolidLine"      );
-    m_styleCombo->addItem( "DashLine"       );
-    m_styleCombo->addItem( "DotLine"        );
-    m_styleCombo->addItem( "DashDotLine"    );
-    m_styleCombo->addItem( "DashDotDotLine" );
+    m_styleCombo->addItem( QStringLiteral("NoPen")          );
+    m_styleCombo->addItem( QStringLiteral("SolidLine")      );
+    m_styleCombo->addItem( QStringLiteral("DashLine")       );
+    m_styleCombo->addItem( QStringLiteral("DotLine")        );
+    m_styleCombo->addItem( QStringLiteral("DashDotLine")    );
+    m_styleCombo->addItem( QStringLiteral("DashDotDotLine") );
     m_styleCombo->setCurrentIndex( Qt::SolidLine );
 
     m_markerSizeSpinBox = std::make_unique<QSpinBox>();
-    m_markerSizeSpinBox->setSuffix( " Pt.");
+    m_markerSizeSpinBox->setSuffix( QStringLiteral(" Pt."));
     m_markerSizeSpinBox->setValue( 10 );
 
 

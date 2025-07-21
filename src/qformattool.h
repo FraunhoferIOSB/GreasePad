@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,9 @@
 #include "global.h"
 
 #include <QDialog>
+#include <QObject>
+
+#include "qtmetamacros.h"
 
 #include <memory>
 
@@ -43,7 +46,9 @@ class FormatTool : public QDialog {
 public:
     FormatTool( const QString &title, QWidget *);    //!< Value constructor
     FormatTool( const FormatTool &) = delete;        //!< Copy constructor
-    FormatTool & operator= ( FormatTool ) = delete;  //!< Copy assignment constructor
+    FormatTool( const FormatTool &&) = delete;
+    FormatTool & operator= ( FormatTool & ) = delete;  //!< Copy assignment constructor
+    FormatTool & operator= ( FormatTool && ) = delete;
     ~FormatTool() override;
 
 private:
