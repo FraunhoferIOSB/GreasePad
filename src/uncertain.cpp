@@ -126,40 +126,6 @@ bool BasicEntity2D::isIdenticalTo( const BasicEntity2D & us,
 
 
 
-std::pair<uPoint,uPoint> uEndPoints( const Eigen::VectorXd & xi,
-                                     const Eigen::VectorXd & yi)
-{
-    Q_ASSERT( xi.size()>0 );
-    Q_ASSERT( yi.size()==xi.size() );
-
-    const uStraightLine l(xi,yi);
-    const double phi  = l.angle_rad();
-    const VectorXd zi = sin(phi)*xi -cos(phi)*yi;
-
-    int idx = 0;
-
-    Vector3d x1;
-    zi.minCoeff( &idx);
-    x1 << xi(idx), yi(idx), 1;
-
-    Vector3d x2;
-    zi.maxCoeff( &idx);
-    x2 << xi(idx), yi(idx), 1;
-
-    const Matrix3d Zeros = Matrix3d::Zero(3,3);
-    Matrix3d Cov_xx = Matrix3d::Zero();
-
-    uDistance const ud1 = uPoint(x1, Zeros).distanceEuclideanTo(l);
-    Cov_xx.diagonal() << ud1.var_d(), ud1.var_d(), 0.;      // isotropic
-    uPoint const first_ = l.project(uPoint(x1, Cov_xx));
-
-    uDistance const ud2 = uPoint(x2, Zeros).distanceEuclideanTo(l);
-    Cov_xx.diagonal() << ud2.var_d(), ud2.var_d(), 0.;
-    uPoint const second_ = l.project(uPoint(x2, Cov_xx));
-
-    return { first_, second_};
-}
-
 //! Skew-symmetric cross product matrix S(x): a x b = S(a)*b
 Matrix3d skew( const Vector3d & x)
 {

@@ -98,12 +98,6 @@ private:
     static Eigen::Matrix<double, 3, 2> null(const Eigen::Vector3d &xs);
 };
 
-class uPoint;
-
-//! Estimation of two points delimiting an uncertain straight line segment
-std::pair<uPoint,uPoint> uEndPoints( const Eigen::VectorXd &,
-                                     const Eigen::VectorXd &);
-
 } // namespace Uncertain
 
 #endif // UNCERTAIN_H
