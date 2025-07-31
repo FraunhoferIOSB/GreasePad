@@ -66,6 +66,7 @@ using Eigen::Index;
 using Eigen::SparseMatrix;
 using Eigen::RowVectorXi;
 using Eigen::ColMajor;
+using Eigen::VectorXidx;
 
 
 using Constraint::ConstraintBase;
@@ -733,9 +734,9 @@ Index impl::find_new_constraints()
             if ( State::considerCopunctual() ) {
                 // [a] and [c] are adjacent and have at least one common neighbor.
                 // Find all common neighbors of [a] and [c].
-                VectorXi nbnb = Adj.findInColumn(a); // neighbors of [a].
+                VectorXidx nbnb = Adj.findInColumn(a); // neighbors of [a].
                 for ( Index m=0; m<nbnb.rows()-1; m++) {
-                    const int b = nbnb(m);
+                    const Index b = nbnb(m);
 
                     if ( !Adj.isSet( b,c ) ) {
                         continue;   // [b] is not a common neighbor of [a] and [c].
@@ -758,7 +759,7 @@ Index impl::find_new_constraints()
 
     // parallelism (2) ......................................
     // case: straight line segment connects two segments
-    VectorXi idx = Adj.findInColumn(c); // neighbors of [c]
+    VectorXidx idx = Adj.findInColumn(c); // neighbors of [c]
 
     // Check all pairs of neighbors.
     for ( Index i=0; i<idx.rows(); i++) {
@@ -1121,7 +1122,7 @@ void impl::remove_constraint( const Index i )
 
     if ( m_constr.at(i)->is<Parallel>() )
     {
-        VectorXi idx = Bi.findInColumn( i);
+        VectorXidx idx = Bi.findInColumn( i);
         Q_ASSERT_X( idx.size() == 2, Q_FUNC_INFO,
                     QStringLiteral("parallel with %1 entities")
                     .arg( QString::number(idx.size())).toUtf8() );
@@ -1354,13 +1355,13 @@ void impl::replaceGraphics() {
     for( int c=0; c<m_constr.length(); c++)
     {
         bool modified = false;
-        VectorXi const idxx = Bi.findInColumn(c);
+        const VectorXidx idxx = Bi.findInColumn(c);
 
         if ( m_constr.at(c).use_count()==1 ) {
             modified = true; // actually not modified, but added
         }
         else {
-            for ( int s=0; s<static_cast<int>(idxx.size()); s++) {
+            for ( int s=0; s<idxx.size(); s++) {
                 if ( m_segm.at(s).use_count()==1 ) {
                     modified = true;
                     break;
@@ -1373,8 +1374,6 @@ void impl::replaceGraphics() {
             Q_ASSERT( idxx.size()>0 && idxx.size()<4 ); // {1,2,3}-ary
             q->setStatus(   m_constr.at(c)->required(),
                             m_constr.at(c)->enforced() );
-            //q->setGeometry( *m_segm.at(idxx(0)),
-            //                *m_segm.at(idxx(1))  );
             q->setGeometry( m_segm, idxx  );
             m_qConstraint.replace( c, q);
         }

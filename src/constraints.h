@@ -24,6 +24,8 @@
 #include <Eigen/Core>
 #include <memory>
 
+#include "matrix.h"
+
 //! Geometric constraints (relations)
 namespace Constraint {
 
@@ -32,6 +34,7 @@ using Eigen::MatrixXd;
 using Eigen::Vector3d;
 using Eigen::VectorXd;
 using Eigen::VectorXi;
+using Eigen::VectorXidx;
 
 //! Base class for constraints
 class ConstraintBase
@@ -70,10 +73,10 @@ public:
     void setEnforced( const bool b) { m_enforced = b; }     //!< Set status success of enforcement
 
     //! Compute Jacobian w.r.t. observations
-    [[nodiscard]] virtual MatrixXd Jacobian(   const VectorXi &idxx,
+    [[nodiscard]] virtual MatrixXd Jacobian(   const Eigen::VectorXidx &idxx,
                                  const VectorXd &l0,  const VectorXd &l) const = 0;
     //! Compute contradictions with adjusted observations
-    [[nodiscard]] virtual VectorXd contradict( const VectorXi &idxx,
+    [[nodiscard]] virtual VectorXd contradict( const VectorXidx &idxx,
                                  const VectorXd &l0 ) const = 0;
 
     //! Check if constraint is of a certain, specified type
@@ -99,8 +102,8 @@ protected:
 class Copunctual : public ConstraintBase
 {
 public:
-    [[nodiscard]] MatrixXd Jacobian(   const VectorXi &idxx, const VectorXd &l0, const VectorXd &l) const override;
-    [[nodiscard]] VectorXd contradict( const VectorXi &idxx, const VectorXd &l0) const override;
+    [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx, const VectorXd &l0, const VectorXd &l) const override;
+    [[nodiscard]] VectorXd contradict( const VectorXidx &idxx, const VectorXd &l0) const override;
     [[nodiscard]] int dof() const override   {return s_dof;}
     [[nodiscard]] int arity() const override {return s_arity;}   //!< number of involved entities
 
@@ -123,8 +126,8 @@ public:
 class Parallel : public ConstraintBase
 {
 public:
-    [[nodiscard]] MatrixXd Jacobian(   const VectorXi &idxx, const VectorXd &l0,  const VectorXd &l) const override;
-    [[nodiscard]] VectorXd contradict( const VectorXi &idxx, const VectorXd &l0) const override;
+    [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx, const VectorXd &l0,  const VectorXd &l) const override;
+    [[nodiscard]] VectorXd contradict( const VectorXidx &idxx, const VectorXd &l0) const override;
     [[nodiscard]] int dof() const override   { return s_dof;   }
     [[nodiscard]] int arity() const override { return s_arity; }
 
@@ -146,8 +149,8 @@ private:
 class Vertical : public ConstraintBase
 {
 public:
-    [[nodiscard]] MatrixXd Jacobian(   const VectorXi &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
-    [[nodiscard]] VectorXd contradict( const VectorXi &idxx,  const VectorXd &l0) const override;
+    [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
+    [[nodiscard]] VectorXd contradict( const VectorXidx &idxx,  const VectorXd &l0) const override;
     [[nodiscard]] int dof() const override   { return s_dof;   }
     [[nodiscard]] int arity() const override { return s_arity; }
 
@@ -170,8 +173,8 @@ private:
 class Horizontal : public ConstraintBase
 {
 public:
-    [[nodiscard]] MatrixXd Jacobian(   const VectorXi &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
-    [[nodiscard]] VectorXd contradict( const VectorXi &idxx,  const VectorXd &l0) const override;
+    [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
+    [[nodiscard]] VectorXd contradict( const VectorXidx &idxx,  const VectorXd &l0) const override;
     [[nodiscard]] int dof() const override   { return s_dof;   }
     [[nodiscard]] int arity() const override { return s_arity; }
 
@@ -194,8 +197,8 @@ private:
 class Diagonal : public ConstraintBase
 {
 public:
-    [[nodiscard]] MatrixXd Jacobian(   const VectorXi &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
-    [[nodiscard]] VectorXd contradict( const VectorXi &idxx,  const VectorXd &l0) const override;
+    [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
+    [[nodiscard]] VectorXd contradict( const VectorXidx &idxx,  const VectorXd &l0) const override;
     [[nodiscard]] int dof() const override   { return s_dof;   }
     [[nodiscard]] int arity() const override { return s_arity; }
 
@@ -216,8 +219,8 @@ private:
 class Orthogonal : public ConstraintBase
 {
 public:
-    [[nodiscard]] MatrixXd Jacobian(   const VectorXi &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
-    [[nodiscard]] VectorXd contradict( const VectorXi &idxx,  const VectorXd &l0) const override;
+    [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
+    [[nodiscard]] VectorXd contradict( const VectorXidx &idxx,  const VectorXd &l0) const override;
     [[nodiscard]] int dof() const override   { return s_dof;   }
     [[nodiscard]] int arity() const override { return s_arity; }
 
@@ -239,8 +242,8 @@ private:
 class Identical : public ConstraintBase
 {
 public:
-    [[nodiscard]] MatrixXd Jacobian( const VectorXi &idxx, const VectorXd &l0, const VectorXd &l) const override;
-    [[nodiscard]] VectorXd contradict( const VectorXi &idxx, const VectorXd &l0) const override;
+    [[nodiscard]] MatrixXd Jacobian( const VectorXidx &idxx, const VectorXd &l0, const VectorXd &l) const override;
+    [[nodiscard]] VectorXd contradict( const VectorXidx &idxx, const VectorXd &l0) const override;
     [[nodiscard]] int dof() const override   {return s_dof;}
     [[nodiscard]] int arity() const override {return s_arity;}
 

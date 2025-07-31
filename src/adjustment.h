@@ -111,7 +111,7 @@ private:
     //! Nullspace of row vector
     static Eigen::MatrixXd null(const Eigen::VectorXd &xs);
 
-    static Eigen::Index indexOf(const Eigen::VectorXi &v, int x);
+    static Eigen::Index indexOf(const Eigen::VectorXi &v, Eigen::Index i);
 };
 
 #endif // ADJUSTMENT_H

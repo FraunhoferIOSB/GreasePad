@@ -25,6 +25,7 @@
 #include <QStringLiteral>
 
 #include "qassert.h"
+#include "qcontainerfwd.h"
 #include "qlogging.h"
 #include "qtdeprecationdefinitions.h"
 
@@ -47,21 +48,21 @@ using Eigen::MatrixXd;
 using Eigen::SparseMatrix;
 
 
-Index AdjustmentFramework::indexOf(const Eigen::VectorXi &v, const int x)
+Index AdjustmentFramework::indexOf(const Eigen::VectorXi &v, const Index i)
 {
     for ( Index j=0; j<v.size(); j++) {
-        if ( v(j)==x ) {
+        if ( v(j)==i ) {
             return j;
         }
     }
     return -1;
 
     /* Eigen 3.4.0
-    auto it = std::find( v.begin(), v.end(), x);
+    auto it = std::find( v.begin(), v.end(), i);
     if ( it==v.end() ) {
         return -1;
     }
-    return std::distance( v.begin(), it);*/
+    return std::distance( v.begin(), it); */
 }
 
 MatrixXd AdjustmentFramework::Rot_ab(const VectorXd &a, const VectorXd &b)
@@ -397,7 +398,7 @@ void AdjustmentFramework::check_constraints(
 
             auto idxx = bi->findInColumn( mapc(c) );
             for ( Index i=0; i<idxx.size(); i++ ) {
-                int const idxxx = indexOf(maps, idxx(i));
+                const Index idxxx = indexOf(maps, idxx(i));
                 deb << idxxx+1;
             }
         }

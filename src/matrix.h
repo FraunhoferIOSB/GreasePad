@@ -23,11 +23,16 @@
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 
+namespace Eigen {
+using VectorXidx = Matrix<Index,Dynamic,1>;
+} // namespace Eigen
+
 namespace Graph {
 
 using Eigen::ColMajor;
 using Eigen::SparseMatrix;
 using Eigen::VectorXi;
+
 
 //! Sparse incidence matrix to encode relationships
 class IncidenceMatrix : public SparseMatrix<int, ColMajor, int>
@@ -41,7 +46,7 @@ public:
         return *this;
     }
 
-    [[nodiscard]] VectorXi findInColumn( Index c ) const;    //!< Matlab: find(A(:,c))
+    [[nodiscard]] Eigen::VectorXidx findInColumn( Index c ) const;    //!< Matlab: find(A(:,c))
     [[nodiscard]] bool isSet( Index r, Index c) const;     //!< Check if r and c are related
     [[nodiscard]] SparseMatrix<int> biadjacency() const;   //!< Create biadjacency matrix [O, A; A', O]
 

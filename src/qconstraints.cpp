@@ -262,7 +262,7 @@ std::shared_ptr<QConstraintBase> QAligned::doClone() const
 
 
 void QAligned::setGeometry( QVector<std::shared_ptr<const uStraightLineSegment>> &s,
-                            const Eigen::VectorXi &idx)
+                            const Eigen::VectorXidx &idx)
 {
     assert( idx.size()==1 );
     int const i = idx(0);
@@ -341,7 +341,7 @@ qreal QOrthogonal::markerSize() const
 
 
 void QOrthogonal::setGeometry( QVector<std::shared_ptr<const uStraightLineSegment>> &s,
-                               const Eigen::VectorXi &idx)
+                               const Eigen::VectorXidx &idx)
 {
     // qDebug() << Q_FUNC_INFO;
     assert( idx.size()==2 );
@@ -403,7 +403,7 @@ std::shared_ptr<QConstraintBase> QCopunctual::create()
 }
 
 void QCopunctual::setGeometry( QVector<std::shared_ptr<const uStraightLineSegment>> &s,
-                               const Eigen::VectorXi &idx)
+                               const Eigen::VectorXidx &idx)
 {
     assert( idx.size()==3 );
     int const i = idx(0);
@@ -501,7 +501,7 @@ qreal QParallel::markerSize() const
 
 
 void QParallel::setGeometry( QVector<std::shared_ptr<const uStraightLineSegment>> &s,
-                             const Eigen::VectorXi &idx)
+                             const Eigen::VectorXidx &idx)
 {
     assert( idx.size()==2 );
     int const i = idx(0);
@@ -584,7 +584,7 @@ qreal QIdentical::markerSize() const
 
 
 void QIdentical::setGeometry( QVector<std::shared_ptr<const uStraightLineSegment>> &s,
-                              const Eigen::VectorXi &idx)
+                              const Eigen::VectorXidx &idx)
 {
     assert( idx.size()==2 );
     int const i = idx(0);

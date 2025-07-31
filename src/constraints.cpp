@@ -100,7 +100,7 @@ std::shared_ptr<ConstraintBase> ConstraintBase::clone() const
 
 
 
-MatrixXd Orthogonal::Jacobian( const VectorXi & idxx,
+MatrixXd Orthogonal::Jacobian( const VectorXidx & idxx,
                                const VectorXd &l0,
                                const VectorXd &l) const
 {
@@ -121,7 +121,7 @@ MatrixXd Orthogonal::Jacobian( const VectorXi & idxx,
     return Tmp;
 }
 
-VectorXd Orthogonal::contradict( const VectorXi &idx,
+VectorXd Orthogonal::contradict( const VectorXidx &idx,
                                  const VectorXd &l0) const
 {
     Vector3d const a = l0.segment(3 * idx(0), 3);
@@ -150,7 +150,7 @@ std::shared_ptr<ConstraintBase> Orthogonal::doClone() const
     return T;
 }
 
-MatrixXd Copunctual::Jacobian(const VectorXi &idx, const VectorXd &l0, const VectorXd &l) const
+MatrixXd Copunctual::Jacobian(const VectorXidx &idx, const VectorXd &l0, const VectorXd &l) const
 {
     Vector3d const a0 = l0.segment(3 * idx(0), 3);
     Vector3d const b0 = l0.segment(3 * idx(1), 3);
@@ -171,7 +171,7 @@ MatrixXd Copunctual::Jacobian(const VectorXi &idx, const VectorXd &l0, const Vec
     return Tmp;
 }
 
-VectorXd Copunctual::contradict(const VectorXi &idx, const VectorXd &l0) const
+VectorXd Copunctual::contradict(const VectorXidx &idx, const VectorXd &l0) const
 {
     Vector3d const a = l0.segment(3 * idx(0), 3);
     Vector3d const b = l0.segment(3 * idx(1), 3);
@@ -212,7 +212,7 @@ std::shared_ptr<ConstraintBase> Copunctual::doClone() const
     return T;
 }
 
-MatrixXd Identical::Jacobian( const VectorXi & idx,
+MatrixXd Identical::Jacobian( const VectorXidx & idx,
                               const VectorXd & l0,
                               const VectorXd & l) const
 {
@@ -245,7 +245,7 @@ MatrixXd Identical::Jacobian( const VectorXi & idx,
     return Tmp;
 }
 
-VectorXd Identical::contradict( const VectorXi & idx,
+VectorXd Identical::contradict( const VectorXidx & idx,
                                 const VectorXd & l0) const
 {
     Vector3d a0 = l0.segment( 3*idx(0),3 );
@@ -275,7 +275,7 @@ std::shared_ptr<ConstraintBase> Identical::doClone() const
     return T;
 }
 
-MatrixXd Parallel::Jacobian(const VectorXi &idx, const VectorXd &l0, const VectorXd &l) const
+MatrixXd Parallel::Jacobian(const VectorXidx &idx, const VectorXd &l0, const VectorXd &l) const
 {
     Vector3d const a0 = l0.segment(3 * idx(0), 3);
     Vector3d const b0 = l0.segment(3 * idx(1), 3);
@@ -294,7 +294,7 @@ MatrixXd Parallel::Jacobian(const VectorXi &idx, const VectorXd &l0, const Vecto
     return Tmp;
 }
 
-VectorXd Parallel::contradict(const VectorXi &idx, const VectorXd &l0) const
+VectorXd Parallel::contradict(const VectorXidx &idx, const VectorXd &l0) const
 {
     Vector3d const a = l0.segment(3 * idx(0), 3);
     Vector3d const b = l0.segment( 3*idx(1),3 );
@@ -341,7 +341,7 @@ Vector3d Vertical::e2()
     return tmp;
 }
 
-MatrixXd Vertical::Jacobian(const VectorXi &idx, const VectorXd &l0, const VectorXd &l) const
+MatrixXd Vertical::Jacobian(const VectorXidx &idx, const VectorXd &l0, const VectorXd &l) const
 {
     Vector3d const a0 = l0.segment(3 * idx(0), 3);
     Vector3d const a   =  l.segment( 3*idx(0), 3);
@@ -351,7 +351,7 @@ MatrixXd Vertical::Jacobian(const VectorXi &idx, const VectorXd &l0, const Vecto
     return e2().adjoint()* Rot_ab(a0,a)*null(a0);
 }
 
-VectorXd Vertical::contradict( const VectorXi &idx,
+VectorXd Vertical::contradict( const VectorXidx &idx,
                                const VectorXd &l0) const
 {
     VectorXd tmp(1);
@@ -359,7 +359,7 @@ VectorXd Vertical::contradict( const VectorXi &idx,
     return tmp;
 }
 
-VectorXd Diagonal::contradict( const VectorXi &idx,
+VectorXd Diagonal::contradict( const VectorXidx &idx,
                                const VectorXd &l0) const
 {
     Vector3d l = l0.segment( 3*idx(0), 3);
@@ -378,7 +378,7 @@ std::shared_ptr<ConstraintBase> Diagonal::doClone() const
 }
 
 
-MatrixXd Diagonal::Jacobian( const VectorXi &idx,
+MatrixXd Diagonal::Jacobian( const VectorXidx &idx,
                              const VectorXd &l0,
                              const VectorXd &l) const
 {
@@ -398,7 +398,7 @@ std::shared_ptr<ConstraintBase> Horizontal::doClone() const
     return T;
 }
 
-VectorXd Horizontal::contradict( const VectorXi &idx,
+VectorXd Horizontal::contradict( const VectorXidx &idx,
                                  const VectorXd &l0) const
 {
     VectorXd tmp(1);  // scalar as vector
@@ -414,7 +414,7 @@ Vector3d Horizontal::e1()
     return tmp;
 }
 
-MatrixXd Horizontal::Jacobian( const VectorXi &idx,
+MatrixXd Horizontal::Jacobian( const VectorXidx &idx,
                                const VectorXd &l0,
                                const VectorXd &l) const
 {
