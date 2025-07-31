@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,48 +17,59 @@
  */
 
 #include "adjustment.h"
-
 #include "constraints.h"
 #include "global.h"
 #include "matrix.h"
+
+#include <QString>
+#include <QStringLiteral>
+
+#include "qassert.h"
 #include "qlogging.h"
-#include <algorithm>
+#include "qtdeprecationdefinitions.h"
+
 #include <cassert>
+#include <cfloat>
 #include <cmath>
-#include <iterator>
-#include <math.h>
 #include <memory>
 #include <utility>
+
+#include <Eigen/Core>
+#include <Eigen/SparseCore>
+
 
 using Graph::IncidenceMatrix;
 using Constraint::ConstraintBase;
 
-#ifdef QT_DEBUG
-static const double T_ZERO = 1e-5;
-#endif
+using Eigen::Index;
+using Eigen::VectorXd;
+using Eigen::MatrixXd;
+using Eigen::SparseMatrix;
+
 
 Index AdjustmentFramework::indexOf(const Eigen::VectorXi &v, const int x)
 {
-    //    for ( Index j=0; j<v.size(); j++) {
-    //        if ( v(j)==x ) {
-    //            return int(j);
-    //        }
-    //    }
+    for ( Index j=0; j<v.size(); j++) {
+        if ( v(j)==x ) {
+            return j;
+        }
+    }
+    return -1;
 
-    // Eigen 3.4.0
+    /* Eigen 3.4.0
     auto it = std::find( v.begin(), v.end(), x);
     if ( it==v.end() ) {
         return -1;
     }
-    return std::distance( v.begin(), it);
+    return std::distance( v.begin(), it);*/
 }
 
 MatrixXd AdjustmentFramework::Rot_ab(const VectorXd &a, const VectorXd &b)
 {
     Q_ASSERT( a.size()==b.size());
 #ifdef QT_DEBUG
-    Q_ASSERT( fabs( a.norm()-1.) < T_ZERO );
-    Q_ASSERT( fabs( b.norm()-1.) < T_ZERO );
+    Q_ASSERT( fabs( a.norm()-1.) < FLT_EPSILON );
+    Q_ASSERT( fabs( b.norm()-1.) < FLT_EPSILON );
 #endif
     return MatrixXd::Identity( a.size(),a.size())
             +2*b*a.adjoint()
@@ -74,7 +85,7 @@ MatrixXd AdjustmentFramework::null(const VectorXd &xs)
 
 #ifdef QT_DEBUG
     QString const what = QStringLiteral("norm(x) = %1").arg(QString::number(xs.norm()));
-    Q_ASSERT_X(std::fabs(xs.norm() - 1.) <= T_ZERO, Q_FUNC_INFO, what.toStdString().data());
+    Q_ASSERT_X(std::fabs(xs.norm() - 1.) <= FLT_EPSILON, Q_FUNC_INFO, what.toStdString().data());
 #endif
     Eigen::Index  const N = xs.size();
 
@@ -91,7 +102,7 @@ MatrixXd AdjustmentFramework::null(const VectorXd &xs)
 
     VectorXd const check = JJ.adjoint()*xs;
 #ifdef QT_DEBUG
-    Q_ASSERT_X( check.norm() <= T_ZERO, Q_FUNC_INFO, "not a zero vector");
+    Q_ASSERT_X( check.norm() <= FLT_EPSILON, Q_FUNC_INFO, "not a zero vector");
 #endif
     return JJ;
 }
@@ -155,9 +166,9 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
         }
     }
     if ( verbose ) {
-        qDebug().noquote() << QString("%1 constraint%2 recognized...")
+        qDebug().noquote() << QStringLiteral("%1 constraint%2 recognized...")
                               .arg( C). arg( C==1 ? "" : "s" );
-        qDebug().noquote() << QString("%1 constraint%2 required?...")
+        qDebug().noquote() << QStringLiteral("%1 constraint%2 required?...")
                               .arg( numReq). arg( numReq==1 ? "" : "s" );
     }
 
@@ -188,7 +199,7 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
     for ( it=0; it < nIterMax(); it++ )
     {
         if ( verbose ) {
-            qDebug().noquote() << QString("  iteration #%1...").arg(it+1);
+            qDebug().noquote() << QStringLiteral("  iteration #%1...").arg(it+1);
         }
         Jacobian( constr, Bi, BBr, g0, maps, mapc);
 
@@ -225,7 +236,7 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
             // redundant or contradictory constraint
             if ( verbose ) {
                 qDebug().noquote() << red
-                                   << QString("-> ill-conditioned. Reciprocal condition number = %1").arg(rcn)
+                                   << QStringLiteral("-> ill-conditioned. Reciprocal condition number = %1").arg(rcn)
                                    << black;
             }
             return false;
@@ -236,7 +247,7 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
         if ( lu_decomp1.rank() < BBr.rows() ) {
             // redundant or contradictory constraint
             if ( verbose ) {
-                qDebug().noquote() << QString("-> Rank deficiency. Reciprocal condition number = %1").arg(rcn);
+                qDebug().noquote() << QStringLiteral("-> Rank deficiency. Reciprocal condition number = %1").arg(rcn);
             }
             return false;
         }
@@ -263,7 +274,7 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
     if ( redl.norm() >= threshold_convergence() )  {
         // redundant or contradictory
         if ( verbose ) {
-            qDebug().noquote() << red << QString("-> Not converged after %1 iteration%2. Reciprocal condition number = %3")
+            qDebug().noquote() << red << QStringLiteral("-> Not converged after %1 iteration%2. Reciprocal condition number = %3")
                                   .arg( nIterMax() )
                                   .arg( nIterMax()==1 ? "" : "s")
                                   .arg( rcn ) << black;
@@ -271,7 +282,7 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
         return false;
     }
     if ( verbose ) {
-        qDebug().noquote() << green << QString("-> Converged after %1 iteration%2. Reciprocal condition number = %3")
+        qDebug().noquote() << green << QStringLiteral("-> Converged after %1 iteration%2. Reciprocal condition number = %3")
                               .arg( it)
                               .arg( it+1==1 ? "" : "s")
                               .arg( rcn ) << black;
@@ -314,12 +325,12 @@ void AdjustmentFramework::Jacobian(
 
         auto JJ = con->Jacobian( idx, l0(), l() );
         int const dof = con->dof();
-        for ( int i=0; i< con->arity(); i++ )   {
+        for ( Index i=0; i< con->arity(); i++ )   {
             // dof rows for this constraint
             Q_ASSERT( JJ.rows()==dof );
             for ( Index r=0; r<JJ.rows(); r++ ) {
-                BBr.coeffRef( R+r, 2*idx(i)   ) = JJ(r,2*i  );  // Two columns for each entity
-                BBr.coeffRef( R+r, 2*idx(i)+1 ) = JJ(r,2*i+1);
+                BBr.coeffRef( R+r,  2*idx(i)   )  = JJ(r, 2*i   );  // Two columns for each entity
+                BBr.coeffRef( R+r, (2*idx(i))+1 ) = JJ(r,(2*i)+1);
             }
         }
         g0.segment(R,dof) = con->contradict( idx, l0() );
@@ -335,25 +346,25 @@ void AdjustmentFramework::check_constraints(
         const Eigen::RowVectorXi & maps,
         const Eigen::RowVectorXi & mapc) const
 {
-    double d = NAN;       // distance to be checked, d = 0?
+    // double d = NAN;       // distance to be checked, d = 0?
     const Index C = mapc.size();
 
     // check intrinsic constraints ..............................
 #ifdef QT_DEBUG
     const Index S = maps.size();
-    for (int s=0; s<S; s++) {
+    for (Index s=0; s<S; s++) {
         if (verbose) {
             qDebug().noquote()
-                    << QString("straight line #%1: [").arg(s+1, 2)
+                    << QStringLiteral("straight line #%1: [").arg(s+1, 2)
                     << l0_segment(3*s,3).x() << ","
                     << l0_segment(3*s,3).y() << ","
                     << l0_segment(3*s,3).z() << "], \tnorm ="
                     << l0_segment(3*s,3).norm();
         }
-        d = 1.0 -l0_segment(3*s,3).norm();
+        const double d = 1.0 -l0_segment(3*s,3).norm();
         if ( std::fabs( d ) > threshold_numericalCheck() ) {
             // QApplication::beep();
-            qDebug().noquote() <<  red << QString("intrinsic constraint %1  check = %2").arg(s).arg(d) << black;
+            qDebug().noquote() <<  red << QStringLiteral("intrinsic constraint %1  check = %2").arg(s).arg(d) << black;
         }
     }
 #endif
@@ -362,7 +373,7 @@ void AdjustmentFramework::check_constraints(
     //constexpr int width = 25;
     for ( int c=0; c<C; c++ )
     {
-        auto & con = constr->at( mapc(c) );
+        const auto & con = constr->at( mapc(c) );
         if ( con->unevaluated() ) {
             continue;
         }
@@ -372,15 +383,15 @@ void AdjustmentFramework::check_constraints(
             idx(i) = indexOf( maps, idx(i) );
         }
 
-        d =  con->contradict( idx, l0() ).norm();
+        const double d =  con->contradict( idx, l0() ).norm();
         con->setEnforced(  fabs(d) < threshold_numericalCheck()  );
 
 #ifdef QT_DEBUG
         if ( verbose ) {
-            QString const msg1 = QString("%1:  ").arg(QString::fromLatin1(con->type_name()), 12);
-            QString const msg2 = QString("check = %2, \t").arg(d);
+            QString const msg1 = QStringLiteral("%1:  ").arg(QString::fromLatin1(con->type_name()), 12);
+            QString const msg2 = QStringLiteral("check = %2, \t").arg(d);
             QDebug deb = qDebug().noquote();
-            deb << QString("constraint #%1:  ").arg(c+1,3);
+            deb << QStringLiteral("constraint #%1:  ").arg(c+1,3);
             deb << (con->required() ? green : blue) << msg1 << black;
             deb << (con->enforced() ? black : red)  << msg2 << black;
 

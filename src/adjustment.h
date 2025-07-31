@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,25 +19,21 @@
 #ifndef ADJUSTMENT_H
 #define ADJUSTMENT_H
 
+#include "constraints.h"
 #include "matrix.h"
 
+#include <Eigen/Core>
 #include <Eigen/Dense>
+#include <Eigen/SparseCore>
 
 #include <memory> // C++
-
-#include <QList>         // Qt
 #include <utility>
 
-namespace Constraint {
-class ConstraintBase;
-}
-using Constraint::ConstraintBase;
+#include <QList>         // Qt
 
-using Eigen::VectorXd;
-using Eigen::MatrixXd;
-using Eigen::SparseMatrix;
-using Eigen::Index;
-using Eigen::RowVectorXi;
+#include "qcontainerfwd.h"
+
+
 
 //! Adjustment framework: obervations, Jacobians, optimization...
 class AdjustmentFramework
@@ -47,10 +43,11 @@ public:
     AdjustmentFramework( const AdjustmentFramework &) = delete;
 
     //! Value constructor: vector of observations and covariance matrix
-    AdjustmentFramework( const std::pair<VectorXd, SparseMatrix<double> > & p)
+    explicit AdjustmentFramework( const std::pair<Eigen::VectorXd, Eigen::SparseMatrix<double> > & p)
         : l_(p.first), Cov_ll_(p.second)
     {
-        l0_ = l_;  // initilization approx./estimated observations
+        // initilization: approx. adjusted observations := observations
+        l0_ = l_;
     }
 
     AdjustmentFramework ( AdjustmentFramework &&) = delete;
@@ -59,63 +56,62 @@ public:
     AdjustmentFramework & operator= ( AdjustmentFramework &&) = delete;
 
     //! Enforce the constraints of a subtask (adjustment)
-    bool enforce_constraints( const QVector<std::shared_ptr<ConstraintBase> > *constr,
+    bool enforce_constraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
                               const Graph::IncidenceMatrix *Bi,
-                              const RowVectorXi &maps,
-                              const RowVectorXi &mapc);
+                              const Eigen::RowVectorXi &maps,
+                              const Eigen::RowVectorXi &mapc);
 
     //! Get s-th entity, i.e., segment, represented by vector of length len
-    std::pair<VectorXd, MatrixXd> getEntity( Index s, int len) const;
+    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::MatrixXd> getEntity( Eigen::Index s, int len) const;
 
 private:
-    VectorXd l0_segment(   Index offset, int len) const { return l0_.segment(offset,len);}
-    VectorXd l_segment(    Index offset, int len) const { return l_.segment(offset,len);}
-    MatrixXd Cov_ll_block( Index offset, int n) const   { return Cov_ll_.block( offset,offset,n,n); }
+    [[nodiscard]] Eigen::VectorXd l0_segment(   Eigen::Index offset, int len) const { return l0_.segment(offset,len);}
+    [[nodiscard]] Eigen::VectorXd l_segment(    Eigen::Index offset, int len) const { return l_.segment(offset,len);}
+    [[nodiscard]] Eigen::MatrixXd Cov_ll_block( Eigen::Index offset, int n) const   { return Cov_ll_.block( offset,offset,n,n); }
 
-    VectorXd l0() const { return l0_ ;}
-    VectorXd l() const  { return l_; }
+    [[nodiscard]] Eigen::VectorXd l0() const { return l0_ ;}
+    [[nodiscard]] Eigen::VectorXd l() const  { return l_; }
 
-       int nIterMax() const { return nIterMax_; }
-    double threshold_convergence() const { return threshold_.convergence; }
-    double threshold_ReciprocalConditionNumber() const { return threshold_.ReciprocalConditionNumber; }
-    double threshold_rankEstimate()   const { return threshold_.rankEstimate;   }
-    double threshold_numericalCheck() const { return threshold_.numericalCheck; }
+    [[nodiscard]]    int nIterMax() const { return nIterMax_; }
+    [[nodiscard]] double threshold_convergence() const { return convergence; }
+    [[nodiscard]] double threshold_ReciprocalConditionNumber() const { return ReciprocalConditionNumber; }
+    [[nodiscard]] double threshold_rankEstimate()   const { return rankEstimate;   }
+    [[nodiscard]] double threshold_numericalCheck() const { return numericalCheck; }
 
     void reset() { l0_ = l_;}
-    void update( Index start, const VectorXd &x );
+    void update( Eigen::Index start, const Eigen::VectorXd &x );
 
-    void Jacobian( const QVector<std::shared_ptr<ConstraintBase> > *constr,
+    void Jacobian( const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
                    const Graph::IncidenceMatrix *Bi,
-                   SparseMatrix<double, Eigen::ColMajor> & BBr,
-                   VectorXd & g0,
-                   const RowVectorXi & maps,
-                   const RowVectorXi & mapc) const;
+                   Eigen::SparseMatrix<double, Eigen::ColMajor> & BBr,
+                   Eigen::VectorXd & g0,
+                   const Eigen::RowVectorXi & maps,
+                   const Eigen::RowVectorXi & mapc) const;
 
-    void check_constraints( const QVector<std::shared_ptr<ConstraintBase> > *constr,
+    void check_constraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
                             const Graph::IncidenceMatrix *bi,
-                            const RowVectorXi & maps,
-                            const RowVectorXi & mapc ) const;
+                            const Eigen::RowVectorXi & maps,
+                            const Eigen::RowVectorXi & mapc ) const;
 
     bool verbose = true;
-    VectorXd l0_;             // vector of approximate/estimated observations
-    const VectorXd l_;        // vector of observations.
-    const MatrixXd Cov_ll_;   // covariance matrix of vector of observations
 
-    const int nIterMax_ = 10;                 // maximal number of iterations
-    struct Threshold
-    {
-        const double convergence     = 1e-7;  // Threshold convergence
-        const double ReciprocalConditionNumber = 1e-4;  // condition number
-        const double rankEstimate    = 1e-6;  // rank estimation
-        const double numericalCheck  = 1e-5;  // numerical check constraints
-    } threshold_;
+    Eigen::VectorXd l0_;             // vector of approximate/estimated observations
+    const Eigen::VectorXd l_;        // vector of observations.
+    const Eigen::MatrixXd Cov_ll_;   // covariance matrix of vector of observations
+
+    const int    nIterMax_ = 10;          // maximal number of iterations
+    const double convergence     = 1e-7;  // Threshold convergence
+    const double ReciprocalConditionNumber = 1e-4;  // condition number
+    const double rankEstimate    = 1e-6;  // rank estimation
+    const double numericalCheck  = 1e-5;  // numerical check constraints
+
 
     //! Rotation matrix for minimal rotation
-    static MatrixXd Rot_ab(const VectorXd &a, const VectorXd &b);
+    static Eigen::MatrixXd Rot_ab(const Eigen::VectorXd &a, const Eigen::VectorXd &b);
     //! Nullspace of row vector
-    static MatrixXd null(const VectorXd &xs);
+    static Eigen::MatrixXd null(const Eigen::VectorXd &xs);
 
-    static Index indexOf(const Eigen::VectorXi &v, int x);
+    static Eigen::Index indexOf(const Eigen::VectorXi &v, int x);
 };
 
 #endif // ADJUSTMENT_H
