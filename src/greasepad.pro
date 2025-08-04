@@ -19,7 +19,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 # set assember's flags (MinGW), syntax: -Wa,<comma-separated list>
-# QMAKE_CXXFLAGS += -Wa,-mbig-obj
+contains(QMAKE_CC, gcc) {
+    # MinGW
+    QMAKE_CXXFLAGS += -Wa,-mbig-obj
+}
 
 
 SOURCES += \
