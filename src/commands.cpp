@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,9 @@
 
 #include <QDebug>
 #include <QGraphicsItem>
+#include <QStringLiteral>
+#include <QUndoCommand>
+
 #include <memory>
 #include <utility>
 
@@ -42,7 +45,7 @@ AddStroke::AddStroke( State *curr,
                       QUndoCommand *parent) : Undo(parent)
 {
     // qDebug() << Q_FUNC_INFO;
-    setText( "add stroke" );
+    setText( QStringLiteral("add stroke") );
     current_state_ = curr;      // set pointer
     prev_state_ = std::move(p);
     next_state_ = std::move(n);
@@ -70,7 +73,7 @@ DeleteSelection::DeleteSelection( State *st,
                                   std::unique_ptr<State> & n,
                                   QUndoCommand *parent) : Undo(parent)
 {
-    setText( QString("delete selected item%1")
+    setText( QStringLiteral("delete selected item%1")
              .arg( scene()->selectedItems().size()==1 ? "" : "s") );
 
     current_state_ = st;   // pointer
@@ -96,7 +99,7 @@ void DeleteSelection::undo()
 TabulaRasa::TabulaRasa( State *st, QUndoCommand *parent ) : Undo(parent)
 {
     // qDebug() << Q_FUNC_INFO ;
-    setText( "clear all" );
+    setText( QStringLiteral("clear all") );
     current_state_ = st;   // pointer
     prev_state_ = std::make_unique<State>(*st);   // copy
     next_state_ = std::make_unique<State>();

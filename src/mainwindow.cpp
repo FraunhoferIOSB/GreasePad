@@ -815,7 +815,8 @@ void MainWindow::readBinaryFile( const QString & fileName)
                     fileInfo.fileName(),
                     &curr_state,
                     prev_state,
-                    next_state)
+                    next_state,
+                    nullptr)
                 );
 
     // setWindowModified( false );
@@ -826,7 +827,7 @@ void MainWindow::readBinaryFile( const QString & fileName)
 void MainWindow::slotCmdTabulaRasa()
 {
     m_undoStack->push(
-                new Cmd::TabulaRasa( &curr_state )
+                new Cmd::TabulaRasa( &curr_state, nullptr )
                 );
 
     setWindowModified( true );
@@ -859,7 +860,8 @@ void MainWindow::slotCmdAddStroke( QPainterPath *path)
         m_undoStack->push(
                     new Cmd::AddStroke( &curr_state,
                                         prev_state_,
-                                        next_state_)
+                                        next_state_,
+                               nullptr)
                     );
         setWindowModified( true );
     }
@@ -883,7 +885,7 @@ void MainWindow::slotCmdDeleteSelection()
         m_undoStack->push(
                     new Cmd::DeleteSelection( &curr_state,
                                               prev_state_,
-                                              next_state_)
+                                              next_state_, nullptr)
                     );
         setWindowModified( true );
     }

@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,12 +22,13 @@
 #include <memory>
 
 #include <QGraphicsScene>
+#include <QString>
 #include <QUndoCommand>
 
 class State;
 namespace  GUI {
 class MainScene;
-}
+} // namespace GUI
 
 
 //! Namespace for commands (und/redo)
@@ -42,19 +43,18 @@ public:
     Undo & operator= (const Undo & other) = delete; //!< Copy assignment operator
     Undo & operator= (Undo && other) = delete;      //!< Move assignment operator
 
-protected:
-    Undo( QUndoCommand *parent=nullptr); //!< Standard constructor
-    ~Undo() override = default;
-
-    State *current_state_{};             //!< Pointer to current state
-    std::unique_ptr<State> next_state_;  //!< Pointer to next state (redo)
-    std::unique_ptr<State> prev_state_;  //!< Pointer to previous state (undo)
-
-public:
     //! Set pointer to scene
     static void setScene ( GUI::MainScene * sc) {  s_scene = sc; }
     //! Get pointer to scene
     static GUI::MainScene * scene() { return s_scene;  }
+
+protected:
+    explicit Undo( QUndoCommand *parent); //!< Standard constructor
+    ~Undo() = default;
+
+    State *current_state_{};             //!< Pointer to current state
+    std::unique_ptr<State> next_state_;  //!< Pointer to next state (redo)
+    std::unique_ptr<State> prev_state_;  //!< Pointer to previous state (undo)
 
 private:
     static GUI::MainScene *s_scene;
@@ -69,7 +69,7 @@ public:
     AddStroke( State *curr,
                std::unique_ptr<State> & p,
                std::unique_ptr<State> & n,
-               QUndoCommand *parent=nullptr);
+               QUndoCommand *parent);
     AddStroke( const AddStroke &) = delete;
     AddStroke( AddStroke &&) = delete;
     AddStroke operator= (const AddStroke &) = delete;
@@ -90,8 +90,7 @@ public:
     DeleteSelection( State *st,
                      std::unique_ptr<State> &p,
                      std::unique_ptr<State> &n,
-                     QUndoCommand *parent=nullptr);
-
+                     QUndoCommand *parent);
 private:
     void redo() override;
     void undo() override;
@@ -103,8 +102,7 @@ class TabulaRasa : public Undo
 {
 public:
     //! Value constructor
-    TabulaRasa( State *st,
-                QUndoCommand *parent=nullptr);
+    TabulaRasa( State *st, QUndoCommand *parent);
 private:
     void redo() override;
     void undo() override;
@@ -119,7 +117,7 @@ public:
                                  State *curr,
                                  std::unique_ptr<State> &p,
                                  std::unique_ptr<State> &n,
-                                 QUndoCommand *parent=nullptr);
+                                 QUndoCommand *parent);
 private:
     void redo() override;
     void undo() override;
