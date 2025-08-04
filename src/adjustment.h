@@ -72,11 +72,11 @@ private:
     [[nodiscard]] Eigen::VectorXd l0() const { return l0_ ;}
     [[nodiscard]] Eigen::VectorXd l() const  { return l_; }
 
-    [[nodiscard]]    int nIterMax() const { return nIterMax_; }
-    [[nodiscard]] double threshold_convergence() const { return convergence; }
-    [[nodiscard]] double threshold_ReciprocalConditionNumber() const { return ReciprocalConditionNumber; }
-    [[nodiscard]] double threshold_rankEstimate()   const { return rankEstimate;   }
-    [[nodiscard]] double threshold_numericalCheck() const { return numericalCheck; }
+    [[nodiscard]] static int nIterMax() { return nIterMax_; }
+    [[nodiscard]] static double threshold_convergence() { return convergence; }
+    [[nodiscard]] static double threshold_ReciprocalConditionNumber() { return ReciprocalConditionNumber; }
+    [[nodiscard]] static double threshold_rankEstimate() { return rankEstimate;   }
+    [[nodiscard]] static double threshold_numericalCheck() { return numericalCheck; }
 
     void reset() { l0_ = l_;}
     void update( Eigen::Index start, const Eigen::VectorXd &x );
@@ -87,6 +87,8 @@ private:
                    Eigen::VectorXd & g0,
                    const Eigen::RowVectorXi & maps,
                    const Eigen::RowVectorXi & mapc) const;
+    //! compute reduced coordinates
+    void reduce ( Eigen::VectorXd &, Eigen::SparseMatrix<double,Eigen::ColMajor> &) const;
 
     void check_constraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
                             const Graph::IncidenceMatrix *bi,
@@ -99,11 +101,11 @@ private:
     const Eigen::VectorXd l_;        // vector of observations.
     const Eigen::MatrixXd Cov_ll_;   // covariance matrix of vector of observations
 
-    const int    nIterMax_ = 10;          // maximal number of iterations
-    const double convergence     = 1e-7;  // Threshold convergence
-    const double ReciprocalConditionNumber = 1e-4;  // condition number
-    const double rankEstimate    = 1e-6;  // rank estimation
-    const double numericalCheck  = 1e-5;  // numerical check constraints
+    static constexpr int    nIterMax_ = 10;          // maximal number of iterations
+    static constexpr double convergence     = 1e-7;  // Threshold convergence
+    static constexpr double ReciprocalConditionNumber = 1e-4;  // condition number
+    static constexpr double rankEstimate    = 1e-6;  // rank estimation
+    static constexpr double numericalCheck  = 1e-5;  // numerical check constraints
 
 
     //! Rotation matrix for minimal rotation

@@ -203,30 +203,7 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
             qDebug().noquote() << QStringLiteral("  iteration #%1...").arg(it+1);
         }
         Jacobian( constr, Bi, BBr, g0, maps, mapc);
-
-        // reduced coordinates: vector and covariance matrix .............
-        for ( Index s=0; s<S; s++ )
-        {
-            Index const offset3 = 3 * s;
-            Index const offset2 = 2 * s;
-
-            Eigen::Matrix<double, 3, 2> const NN = null(l0_segment(offset3, 3));
-
-            // (i) reduced coordinates of observations
-            lr.segment(offset2,2) = NN.adjoint() * l_segment(offset3,3);
-
-            // (ii) covariance matrix, reduced coordinates
-            Eigen::Matrix3d const RR = Rot_ab(l_segment(offset3, 3), l0_segment(offset3, 3));
-            Eigen::Matrix<double, 2, 3> const JJ = NN.adjoint() * RR;
-            Eigen::Matrix2d Cov_rr = JJ*Cov_ll_block( offset3,3)*JJ.adjoint();
-
-            // rCov_ll.block(offset2, offset2, 2, 2) = Cov_rr; // not for sparse matrices
-            for ( int i=0; i<2; i++ ) {
-                for ( int j=0; j<2; j++ ) {
-                    rCov_ll.coeffRef( offset2 +i,offset2 +j) = Cov_rr(i,j);
-                }
-            }
-        }
+        reduce ( lr, rCov_ll);
 
         // check rank and condition .....................................
 
@@ -293,6 +270,38 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
     check_constraints( constr, Bi, maps, mapc);
 
     return true;
+}
+
+
+
+void AdjustmentFramework::reduce (
+    Eigen::VectorXd & lr,
+    SparseMatrix<double, Eigen::ColMajor> & rCov_ll) const
+{
+    // reduced coordinates: vector and covariance matrix .............
+    const Index S = l0_.size()/3;
+    for ( Index s=0; s<S; s++ )
+    {
+        Index const offset3 = 3 * s;
+        Index const offset2 = 2 * s;
+
+        Eigen::Matrix<double, 3, 2> const NN = null(l0_segment(offset3, 3));
+
+        // (i) reduced coordinates of observations
+        lr.segment(offset2,2) = NN.adjoint() * l_segment(offset3,3);
+
+        // (ii) covariance matrix, reduced coordinates
+        Eigen::Matrix3d const RR = Rot_ab(l_segment(offset3, 3), l0_segment(offset3, 3));
+        Eigen::Matrix<double, 2, 3> const JJ = NN.adjoint() * RR;
+        Eigen::Matrix2d Cov_rr = JJ*Cov_ll_block( offset3,3)*JJ.adjoint();
+
+        // rCov_ll.block(offset2, offset2, 2, 2) = Cov_rr; // not for sparse matrices
+        for ( int i=0; i<2; i++ ) {
+            for ( int j=0; j<2; j++ ) {
+                rCov_ll.coeffRef( offset2 +i,offset2 +j) = Cov_rr(i,j);
+            }
+        }
+    }
 }
 
 
