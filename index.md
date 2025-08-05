@@ -139,3 +139,8 @@ The author would like to thank Wolfgang Förstner (University of Bonn) and Horst
 
 A. With a computer mouse as pointing device, you can select segments or constraints using the mouse's right button. With a stylus or one of your fingers, you will probably have to press for a short moment onto the touch pad. If a graphical element covers another element, you can change the visual stacking.
  
+### Further geometric elements
+
+*Q. Why are there no curve segments of higher order provided, say arcs of ellipses or arcs of circles?* 
+
+A. The joint utilization of curves and straight lines implies a model selection. Actually, one cannot distinguish automatically and reliable between a short sequence representing a straight line segment and a short sequence representing a short arc of a curve. For this to work, the user would have to express his or her intention interactively. This approach, however, is in conflict with the modeless design of the program.
