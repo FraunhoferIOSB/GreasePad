@@ -113,6 +113,7 @@ private:
     //! Nullspace of row vector
     static Eigen::MatrixXd null(const Eigen::VectorXd &xs);
 
+    [[nodiscard]] static bool is_rank_deficient( Eigen::SparseMatrix<double,Eigen::ColMajor> & BBr, double T );
     static Eigen::Index indexOf(const Eigen::VectorXi &v, Eigen::Index i);
 };
 

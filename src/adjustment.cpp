@@ -29,10 +29,12 @@
 #include "qlogging.h"
 #include "qtdeprecationdefinitions.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cfloat>
 #include <cmath>
 #include <memory>
+#include <numeric>
 #include <utility>
 
 #include <Eigen/Core>
@@ -152,20 +154,30 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
                                                const Eigen::RowVectorXi & maps,
                                                const Eigen::RowVectorXi & mapc )
 {
-    if ( mapc.size() < 1 ) {
-        return true;
-    }
-
     const Index C = mapc.size();
     const Index S = maps.size();
 
+    if ( C < 1 ) {
+        return true;
+    }
+
     // number of required constraints, inclusive hypothesis to be tested
-    int numReq = 0;
-    for ( Index c=0; c<mapc.size(); c++ ) {
+    /* int numReq = 0;
+    for ( Index c=0; c<C; c++ ) {
         if ( constr->at( mapc(c) )->required() ) {
             numReq++;
         }
-    }
+    } */
+
+    /* int numReq= 0;
+    for ( auto c : mapc  ) {
+         numReq += constr->at( c )->required() ? 1 : 0;
+    } */
+
+    const Index numReq = std::count_if(
+        mapc.begin(), mapc.end(),
+        [&constr](Index i){ return constr->at(i)->required();} );
+
     if ( verbose ) {
         qDebug().noquote() << QStringLiteral("%1 constraint%2 recognized...")
                               .arg( C). arg( C==1 ? "" : "s" );
@@ -173,16 +185,22 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
                               .arg( numReq). arg( numReq==1 ? "" : "s" );
     }
 
-    reset(); // set adjusted observations  l0 := l
-
     // number of required equations (not constraints!),
-    // e.g., two equations fpr parallelism
-    int E = 0;
+    // e.g., two equations for parallelism
+    /* int E = 0;
     for ( Index c=0; c<mapc.size(); c++ ) {
         if ( constr->at( mapc(c) )->required() ) {
             E += constr->at( mapc(c) )->dof();
         }
-    }
+    }*/
+    const int E = std::accumulate(
+        mapc.begin(),  mapc.end(),    0,
+        [&constr](int acc, int i){
+            return acc += constr->at(i)->required() ? constr->at(i)->dof() : 0;} );
+
+
+    reset(); // set adjusted observations  l0 := l
+
 
     VectorXd redl;
     VectorXd cg;
@@ -207,9 +225,18 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
 
         // check rank and condition .....................................
 
+        if ( is_rank_deficient( BBr, threshold_rankEstimate()) ) {
+            // redundant or contradictory constraint
+            if ( verbose ) {
+                qDebug().noquote() << QStringLiteral("-> Rank deficiency");
+            }
+            return false;
+        }
+
+
         // rank-revealing decomposition
-        Eigen::FullPivLU<MatrixXd> const lu_decomp2(BBr * rCov_ll * BBr.adjoint());
-        rcn = lu_decomp2.rcond();
+        Eigen::FullPivLU<MatrixXd> const lu_decomp(BBr * rCov_ll * BBr.adjoint());
+        rcn = lu_decomp.rcond();
         if ( rcn < threshold_ReciprocalConditionNumber() ) {
             // redundant or contradictory constraint
             if ( verbose ) {
@@ -220,22 +247,13 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
             return false;
         }
 
-        Eigen::FullPivLU<MatrixXd> lu_decomp1( BBr );
-        lu_decomp1.setThreshold( threshold_rankEstimate() );
-        if ( lu_decomp1.rank() < BBr.rows() ) {
-            // redundant or contradictory constraint
-            if ( verbose ) {
-                qDebug().noquote() << QStringLiteral("-> Rank deficiency. Reciprocal condition number = %1").arg(rcn);
-            }
-            return false;
-        }
 
 
         // contradictions
         cg = -g0  -BBr*lr;
 
         // estimated update of reduced coordinates observations
-        redl = rCov_ll*BBr.adjoint()*lu_decomp2.inverse()*cg +lr;
+        redl = rCov_ll*BBr.adjoint()*lu_decomp.inverse()*cg +lr;
 
         // updates adjusted observations, via retraction
         for ( Index s=0; s<maps.size(); s++ ) {
@@ -415,4 +433,10 @@ void AdjustmentFramework::check_constraints(
     }
 }
 
-
+//! check if the matrix AA is rank-deficient
+bool AdjustmentFramework::is_rank_deficient( Eigen::SparseMatrix<double,Eigen::ColMajor> & AA, const double T )
+{
+    Eigen::ColPivHouseholderQR<MatrixXd> qr(AA);
+    qr.setThreshold( T );
+    return ( qr.rank() < AA.rows() );
+}
