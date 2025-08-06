@@ -20,12 +20,8 @@
 #define CONICS_H
 
 #include <Eigen/Core>
-#include <utility>
 
-namespace Uncertain {
-class uPoint;
-class uStraightLine;
-} // namespace Uncertain
+#include <utility>
 
 
 //! Namespace Conic
@@ -43,8 +39,6 @@ public:
     [[nodiscard]] Matrix3d C() const { return CC;}  //!< getter
     [[nodiscard]] bool isCentral()   const;  //!< Check if conic has a central point
     [[nodiscard]] std::pair<Vector3d,Vector3d> intersect( const Vector3d & l ) const;  //!< Two intersection points with a straight line
-
-    static Matrix3d cof3(const Matrix3d &MM);     //!< 3x3 cofactor matrix, i.e., transposed adjunct
 
 private:
     static Matrix3d skew(const Vector3d &x);

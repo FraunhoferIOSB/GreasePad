@@ -232,11 +232,11 @@ void QSegment::setShape( const uPoint &ux,
 
     // two ellipses ...............................................
     uPoint ux2 = x2.euclidean();
-    Matrix3d CC = Conic::ConicBase::cof3( k2*ux2.Cov() -ux2.v()*ux2.v().adjoint() );
+    Matrix3d CC = cof3( k2*ux2.Cov() -ux2.v()*ux2.v().adjoint() );
     Conic::Ellipse const ell_x(CC);
 
     ux2 = y2.euclidean();
-    CC = Conic::ConicBase::cof3( k2*ux2.Cov() -ux2.v()*ux2.v().adjoint() );
+    CC = cof3( k2*ux2.Cov() -ux2.v()*ux2.v().adjoint() );
     Conic::Ellipse const ell_y(CC);
 
     ellipse_.first  = toPoly( ell_x.poly( nSupport ) );
@@ -474,5 +474,25 @@ QUnconstrained::QUnconstrained( const uPoint & ux,
      setVisible( QUnconstrained::show() );
      setPen( s_defaultPen );
 }
+
+Matrix3d QSegment::cof3(const Matrix3d &MM)
+{
+    Matrix3d Cof;
+
+    Cof(0,0) = +MM(1,1)*MM(2,2) -MM(2,1)*MM(1,2);
+    Cof(0,1) = -MM(1,0)*MM(2,2) +MM(2,0)*MM(1,2);
+    Cof(0,2) = +MM(1,0)*MM(2,1) -MM(2,0)*MM(1,1);
+
+    Cof(1,0) = -MM(0,1)*MM(2,2) +MM(2,1)*MM(0,2);
+    Cof(1,1) = +MM(0,0)*MM(2,2) -MM(2,0)*MM(0,2);
+    Cof(1,2) = -MM(0,0)*MM(2,1) +MM(2,0)*MM(0,1);
+
+    Cof(2,0) = +MM(0,1)*MM(1,2) -MM(1,1)*MM(0,2);
+    Cof(2,1) = -MM(0,0)*MM(1,2) +MM(1,0)*MM(0,2);
+    Cof(2,2) = +MM(0,0)*MM(1,1) -MM(1,0)*MM(0,1);
+
+    return Cof;
+}
+
 
 } // namespace QEntity

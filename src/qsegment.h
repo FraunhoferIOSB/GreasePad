@@ -78,6 +78,8 @@ public:
 
     static void setPenSelected( const QPen & p) { s_penSelected = p;}
 
+    static Eigen::Matrix3d cof3(const Eigen::Matrix3d &MM);     //!< 3x3 cofactor matrix, i.e., transposed adjunct
+
 protected:
     //! Standard constructor
     explicit QSegment( QGraphicsItem *parent = nullptr );
