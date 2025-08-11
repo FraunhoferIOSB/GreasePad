@@ -340,26 +340,26 @@ bool impl::deserialize( QDataStream & in )
         std::shared_ptr<ConstraintBase> c;
         // (1) unary
         if ( std::strcmp( type_name, "vertical")==0 ){
-            c = Vertical::create();
+            c = std::make_shared<Vertical>(); // create();;
         }
         if ( std::strcmp( type_name, "horizontal")==0 ){
-            c = Horizontal::create();
+            c = std::make_shared<Horizontal>(); // create();;
         }
         if ( std::strcmp( type_name, "diagonal")==0 ){
-            c = Diagonal::create();
+            c = std::make_shared<Diagonal>(); // create();
         }
 
         // (2) binary
         if ( std::strcmp( type_name, "orthogonal")==0 ){
-            c = Orthogonal::create();
+            c = std::make_shared<Orthogonal>(); // create();;
         }
         if ( std::strcmp( type_name, "parallel")==0 ){
-            c = Parallel::create();
+            c = std::make_shared<Parallel>(); // create();;
         }
 
         // (3) ternary
         if ( std::strcmp( type_name, "copunctual")==0 ){
-            c = Copunctual::create();
+            c = std::make_shared<Copunctual>(); // create();
         }
 
         if ( c==nullptr ) {

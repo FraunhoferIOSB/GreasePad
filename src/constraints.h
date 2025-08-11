@@ -20,10 +20,13 @@
 #define CONSTRAINTS_H
 
 #include <QDebug>
-#include <Eigen/Dense>
+
 #include <Eigen/Core>
+#include <Eigen/Dense>
+
 #include <memory>
 
+#include "cstdint"
 #include "matrix.h"
 
 //! Geometric constraints (relations)
@@ -54,7 +57,7 @@ protected:
                             const VectorXd &b);  //!< Minimal rotation between two vectors as rotation matrix
 public:
     //! Status: unevaluated, required, obsolete (redundant)
-    enum Status { UNEVAL=0, REQUIRED, OBSOLETE };
+    enum Status : std::uint8_t { UNEVAL=0, REQUIRED, OBSOLETE };
 
     // virtual void serialize( QDataStream &out) const;  //!< Serialize (Qt)
     // static std::shared_ptr<ConstraintBase> deserialize( QDataStream &in ); //!< Deserialization (Qt)
@@ -84,22 +87,49 @@ public:
     bool is()  { return ( dynamic_cast<T*>(this) != nullptr);    }
 
     //! Clone constraints via nonvirtual interface pattern
-    [[nodiscard]] std::shared_ptr<ConstraintBase> clone() const;
-
-private:
-    [[nodiscard]] virtual std::shared_ptr<ConstraintBase> doClone() const = 0;
-
-    Status m_status;    // { UNEVAL=0 | REQUIRED | OBSOLETE };
-    bool   m_enforced;
+    [[nodiscard]] virtual std::shared_ptr<ConstraintBase> clone() const = 0;
 
 protected:
+    //! sign(0):=+1
     template <typename T>
     int sign(T val) const { return (T(0) <= val) - (val < T(0));  }
+
+private:
+    Status m_status;    // { UNEVAL=0 | REQUIRED | OBSOLETE };
+    bool   m_enforced;
 };
 
 
+/*
+ * The curiously recurring template pattern (CRTP)
+ * is used to enable static polymorphism
+ * and to avoid duplicate clone functions in the derived classes.
+ */
+template <typename Derived>
+class ConstraintCRTP : public ConstraintBase
+{
+public:
+    [[nodiscard]] std::shared_ptr<ConstraintBase> clone() const override {
+        auto T = std::make_shared<Derived>();
+        T->setStatus( this->status() );
+        T->setEnforced( this->enforced());
+        return T;
+        // return std::make_shared<Derived>(static_cast<Derived const&> (*this));
+    };
+
+    ConstraintCRTP( const ConstraintCRTP &) = delete;
+    ConstraintCRTP & operator= (const ConstraintCRTP &) = delete;
+    ConstraintCRTP & operator= (ConstraintCRTP &&) = delete;
+    ~ConstraintCRTP() override = default;
+
+private:
+    ConstraintCRTP() = default;
+    ConstraintCRTP(ConstraintCRTP&&) noexcept = default;
+    friend Derived;
+};
+
 //! Concurrence constraint (three copunctual straight lines)
-class Copunctual : public ConstraintBase
+class Copunctual : public ConstraintCRTP<Copunctual>
 {
 public:
     [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx, const VectorXd &l0, const VectorXd &l) const override;
@@ -107,23 +137,16 @@ public:
     [[nodiscard]] int dof() const override   {return s_dof;}
     [[nodiscard]] int arity() const override {return s_arity;}   //!< number of involved entities
 
-protected:
+private:
     [[nodiscard]] const char* type_name() const override { return "copunctual"; }
 
-private:
-    [[nodiscard]] std::shared_ptr<ConstraintBase> doClone() const override;
     static Matrix3d cof3(const Matrix3d &MM); //!< 3x3 cofactor matrix
     static const int s_dof   = 1;
     static const int s_arity = 3;
-public:
-    //! Create concurrence constraint
-    static std::shared_ptr<ConstraintBase> create() {
-        return std::make_shared<Copunctual>();
-    }
 };
 
 //! Parallelism constraint
-class Parallel : public ConstraintBase
+class Parallel : public ConstraintCRTP<Parallel>
 {
 public:
     [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx, const VectorXd &l0,  const VectorXd &l) const override;
@@ -131,14 +154,8 @@ public:
     [[nodiscard]] int dof() const override   { return s_dof;   }
     [[nodiscard]] int arity() const override { return s_arity; }
 
-    //! Create parallelism constraint
-    static std::shared_ptr<ConstraintBase> create() {
-        return std::make_shared<Parallel>();
-    }
-
 private:
     [[nodiscard]] const char* type_name() const override { return "parallel"; }
-    [[nodiscard]] std::shared_ptr<ConstraintBase> doClone() const override;
 
     static Eigen::Matrix3d S3();
     static const int s_dof   = 1;
@@ -146,7 +163,7 @@ private:
 };
 
 //! Vertical straight line
-class Vertical : public ConstraintBase
+class Vertical : public ConstraintCRTP<Vertical>
 {
 public:
     [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
@@ -154,13 +171,8 @@ public:
     [[nodiscard]] int dof() const override   { return s_dof;   }
     [[nodiscard]] int arity() const override { return s_arity; }
 
-    //! Create constraint
-    static std::shared_ptr<ConstraintBase> create() {
-        return std::make_shared<Vertical>();
-    }
 private:
     [[nodiscard]] const char* type_name() const override { return "vertical"; }
-    [[nodiscard]] std::shared_ptr<ConstraintBase> doClone() const override;
 
     static const int s_dof = 1;
     static const int s_arity = 1;
@@ -170,7 +182,7 @@ private:
 
 
 //! Horizontal straight line
-class Horizontal : public ConstraintBase
+class Horizontal : public ConstraintCRTP<Horizontal>
 {
 public:
     [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
@@ -178,13 +190,8 @@ public:
     [[nodiscard]] int dof() const override   { return s_dof;   }
     [[nodiscard]] int arity() const override { return s_arity; }
 
-    //! Create constraint
-    static std::shared_ptr<ConstraintBase> create() {
-        return std::make_shared<Horizontal>();
-    }
 private:
     [[nodiscard]] const char* type_name() const override { return "horizontal"; }
-    [[nodiscard]] std::shared_ptr<ConstraintBase> doClone() const override;
 
     static const int s_dof = 1;
     static const int s_arity = 1;
@@ -194,7 +201,7 @@ private:
 
 
 //! Diagonal straight line
-class Diagonal : public ConstraintBase
+class Diagonal : public ConstraintCRTP<Diagonal>
 {
 public:
     [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
@@ -202,13 +209,8 @@ public:
     [[nodiscard]] int dof() const override   { return s_dof;   }
     [[nodiscard]] int arity() const override { return s_arity; }
 
-    //! Create constraint
-    static std::shared_ptr<ConstraintBase> create() {
-        return std::make_shared<Diagonal>();
-    }
 private:
     [[nodiscard]] const char* type_name() const override { return "diagonal"; }
-    [[nodiscard]] std::shared_ptr<ConstraintBase> doClone() const override;
 
     static const int s_dof = 1;
     static const int s_arity = 1;
@@ -216,7 +218,7 @@ private:
 
 
 //! Orthogonallity constraint
-class Orthogonal : public ConstraintBase
+class Orthogonal : public ConstraintCRTP<Orthogonal>
 {
 public:
     [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
@@ -224,13 +226,8 @@ public:
     [[nodiscard]] int dof() const override   { return s_dof;   }
     [[nodiscard]] int arity() const override { return s_arity; }
 
-    //! Create orthogonallity constraint
-    static std::shared_ptr<ConstraintBase> create() {
-        return std::make_shared<Orthogonal>();
-    }
 private:
     [[nodiscard]] const char* type_name() const override { return "orthogonal"; }
-    [[nodiscard]] std::shared_ptr<ConstraintBase> doClone() const override;
 
     static Matrix3d CC();
     static const int s_dof = 1;
@@ -239,7 +236,7 @@ private:
 
 
 //! Identity constraint
-class Identical : public ConstraintBase
+class Identical : public ConstraintCRTP<Identical>
 {
 public:
     [[nodiscard]] MatrixXd Jacobian( const VectorXidx &idxx, const VectorXd &l0, const VectorXd &l) const override;
@@ -249,7 +246,6 @@ public:
 
 private:
     [[nodiscard]] const char* type_name() const override {return "identical";}
-    [[nodiscard]] std::shared_ptr<ConstraintBase> doClone() const override;
 
     static const int s_dof   = 2;
     static const int s_arity = 2;

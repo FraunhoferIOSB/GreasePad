@@ -19,12 +19,18 @@
 #include "constraints.h"
 
 #include <Eigen/Core>
+
 #include <QDebug>
+#include <QStringLiteral>
+
 #include "qassert.h"
+#include "qtdeprecationdefinitions.h"
+
 #include <cassert>
+#include <cfloat>
 #include <cmath>
 #include <cstdlib>
-#include <memory>
+
 
 namespace Constraint {
 
@@ -32,17 +38,14 @@ using Eigen::Vector3d;
 using Eigen::Vector2cd;
 using Eigen::Matrix;
 
-#ifdef QT_DEBUG
-static const double T_ZERO = 1e-5;
-#endif
 
 MatrixXd ConstraintBase::Rot_ab( const VectorXd &a,
                                  const VectorXd &b)
 {
     Q_ASSERT( a.size()==b.size() );
 #ifdef QT_DEBUG
-    Q_ASSERT( std::fabs( a.norm()-1.) < T_ZERO );
-    Q_ASSERT( std::fabs( b.norm()-1.) < T_ZERO );
+    Q_ASSERT( std::fabs( a.norm()-1.) < FLT_EPSILON );
+    Q_ASSERT( std::fabs( b.norm()-1.) < FLT_EPSILON );
 #endif
     return MatrixXd::Identity( a.size(),a.size())
             +2*b*a.adjoint()
@@ -58,7 +61,7 @@ MatrixXd ConstraintBase::null( const VectorXd & xs )
 
 #ifdef QT_DEBUG
     QString const what = QStringLiteral("norm(x) = %1").arg( QString::number(xs.norm()) );
-    Q_ASSERT_X(fabs(xs.norm() - 1.) <= T_ZERO, "null(x)", what.toStdString().data());
+    Q_ASSERT_X(fabs(xs.norm() - 1.) <= FLT_EPSILON, "null(x)", what.toStdString().data());
 #endif
 
     Eigen::Index  const N = xs.size();
@@ -76,7 +79,7 @@ MatrixXd ConstraintBase::null( const VectorXd & xs )
 
     VectorXd const check = JJ.adjoint() * xs;
 #ifdef QT_DEBUG
-    Q_ASSERT_X( check.norm() <= T_ZERO, Q_FUNC_INFO, "not a zero vector");
+    Q_ASSERT_X( check.norm() <= FLT_EPSILON, Q_FUNC_INFO, "not a zero vector");
 #endif
     return JJ;
 }
@@ -88,7 +91,7 @@ ConstraintBase::ConstraintBase()
     // qDebug().noquote() << Q_FUNC_INFO;
 }
 
-std::shared_ptr<ConstraintBase> ConstraintBase::clone() const
+/*std::shared_ptr<ConstraintBase> ConstraintBase::clone() const
 {
    // qDebug() << Q_FUNC_INFO;
    std::shared_ptr<ConstraintBase> ptr = doClone();
@@ -96,7 +99,7 @@ std::shared_ptr<ConstraintBase> ConstraintBase::clone() const
    assert( typeid(r) == typeid(*this)
            && "ConstraintBase: doClone() incorrectly overridden" );
    return ptr;
-}
+}*/
 
 
 
@@ -142,13 +145,13 @@ Matrix3d Orthogonal::CC()
 }
 
 
-std::shared_ptr<ConstraintBase> Orthogonal::doClone() const
+/*std::shared_ptr<ConstraintBase> Orthogonal::doClone() const
 {
     auto T = std::make_shared<Orthogonal>();
     T->setStatus( this->status() );
     T->setEnforced( this->enforced());
     return T;
-}
+}*/
 
 MatrixXd Copunctual::Jacobian(const VectorXidx &idx, const VectorXd &l0, const VectorXd &l) const
 {
@@ -163,7 +166,8 @@ MatrixXd Copunctual::Jacobian(const VectorXidx &idx, const VectorXd &l0, const V
     Matrix3d const MM = (Matrix3d() << a0,b0,c0 ).finished(); // [a0,b0,c0]
     Matrix3d Adju = cof3(MM).adjoint(); // adjugate(MM)
 
-    MatrixXd Tmp(1,6);
+    constexpr int SIX = 6;
+    MatrixXd Tmp(1,SIX);
     Tmp << Adju.row(0)*Rot_ab(a0,a)*null(a0),
            Adju.row(1)*Rot_ab(b0,b)*null(b0),
            Adju.row(2)*Rot_ab(c0,c)*null(c0);
@@ -204,13 +208,7 @@ Matrix3d Copunctual::cof3(const Matrix3d &MM)
     return Cof;
 }
 
-std::shared_ptr<ConstraintBase> Copunctual::doClone() const
-{
-    auto T = std::make_shared<Copunctual>();
-    T->setStatus(   this->status()   );
-    T->setEnforced( this->enforced() );
-    return T;
-}
+
 
 MatrixXd Identical::Jacobian( const VectorXidx & idx,
                               const VectorXd & l0,
@@ -242,6 +240,7 @@ MatrixXd Identical::Jacobian( const VectorXidx & idx,
 
     MatrixXd Tmp(2,4);
     Tmp << JJ.adjoint()*JJa.adjoint(), -JJ.adjoint()*JJb.adjoint();
+
     return Tmp;
 }
 
@@ -259,21 +258,14 @@ VectorXd Identical::contradict( const VectorXidx & idx,
     b0.head(2).cwiseAbs().maxCoeff( &idx2 );
 
     Q_ASSERT( sameSign(a0(idx1), b0(idx2)) );
-    // LU.compute( a0.adjoint() );
-    // Matrix<double,3,2> JJ = LU.kernel();  //  JJ = null( a0');
+
     Matrix<double, 3, 2> const JJ = null(a0);
     Eigen::Vector2d const d2 = JJ.adjoint() * (a0 - b0); //  (10.141)
 
     return d2;
 }
 
-std::shared_ptr<ConstraintBase> Identical::doClone() const
-{
-    auto T = std::make_shared<Identical>();
-    T->setStatus(   this->status()  );
-    T->setEnforced( this->enforced());
-    return T;
-}
+
 
 MatrixXd Parallel::Jacobian(const VectorXidx &idx, const VectorXd &l0, const VectorXd &l) const
 {
@@ -283,11 +275,8 @@ MatrixXd Parallel::Jacobian(const VectorXidx &idx, const VectorXd &l0, const Vec
     Vector3d const a = l.segment(3 * idx(0), 3);
     Vector3d const b =  l.segment( 3*idx(1),3 );
 
-    // Matrix<double,1,2> JJa;
-    // Matrix<double,1,2> JJb;
-
-    Matrix<double, 1, 2> const JJa = -b0.adjoint() * S3() * Rot_ab(a0, a) * null(a0);
-    Matrix<double, 1, 2> const JJb = a0.adjoint() * S3() * Rot_ab(b0, b) * null(b0);
+    const Matrix<double, 1, 2> JJa = -b0.adjoint() * S3() * Rot_ab(a0, a) * null(a0);
+    const Matrix<double, 1, 2> JJb = a0.adjoint() * S3() * Rot_ab(b0, b) * null(b0);
 
     MatrixXd Tmp(1,4);
     Tmp << JJa, JJb;
@@ -296,25 +285,14 @@ MatrixXd Parallel::Jacobian(const VectorXidx &idx, const VectorXd &l0, const Vec
 
 VectorXd Parallel::contradict(const VectorXidx &idx, const VectorXd &l0) const
 {
-    Vector3d const a = l0.segment(3 * idx(0), 3);
-    Vector3d const b = l0.segment( 3*idx(1),3 );
+    Vector3d const a = l0.segment( 3*idx(0), 3);
+    Vector3d const b = l0.segment( 3*idx(1), 3);
 
     VectorXd tmp(1,1);
     tmp << a.dot( S3()*b );
-
     return tmp;
 }
 
-
-
-
-std::shared_ptr<ConstraintBase> Parallel::doClone() const
-{
-    auto T = std::make_shared<Parallel>();
-    T->setStatus(   this->status()  );
-    T->setEnforced( this->enforced());
-    return T;
-}
 
 
 //! skew(e_3),  e_3=[0,0,1]'
@@ -324,14 +302,6 @@ Matrix3d Parallel::S3()
     return tmp;
 }
 
-
-std::shared_ptr<ConstraintBase> Vertical::doClone() const
-{
-    auto T = std::make_shared<Vertical>();
-    T->setStatus( this->status() );
-    T->setEnforced( this->enforced());
-    return T;
-}
 
 
 //! e_2 = [0,1,0]'
@@ -355,7 +325,7 @@ VectorXd Vertical::contradict( const VectorXidx &idx,
                                const VectorXd &l0) const
 {
     VectorXd tmp(1);
-    tmp << l0.segment( 3*idx(0)+1, 1);  // 2nd element
+    tmp << l0.segment( (3*idx(0))+1, 1);  // 2nd element
     return tmp;
 }
 
@@ -366,15 +336,6 @@ VectorXd Diagonal::contradict( const VectorXidx &idx,
     VectorXd tmp(1);  // scalar as vector
     tmp << abs(l(0)) - abs( l(1));   // abs(a)-abs(b)
     return tmp;
-}
-
-
-std::shared_ptr<ConstraintBase> Diagonal::doClone() const
-{
-    auto T = std::make_shared<Diagonal>();
-    T->setStatus( this->status() );
-    T->setEnforced( this->enforced());
-    return T;
 }
 
 
@@ -389,14 +350,6 @@ MatrixXd Diagonal::Jacobian( const VectorXidx &idx,
     return JJ * Rot_ab(a0,a) * null(a0);
 }
 
-
-std::shared_ptr<ConstraintBase> Horizontal::doClone() const
-{
-    auto T = std::make_shared<Horizontal>();
-    T->setStatus( this->status() );
-    T->setEnforced( this->enforced());
-    return T;
-}
 
 VectorXd Horizontal::contradict( const VectorXidx &idx,
                                  const VectorXd &l0) const
