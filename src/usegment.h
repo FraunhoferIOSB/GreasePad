@@ -22,8 +22,10 @@
 #include "aabb.h"
 
 #include <QDataStream> // Qt
-#include <Eigen/Dense> // Eigen
+
 #include <Eigen/Core>
+#include <Eigen/Dense> // Eigen
+
 #include <cmath>
 #include <memory> // C++
 
@@ -51,7 +53,7 @@ public:
                           const uPoint & uy);
 
     // deserialization with protected constructor
-    static std::shared_ptr<uStraightLineSegment> create();  // TODO(joc36395) obsolete?
+    static std::shared_ptr<uStraightLineSegment> create();
 
     void serialize( QDataStream & out) const;
     bool deserialize( QDataStream & in);
@@ -110,7 +112,10 @@ public:
     [[nodiscard]] Vector2d y() const { return hy().head(2)/hy()(2); }
 
     //! Get angle between straight line l and x-axis in degree
-    [[nodiscard]] double phi_deg() const { return 180./3.14159*atan2( m_t(1),m_t(0) ); }
+    [[nodiscard]] double phi_deg() const {
+        constexpr double rho = 180./3.14159;
+        return rho*atan2( m_t(1),m_t(0) );
+    }
 
     //! Get axis-aligned bounding box
     [[nodiscard]] Aabb bounding_box() const { return m_bounding_box; }
@@ -127,10 +132,10 @@ private:
     static Matrix3d CC();   // Diag([1,1,0])
 
     template <typename T>
-    inline int sign(T val) {  return (T(0) <= val) - (val < T(0));  }  // sign(0):=+1
+    int sign(T val) {  return (T(0) <= val) - (val < T(0));  }  // sign(0):=+1
 
     template <typename T>
-    inline bool sameSign( T a, T b ) const {  return a*b >= 0.; }   // for debugging and assertion
+    bool sameSign( T a, T b ) const {  return a*b >= 0.; }   // for debugging and assertion
 };
 
 } // namespace Uncertain

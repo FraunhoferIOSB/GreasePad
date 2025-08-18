@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,8 @@ public:
     [[nodiscard]] uPoint euclidean() const;
     [[nodiscard]] uPoint sphericalNormalized() const;
     [[nodiscard]] uPoint transformed( const Matrix3d & TT) const;
+
+    [[nodiscard]] uStraightLine cross( const uPoint &) const;
 
     [[nodiscard]] uDistance distanceAlgebraicTo( const uStraightLine & ul) const;
     [[nodiscard]] uDistance distanceEuclideanTo( const uStraightLine & ul) const;

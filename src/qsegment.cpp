@@ -243,7 +243,9 @@ void QSegment::setShape( const uPoint &ux,
     ellipse_.second = toPoly( ell_y.poly( nSupport ) );
 
     // hyperbola ..................................................
-    uStraightLine ul(x2,y2);
+    // uStraightLine ul = x2.cross(y2);
+    uStraightLine ul(x2.cross(y2));
+    // uStraightLine ul = uStraightLine::cross(x2,y2);
     ul = ul.euclidean();
     CC = k2*ul.Cov() -ul.v()*ul.v().adjoint();
     Conic::Hyperbola const hyp( CC );

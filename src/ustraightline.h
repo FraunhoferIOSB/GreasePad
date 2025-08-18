@@ -20,14 +20,18 @@
 #define USTRAIGHTLINE_H
 
 #include "Eigen/Core"
+
 #include "uncertain.h"
+#include "upoint.h"
+
 #include <cmath>
+
 
 namespace Uncertain {
 
 using Eigen::VectorXd;
 
-class uPoint;
+// class uPoint;
 
 Matrix3d skew( const Vector3d & x);
 
@@ -37,18 +41,19 @@ class uStraightLine : public BasicEntity2D
 {
 public:
     uStraightLine() = default;
-    uStraightLine( const Vector3d & l,
-                   const Matrix3d & Sigma_ll);
-    uStraightLine( const VectorXd & xi,
-                   const VectorXd & yi);
-    uStraightLine( const uPoint & ux,
-                   const uPoint & uy);
+    uStraightLine( const Vector3d & l, const Matrix3d & Sigma_ll);
+
+    [[nodiscard]] static uStraightLine estim( const VectorXd & xi, const VectorXd & yi);
+    [[nodiscard]] static uStraightLine cross( const uPoint & ux, const uPoint & uy)
+    {
+        return ux.cross(uy);
+    }
 
     [[nodiscard]] uStraightLine euclidean() const;
     [[nodiscard]] uStraightLine sphericalNormalized() const;
 
     //! Angle between this straight line and the x-axis in radians
-    [[nodiscard]] double angle_rad()  const { return atan2( m_val(1),m_val(0) ); }
+    [[nodiscard]] double angle_rad()  const { return atan2( v(1),v(0) ); }
 
     //! Signed distance between (0,0) and this straight line
     [[nodiscard]] double signedDistanceToOrigin() const { return v().z()/v().head(2).norm(); }

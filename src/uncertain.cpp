@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,23 @@
 
 #include "uncertain.h"
 #include "qlogging.h"
-#include "upoint.h"
 #include "usegment.h"
 #include "ustraightline.h"
 
 #include <QDebug>
+#include <QStringLiteral>
+
+#include "qassert.h"
+#include "qtdeprecationdefinitions.h"
+
 #include <cassert>
 #include <cfloat>
 #include <cmath>
-#include <utility>
+
+#include <Eigen/Core>
+#include <Eigen/Eigenvalues>
 
 namespace Uncertain {
-
-static const double T_ZERO = 1e-7;
 
 //! Nullspace of row vector
 Matrix<double,3,2> BasicEntity2D::null( const Vector3d &xs ) 
@@ -42,7 +46,7 @@ Matrix<double,3,2> BasicEntity2D::null( const Vector3d &xs )
 
 #ifdef QT_DEBUG
     QString const what = QStringLiteral("norm(x) = %1").arg(QString::number(xs.norm()));
-    Q_ASSERT_X(std::fabs(xs.norm() - 1.) <= T_ZERO, Q_FUNC_INFO, what.toStdString().data());
+    Q_ASSERT_X(std::fabs(xs.norm() - 1.) <= FLT_EPSILON, Q_FUNC_INFO, what.toStdString().data());
 #endif
     Eigen::Index  const N = xs.size();
 
@@ -57,8 +61,8 @@ Matrix<double,3,2> BasicEntity2D::null( const Vector3d &xs )
     JJ.topRows(N-1)  = MatrixXd::Identity(N-1,N-1) -x0*x0.adjoint()/(1.+xN);
     JJ.bottomRows(1) = -x0.adjoint();
 
-    VectorXd check = JJ.adjoint()*xs;
-    Q_ASSERT_X( check.norm() <= T_ZERO,
+    const VectorXd check = JJ.adjoint()*xs;
+    Q_ASSERT_X( check.norm() <= FLT_EPSILON,
                 Q_FUNC_INFO,
                 "not a zero vector");
 
@@ -71,7 +75,7 @@ Matrix<double,3,2> BasicEntity2D::null( const Vector3d &xs )
 bool isCovMat( const MatrixXd & MM )
 {
     // qDebug() << Q_FUNC_INFO;
-    Eigen::SelfAdjointEigenSolver<MatrixXd> eig( MM, Eigen::ComputeEigenvectors);
+    const Eigen::SelfAdjointEigenSolver<MatrixXd> eig( MM, Eigen::ComputeEigenvectors);
     Eigen::VectorXcd ev = eig.eigenvalues();
 
 #ifdef QT_DEBUG

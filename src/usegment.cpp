@@ -17,18 +17,21 @@
  */
 
 #include "usegment.h"
-#include "qassert.h"
-#include "qlogging.h"
 #include "uncertain.h"
 #include "upoint.h"
+#include "ustraightline.h"
 
 #include <Eigen/Core>
 
-#include <cassert>
-#include <cmath>
-#include "ustraightline.h"
-
 #include <QDebug>
+
+#include "qassert.h"
+#include "qlogging.h"
+#include "qtdeprecationdefinitions.h"
+
+#include <cassert>
+#include <cfloat>
+#include <cmath>
 #include <memory>
 
 using Eigen::Matrix3d;
@@ -36,20 +39,19 @@ using Eigen::VectorXi;
 using Eigen::Vector3d;
 using Eigen::VectorXd;
 
-static const double T_ZERO = 1e-7;
-
 
 
 namespace Uncertain {
 
-class uPoint;
+// class uPoint;
+
 
 
 //! Input operator
-QDataStream & operator<< (QDataStream & out, const Aabb & bbox);
+//QDataStream & operator<< (QDataStream & out, const Aabb & bbox);
 
 //! Output operator
-QDataStream &operator>>(QDataStream &in, Aabb &bbox);
+//QDataStream &operator>>(QDataStream &in, Aabb &bbox);
 
 //! Diag([1,1,0])
 Matrix3d uStraightLineSegment::CC()
@@ -97,8 +99,8 @@ uStraightLineSegment::uStraightLineSegment( const uPoint & ux,
     const Matrix3d UUy = Sy*CC()*Sy;
 
     const Vector3d l = Sx*uy.v();
-    Q_ASSERT( fabs( l.norm() ) > T_ZERO );
-    assert(fabs(l.norm()) > T_ZERO && "identical points.");
+    Q_ASSERT( fabs( l.norm() ) > FLT_EPSILON );
+    assert(fabs(l.norm()) > FLT_EPSILON && "identical points.");
 
     double const xh = ux.v()(2);
     double const yh = uy.v()(2);
@@ -285,7 +287,7 @@ bool uStraightLineSegment::move_x_to(const Vector3d &m)
 {
     Vector3d const l = hl().normalized();
     Vector3d z = l.cross( m.normalized() );     // intersection point z
-    if ( z.norm()<T_ZERO ) {
+    if ( z.norm() < FLT_EPSILON ) {
         return false; // l==m
     }
     // Q_ASSERT_X( z.norm() > T_ZERO, "move x", "l == m.");
@@ -304,7 +306,7 @@ bool uStraightLineSegment::move_y_to( const Vector3d & n )
     // intersection point z ............................
     Vector3d const l = hl().normalized();
     Vector3d z = l.cross( n.normalized() );
-    if ( z.norm() < T_ZERO) {
+    if ( z.norm() < FLT_EPSILON) {
         return false; // l==n
     }
     // Q_ASSERT_X( z.norm() > T_ZERO,  "move y", "l == n.");
@@ -352,13 +354,7 @@ VectorXi uStraightLineSegment::indices_of_sorting( const VectorXd &v)
     return idx;
 }*/
 
-
-QDataStream & operator<< (QDataStream & out, const Aabb & bbox)
-{
-    out << bbox.x_min() << bbox.x_max()
-        << bbox.y_min() << bbox.y_max();
-    return out;
-}
+namespace {
 
 QDataStream & operator>> (QDataStream & in, Aabb & bbox)
 {
@@ -373,8 +369,6 @@ QDataStream & operator>> (QDataStream & in, Aabb & bbox)
 }
 
 
-QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,1> & v);
-
 //! Overloaded >>operator for 9-vectors
 QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,1> & v)
 {
@@ -382,7 +376,14 @@ QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,1> & v)
     return in;
 }
 
-QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,9> & MM);
+
+QDataStream & operator<< (QDataStream & out, const Aabb & bbox)
+{
+    out << bbox.x_min() << bbox.x_max()
+    << bbox.y_min() << bbox.y_max();
+    return out;
+}
+
 
 //! Overloaded >>operator for 9x9 matrices
 QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,9> & MM)
@@ -395,9 +396,6 @@ QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,9> & MM)
     return in;
 }
 
-
-QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,1> &v);
-
 //! Overloaded <<operator for 9-vectors
 QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,1> &v)
 {
@@ -405,7 +403,6 @@ QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,1> &v
     for ( int i=0; i<9; i++) {  out << v[i];  }
     return out;
 }
-QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,9> &MM);
 
 //! Overloaded <<operator for 9x9 matrices
 QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,9> &MM)
@@ -419,6 +416,7 @@ QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,9> &M
     return out;
 }
 
+} // namespace
 
 //! Serialization of the uncertain straight line segment t=[l',m',n']' and its bounding box
 void uStraightLineSegment::serialize( QDataStream & out ) const

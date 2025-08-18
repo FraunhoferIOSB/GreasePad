@@ -318,7 +318,6 @@ bool impl::deserialize( QDataStream & in )
     qDebug().noquote() << "(2) reading geometry...";
     qDebug().noquote() << "(2.1) reading uncertain straight line segments...";
     for ( Index s=0; s<Bi.rows(); s++ ) {
-        // auto seg = std::make_shared<uStraightLineSegment>();
         auto seg = uStraightLineSegment::create();
         if ( !seg->deserialize( in ) ) {
             return false;
@@ -1538,7 +1537,8 @@ std::pair<uPoint,uPoint> impl::uEndPoints( const Eigen::VectorXd & xi,
     Q_ASSERT( xi.size()>0 );
     Q_ASSERT( yi.size()==xi.size() );
 
-    const uStraightLine l(xi,yi);
+    // const uStraightLine l(xi,yi);
+    const uStraightLine l = uStraightLine::estim(xi,yi);
     const double phi  = l.angle_rad();
     const VectorXd zi = sin(phi)*xi -cos(phi)*yi;
 

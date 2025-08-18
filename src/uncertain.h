@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,13 @@
 #ifndef UNCERTAIN_H
 #define UNCERTAIN_H
 
-#include <Eigen/Dense>
 #include <Eigen/Core>
+#include <Eigen/Dense>
 
-#include <cfloat>
+#include <cassert>
 #include <cmath>
 #include <utility>
+
 
 //! Uncertain geometric entities
 namespace Uncertain {
@@ -56,44 +57,51 @@ public:
     [[nodiscard]] bool isLessThanZero(    const double T) const { return m_d/sqrt(m_var_d) < +T;  }
 
 private:
-    const double     m_d;
-    const double m_var_d;
+    double     m_d;
+    double m_var_d;
 };
 
 
 //! Base class for uncertain geometric entities, represented by 3-vectors
 class BasicEntity2D
 {
-protected:
-    BasicEntity2D() = default;                                     //!< Default constructor
-    BasicEntity2D & operator= ( const BasicEntity2D &) = default;  //!< Copy assignment
 
 public:
     //! Construct entity with homogeneous 3-vector and its covariance matrix
     BasicEntity2D( Eigen::Vector3d z, Eigen::Matrix3d Cov_zz) : m_val(std::move(z)), m_cov(std::move(Cov_zz)) {}
     BasicEntity2D ( const BasicEntity2D &) = default;              //!< Copy constructor
-    BasicEntity2D( BasicEntity2D &&) = delete;                     //!< Move constructor
+    BasicEntity2D( BasicEntity2D &&) = default; //delete;                     //!< Move constructor
+    BasicEntity2D & operator= ( const BasicEntity2D &&) = delete;  //!< Copy assignment
 
     ~BasicEntity2D() = default;
 
     void normalizeSpherical();
 
     //! Get covariance matrix
-    Matrix3d Cov() const { return m_cov; }
+    [[nodiscard]] Matrix3d Cov() const { return m_cov; }
 
     //! Get homogeneous 3-vector representing the entity
-    Vector3d v()   const { return m_val; }
+    [[nodiscard]] Vector3d v()   const { return m_val; }
 
-    bool isIdenticalTo( const BasicEntity2D &s, double T) const;
+    //! Get i-th element of homogeneous 3-vector
+    [[nodiscard]] double v( const int i)  const {
+        assert( i>=0 && i<3);
+        return m_val(i);
+    }
+
+    [[nodiscard]] bool isIdenticalTo( const BasicEntity2D &s, double T) const;
 
 protected:
+    BasicEntity2D() = default;                                     //!< Default constructor
+    BasicEntity2D & operator= ( const BasicEntity2D &) = default;  //!< Copy assignment
+
+    template <typename T>
+    int sign(T val) const { return (T(0) <= val) - (val < T(0));  }  // sign(0):=+1
+
+private:
     Vector3d m_val; //!< homogeneous 3-vector representing the entity
     Matrix3d m_cov; //!< homogeneous 3x3 covariance matrix
 
-    template <typename T>
-    inline int sign(T val) const { return (T(0) <= val) - (val < T(0));  }  // sign(0):=+1
-
-private:
     //! Nullspace of row 3-vector
     static Eigen::Matrix<double, 3, 2> null(const Eigen::Vector3d &xs);
 };
