@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     QApplication const a(argc, argv);
 
     QApplication::setApplicationName(    "GreasePad" );
-    QApplication::setApplicationVersion( "1.2.0" );
+    QApplication::setApplicationVersion( "1.2.1" );
     QApplication::setOrganizationName(   "Fraunhofer IOSB" );
     QApplication::setOrganizationDomain( "iosb.fraunhofer.de" );
 

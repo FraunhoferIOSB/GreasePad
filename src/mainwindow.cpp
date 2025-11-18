@@ -564,15 +564,15 @@ void MainWindow::createToolBars()
 
 
     labelBoxAlphaRecogn = std::make_unique<QLabel>( " Recognition ");
-    QFont font = labelBoxAlphaRecogn->font();
-    font.setPointSize( font.pointSize()+1);
-    labelBoxAlphaRecogn->setFont(font);
+    //QFont font = labelBoxAlphaRecogn->font();
+    //font.setPointSize( font.pointSize()+1);
+    //labelBoxAlphaRecogn->setFont(font);
 
     labelBoxAlphaSnap   = std::make_unique<QLabel>( " Snap " );
-    labelBoxAlphaSnap->setFont(font);
+    //labelBoxAlphaSnap->setFont(font);
 
     labelBoxOpacity  = std::make_unique<QLabel>( " Opacity " );
-    labelBoxOpacity->setFont(font);
+    //labelBoxOpacity->setFont(font);
 
     barTesting = std::make_unique<QToolBar>( "Testing" );
     barTesting->addWidget( labelBoxAlphaRecogn.get());

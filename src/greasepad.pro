@@ -19,10 +19,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 # set assember's flags (MinGW), syntax: -Wa,<comma-separated list>
-contains(QMAKE_CC, gcc) {
-    # MinGW
-    QMAKE_CXXFLAGS += -Wa,-mbig-obj
-}
+# contains(QMAKE_CC, gcc) {
+#     # MinGW
+#     QMAKE_CXXFLAGS += -Wa,-mbig-obj
+# }
 
 
 SOURCES += \
@@ -77,11 +77,11 @@ FORMS +=
 
 # Eigen
 # INCLUDEPATH += C:/Eigen/eigen-3.4.0/source
-INCLUDEPATH += C:/clone/eigen
+INCLUDEPATH += D:/clone/eigen
 
 # Option
-INCLUDEPATH += "C:/Program Files (x86)/Visual Leak Detector/include/"
-LIBS      += -L"C:/Program Files (x86)/Visual Leak Detector/lib/Win64"
+# INCLUDEPATH += "C:/Program Files (x86)/Visual Leak Detector/include/"
+# LIBS      += -L"C:/Program Files (x86)/Visual Leak Detector/lib/Win64"
 
 RC_ICONS += icons/Tango/preferences-desktop-peripherals.ico
 
