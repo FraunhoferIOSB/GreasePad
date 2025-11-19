@@ -215,7 +215,7 @@ void MainWindow::createActions()
 
     actionTabulaRasa = std::make_unique<QAction>( "Delete all" );
     actionTabulaRasa->setToolTip(  QStringLiteral("Make a clean sweep (blank state)") );
-    actionTabulaRasa->setIcon( QPixmap(":/icons/Tango/Edit-clear.svg" ) );
+    // actionTabulaRasa->setIcon( QPixmap(":/icons/Tango/Edit-clear.svg" ) );
     actionTabulaRasa->setIcon( style()->standardIcon( QStyle::SP_DialogResetButton ) );
 
     actionDeleteSelection = std::make_unique<QAction>( "Delete selected items" );
@@ -1132,7 +1132,7 @@ void MainWindow::slotToggleShowUncertainty()
 void MainWindow::slotToggleShowColored()
 {
     qDebug() << Q_FUNC_INFO;
-    QEntity::QConstrained::toogleShowColor();
+    QEntity::QConstrained::toggleShowColor();
     QConstraint::QConstraintBase::toggleShowColor();
     m_scene->update();
 }

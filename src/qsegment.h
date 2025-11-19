@@ -128,7 +128,7 @@ public:
     static bool show() { return s_show; }              //!< Get status of visibility
     static void toggleShow() { s_show = !s_show; }     //!< Toggle visibility
     static bool showColor() { return s_showColor; }    //!< Get status colorization
-    static void toogleShowColor() { s_showColor = !s_showColor;}      //!< Toggle colorization / no colorization
+    static void toggleShowColor() { s_showColor = !s_showColor;}      //!< Toggle colorization / no colorization
     static void setPenDefault( const QPen & p) { s_defaultPen = p; }  //!< Set default pen
     static QPen defaultPen() { return s_defaultPen; }   //!< Get current default pen
 
