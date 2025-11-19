@@ -1,7 +1,6 @@
+# GreasePad 1.2.1
 
-# GreasePad 1.2.0
-
-The *GreasePad* provides a drawing area and expects pen strokes as the only user input. These strokes are approximated by straight line segments leading to line drawings. During this interactive process, geometric relations such as orthogonality are recognized and enforced immediately by an adjustment process. The program can be utilized to study systems of straight lines and constraints (closure theorems) or to outline the shapes of human-made objects in images. As a pointing device, you can use a computer mouse, a stylus, or one of your fingers in combination with a touchscreen.
+The *GreasePad* provides a drawing area and expects pen strokes as the only user input. These strokes are approximated by straight line segments, resulting in line drawings. During this interactive process, geometric relations such as orthogonality are recognized and enforced immediately through an adjustment process. The program can be utilized to study systems of straight lines and constraints (closure theorems) or to outline the shapes of human-made objects in images. As a pointing device, you can use a computer mouse, a stylus, or one of your fingers in combination with a touchscreen.
 
 <figure>
 <img src="./orthocenter.gif" width = "100%">
@@ -21,15 +20,17 @@ The *GreasePad* provides a drawing area and expects pen strokes as the only user
 <a name="news"></a>
 ## News
 
-* Version 1.2.0 (Oct. 2023): The additional, specific constraints *horizontal*, *vertical*, and *diagonal* enable the alignment of segments with the frame of the canvas. These constraints are disabled by default, i.e., they have to be activated by selecting the corresponding menu item.
+* Version 1.2.1 (November 2025): The source code has been completely revised and modernized. Minor bugs have been fixed.
+
+* Version 1.2.0 (October 2023): The additional, specific constraints *horizontal*, *vertical*, and *diagonal* enable the alignment of segments with the frame of the canvas. These constraints are disabled by default; they must be activated by selecting the corresponding menu item.
 
 <a name="pre-compiled"></a>
 ## Pre-compiled Win64 binaries
 
 No installation procedure is provided. Instead, please perform the following steps:
                                                               
-1. Download the zip file from [https://FraunhoferIOSB.github.io/GreasePad/downloads/GreasePad120_x64.zip](https://FraunhoferIOSB.github.io/GreasePad/downloads/GreasePad120_x64.zip) to your machine. 
-2. Unpack the file contents to a folder. The zip file contains the executable *greasepad.exe* and the required dynamically linked libraries, and the redistributable *vcredist_x64.exe*.
+1. Download the zip file from [https://FraunhoferIOSB.github.io/GreasePad/downloads/GreasePad121_x64.zip](https://FraunhoferIOSB.github.io/GreasePad/downloads/GreasePad120_x64.zip) to your machine. 
+2. Unpack the file contents into a folder. The zip file contains the executable *greasepad.exe* and the required dynamically linked libraries.
 3. Select and start the executable *greasepad.exe*.
 
 
@@ -82,7 +83,7 @@ Thomsen's figure
 <figure>
 <img src="./gallery/mid_point.png" width = "100%">
 <figcaption align="left">
-Mid point of a triangle's side
+Mid point of a triangle's side using a trapezoid
 </figcaption>
 </figure>
 
@@ -92,7 +93,7 @@ Mid point of a triangle's side
 <a name="copyright"></a>
 ## Copyright
 
-Copyright (c) 2022-2025 Jochen Meidow, [Fraunhofer IOSB](http::/www.iosb.fraunhofer.de), Germany.
+Copyright (c) 2022-2025 Jochen Meidow, [Fraunhofer IOSB](http://www.iosb.fraunhofer.de), Germany.
 
 
 <a name="licensing"></a>
@@ -137,10 +138,10 @@ The author would like to thank Wolfgang Förstner (University of Bonn) and Horst
 
 *Q. Given a scene with segments and constraints, how do I select individual segments and/or constraints?*
 
-A. With a computer mouse as pointing device, you can select segments or constraints using the mouse's right button. With a stylus or one of your fingers, you will probably have to press for a short moment onto the touch pad. If a graphical element covers another element, you can change the visual stacking.
+A. With a computer mouse as a pointing device, you can select segments or constraints using the mouse's right button. With a stylus or one of your fingers, you will probably have to press for a short moment onto the touchpad. If a graphical element covers another element, you can change the visual stacking.
  
 ### Further geometric elements
 
 *Q. Why are there no curve segments of higher order provided, say arcs of ellipses or arcs of circles?* 
 
-A. The joint utilization of curves and straight lines implies a model selection. Actually, one cannot distinguish automatically and reliable between a short sequence representing a straight line segment and a short sequence representing a short arc of a curve. For this to work, the user would have to express his or her intention interactively. This approach, however, is in conflict with the modeless design of the program.
+A. The joint utilization of curves and straight lines implies a model selection. Actually, one cannot distinguish automatically and reliably between a short sequence representing a straight line segment and a short sequence representing a short arc of a curve. For this to work, the users would have to express their intentions interactively. This approach, however, is in conflict with the modeless design of the program.
