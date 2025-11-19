@@ -83,7 +83,6 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowIcon( QIcon( QPixmap( ":/icons/Tango/preferences-desktop-peripherals.svg" )));
 
 
-    // createPenTool()
     penTool = std::make_unique<FormatTool>("Properties", this);
 
     setAttribute( Qt::WA_StaticContents);
@@ -96,10 +95,8 @@ MainWindow::MainWindow(QWidget *parent)
     m_undoStack = std::make_unique<QUndoStack>(this);
     m_undoStack->setUndoLimit( UndoLimit );
 
-    // curr_state = std::make_unique<State>();
-    // curr_state = new State();
 
-    double const alpha = 0.1;
+    constexpr double alpha = 0.1;
     State::setAlphaRecognition( alpha );
     State::setAlphaSnapping(    alpha );
 
@@ -369,7 +366,7 @@ void MainWindow::createActions()
     actionToggleConsiderDiagonal = std::make_unique<QAction>( "Consider diagonal" );
     actionToggleConsiderDiagonal->setToolTip( QStringLiteral("Consider diagonal") );
     actionToggleConsiderDiagonal->setCheckable( true );
-    actionToggleConsiderDiagonal->setChecked( State::considerHorizontal() );
+    actionToggleConsiderDiagonal->setChecked( State::considerDiagonal() );
     actionToggleConsiderDiagonal->setIconVisibleInMenu( false );
     actionToggleConsiderDiagonal->setIcon( QPixmap( ":/icons/consider_diag.svg" ));
     actionToggleConsiderDiagonal->setShortcut( QKeySequence(QStringLiteral("d")) );
