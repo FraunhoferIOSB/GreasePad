@@ -51,10 +51,16 @@ public:
     [[nodiscard]] double d() const { return m_d; }
 
     //! Check if distance is greater than zero.
-    [[nodiscard]] bool isGreaterThanZero( const double T) const { return m_d/sqrt(m_var_d) > -T;  }
+    [[nodiscard]] bool isGreaterThanZero( const double T) const {
+        if (m_var_d <= 0.0) {return false;}
+        return m_d / std::sqrt(m_var_d) > -T;
+    }
 
     //! Check if distance is less than zero.
-    [[nodiscard]] bool isLessThanZero(    const double T) const { return m_d/sqrt(m_var_d) < +T;  }
+    [[nodiscard]] bool isLessThanZero(    const double T) const {
+        if (m_var_d <= 0.0) {return false;}
+        return m_d / std::sqrt(m_var_d) < +T;
+    }
 
 private:
     double     m_d;
@@ -71,7 +77,7 @@ public:
     BasicEntity2D( Eigen::Vector3d z, Eigen::Matrix3d Cov_zz) : m_val(std::move(z)), m_cov(std::move(Cov_zz)) {}
     BasicEntity2D ( const BasicEntity2D &) = default;              //!< Copy constructor
     BasicEntity2D( BasicEntity2D &&) = default; //delete;                     //!< Move constructor
-    BasicEntity2D & operator= ( const BasicEntity2D &&) = delete;  //!< Copy assignment
+    BasicEntity2D & operator= ( const BasicEntity2D &&) = delete;  //!< Move assignment
 
     ~BasicEntity2D() = default;
 
