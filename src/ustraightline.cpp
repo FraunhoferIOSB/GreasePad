@@ -20,7 +20,6 @@
 #include <cfloat>
 //#define _USE_MATH_DEFINES // for C++
 #include <cmath>
-#include <cstdlib>
 
 #include "matfun.h"
 #include "uncertain.h"
@@ -49,7 +48,8 @@ using Matfun::cof3;
 //! Diag([1,1,0])
 Matrix3d uStraightLine::CC()
 {
-    const static Matrix3d tmp = (Matrix3d() << 1,0,0,0,1,0,0,0,0).finished();
+    const static Matrix3d tmp = Vector3d(1,1,0).asDiagonal();
+    // (Matrix3d() << 1,0,0,0,1,0,0,0,0).finished();
     return tmp;
 }
 
@@ -111,6 +111,11 @@ uStraightLine uStraightLine::estim( const VectorXd & xi,
 
     // cov. mat. for l = [0 1 0], (10.166) ........................
     // Cov_ll = diag( [1/lambda(2), 0, 1/(I*wq)]);
+
+    Q_ASSERT_X( std::fabs(sv(0)) > FLT_EPSILON, Q_FUNC_INFO,
+               "Division by zero or near-zero singular value sv(0)");
+    Q_ASSERT_X( I>0, Q_FUNC_INFO,
+               "Division by zero: I (number of points) must be nonzero");
 
     Vector3d const t = (Vector3d() << 1. / sv(0), 0, 1. / I).finished();
     Matrix3d const Sigma_ll  = I*t.asDiagonal(); // TODO(meijoc)
@@ -235,7 +240,7 @@ bool uStraightLine::isDiagonal(double T_q) const
 {
     // l=[a,b,c],   abs(a)-abs(b)=0  ?
 
-    double const d = abs(v(0)) - abs(v(1));
+    double const d = std::fabs(v(0)) - std::fabs(v(1));
     Eigen::RowVector3d const JJ = (Eigen::RowVector3d() << sign(v(0)), -sign(v(1)), 0)
                                       .finished();
     double const var_d = JJ * Cov() * JJ.adjoint();

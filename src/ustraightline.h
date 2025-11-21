@@ -52,7 +52,7 @@ public:
     [[nodiscard]] double angle_rad()  const { return atan2( v(1),v(0) ); }
 
     //! Signed distance between (0,0) and this straight line
-    [[nodiscard]] double signedDistanceToOrigin() const { return v().z()/v().head(2).norm(); }
+    [[nodiscard]] double signedDistanceToOrigin() const { return v()(2)/v().head(2).norm(); }
 
     [[nodiscard]] uPoint project( const uPoint & ux) const;
     [[nodiscard]] double acute(   const uStraightLine & um ) const;
@@ -74,8 +74,6 @@ public:
 private:
     using Matrix6d    = Eigen::Matrix<double,6,6>;
     using RowVector6d = Eigen::Matrix<double,1,6>;
-
-    // static Matrix3d cof3(const Matrix3d &MM); // compute 3x3 cofactor matrix
 
     static Matrix3d CC();
     static Matrix3d S3();
