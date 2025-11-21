@@ -30,12 +30,16 @@
 #include <cmath>
 #include <utility>
 
+#include "matfun.h"
+
 namespace Conic {
 
 using Eigen::Vector2d;
 using Eigen::Vector3d;
 using Eigen::Matrix2d;
 using Eigen::Matrix3d;
+using Matfun::skew;
+
 
 ConicBase::ConicBase(Matrix3d other)
     : CC(std::move(other))
@@ -43,12 +47,6 @@ ConicBase::ConicBase(Matrix3d other)
     constexpr double T_sym = 1e-6;
     assert( ( CC -CC.adjoint() ).norm() < T_sym );
 }
-
-Matrix3d ConicBase::skew(const Vector3d &x)
-{
-    return (Matrix3d() << 0.,-x(2),x(1), x(2),0.,-x(0), -x(1),x(0),0.).finished();
-}
-
 
 
 

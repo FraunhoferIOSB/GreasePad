@@ -41,8 +41,6 @@ public:
     [[nodiscard]] std::pair<Vector3d,Vector3d> intersect( const Vector3d & l ) const;  //!< Two intersection points with a straight line
 
 private:
-    static Matrix3d skew(const Vector3d &x);
-
     Matrix3d CC;
 };
 

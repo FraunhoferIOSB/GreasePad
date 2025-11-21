@@ -26,12 +26,16 @@
 #include <cmath>
 #include <utility>
 
+#include "matfun.h"
+
 
 //! Uncertain geometric entities
 namespace Uncertain {
 
 using Eigen::Matrix3d;
 using Eigen::Vector3d;
+using Matfun::skew;
+
 
 //! Check if matrix is covariance matrix
 bool isCovMat( const Eigen::MatrixXd &MM);

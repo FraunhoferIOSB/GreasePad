@@ -12,6 +12,7 @@
 #include <QString>
 #include <QStringLiteral>
 #include <qassert.h>
+#include <qtdeprecationdefinitions.h>
 
 
 namespace Matfun {
@@ -19,6 +20,8 @@ namespace Matfun {
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::SparseMatrix;
+using Eigen::Matrix3d;
+using Eigen::Vector3d;
 
 
 //! Nullspace of row vector
@@ -72,6 +75,12 @@ static bool is_rank_deficient( Eigen::SparseMatrix<double,Eigen::ColMajor> & AA,
     Eigen::ColPivHouseholderQR<MatrixXd> qr(AA);
     qr.setThreshold( T );
     return ( qr.rank() < AA.rows() );
+}
+
+
+static Matrix3d skew(const Vector3d &x)
+{
+    return (Matrix3d() << 0.,-x(2),x(1), x(2),0.,-x(0), -x(1),x(0),0.).finished();
 }
 
 } // namespace Matfun

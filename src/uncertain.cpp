@@ -93,12 +93,4 @@ bool BasicEntity2D::isIdenticalTo( const BasicEntity2D & us,
     return d.dot(Cov_dd.inverse()*d) < T;    // dof = 2
 }
 
-
-
-//! Skew-symmetric cross product matrix S(x): a x b = S(a)*b
-Matrix3d skew( const Vector3d & x)
-{
-return (Matrix3d() << 0.,-x(2),x(1), x(2),0.,-x(0), -x(1),x(0),0.).finished();
-}
-
 } // namespace Uncertain
