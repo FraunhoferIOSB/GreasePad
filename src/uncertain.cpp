@@ -28,14 +28,13 @@
 
 #include <cassert>
 #include <cfloat>
-#include <cmath>
 
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
 namespace Uncertain {
 
-
+using Matfun::null;
 
 //! Check if matrix MM is a proper covariance matrix
 bool isCovMat( const MatrixXd & MM )

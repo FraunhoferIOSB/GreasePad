@@ -48,6 +48,9 @@ using Eigen::VectorXd;
 using Eigen::MatrixXd;
 using Eigen::SparseMatrix;
 
+using Matfun::Rot_ab;
+using Matfun::null;
+using Matfun::is_rank_deficient;
 
 Index AdjustmentFramework::indexOf(const Eigen::VectorXi &v, const Index i)
 {

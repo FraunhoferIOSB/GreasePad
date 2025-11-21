@@ -14,7 +14,7 @@
 #include <qassert.h>
 
 
-namespace {
+namespace Matfun {
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -22,7 +22,7 @@ using Eigen::SparseMatrix;
 
 
 //! Nullspace of row vector
-MatrixXd null( const VectorXd & xs )
+static MatrixXd null( const VectorXd & xs )
 {
     // cf. PCV, eq. (A.120)
 
@@ -53,7 +53,7 @@ MatrixXd null( const VectorXd & xs )
 
 
 
-MatrixXd Rot_ab( const VectorXd &a, const VectorXd &b)
+static MatrixXd Rot_ab( const VectorXd &a, const VectorXd &b)
 {
     Q_ASSERT( a.size()==b.size() );
 #ifdef QT_DEBUG
@@ -67,14 +67,14 @@ MatrixXd Rot_ab( const VectorXd &a, const VectorXd &b)
 
 
 //! check if the matrix AA is rank-deficient
-bool is_rank_deficient( Eigen::SparseMatrix<double,Eigen::ColMajor> & AA, const double T )
+static bool is_rank_deficient( Eigen::SparseMatrix<double,Eigen::ColMajor> & AA, const double T )
 {
     Eigen::ColPivHouseholderQR<MatrixXd> qr(AA);
     qr.setThreshold( T );
     return ( qr.rank() < AA.rows() );
 }
 
-} // namespace
+} // namespace Matfun
 
 
 #endif // MATFUN_H

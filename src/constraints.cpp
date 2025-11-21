@@ -37,6 +37,8 @@ using Eigen::Vector3d;
 using Eigen::Vector2cd;
 using Eigen::Matrix;
 
+using Matfun::Rot_ab;
+using Matfun::null;
 
 ConstraintBase::ConstraintBase()
     : m_status(UNEVAL)
