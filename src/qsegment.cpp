@@ -138,7 +138,7 @@ void QSegment::paint( QPainter *painter,
 
     if ( isSelected() ) {
         painter->setPen( s_penSelected );
-        painter->drawPolygon( minBBox );
+        painter->drawPolygon( selectionPolygon_ );
     }
 
 }
@@ -148,7 +148,7 @@ QRectF QSegment::boundingRect() const
 {
     // qDebug() << Q_FUNC_INFO;
 
-    QRectF result = minBBox.boundingRect();
+    QRectF result = selectionPolygon_.boundingRect();
     result.adjust( -pen_.width(),
                    -pen_.width(),
                    +pen_.width(),
@@ -164,7 +164,7 @@ QRectF QSegment::boundingRect() const
 QPainterPath QSegment::shape() const
 {
     QPainterPath ret;
-    ret.addPolygon( minBBox );
+    ret.addPolygon( selectionPolygon_ );
     return ret;
 }
 
@@ -419,7 +419,7 @@ void QSegment::serialize( QDataStream & out ) const
     out << branch_.second;
     out << ellipse_.first;
     out << ellipse_.second;
-    out << minBBox;
+    out << selectionPolygon_;
 }
 
 bool QSegment::deserialize( QDataStream &in )
@@ -432,7 +432,7 @@ bool QSegment::deserialize( QDataStream &in )
     in >> branch_.second;
     in >> ellipse_.first;
     in >> ellipse_.second;
-    in >> minBBox;
+    in >> selectionPolygon_;
 
     return in.status()==0;
 }
@@ -465,8 +465,8 @@ void QSegment::createSelectionPolygon( const qreal halfWidth)
                  line().center().y() );
     t.rotate(   -line().angle());
 
-    minBBox.clear();
-    minBBox = t.map( poly);
+    selectionPolygon_.clear();
+    selectionPolygon_ = t.map( poly);
 }
 
 QUnconstrained::QUnconstrained( const uPoint & ux,

@@ -54,8 +54,8 @@ public:
 
     QSegment( const QSegment & other) = delete;               //!< Copy constructor
     QSegment & operator= ( const QSegment & other ) = delete; //!< Copy assignment constructor
-    QSegment( const QSegment && other) = delete;   //!< Move constructor
-    QSegment & operator= ( const QSegment && other ) = delete; //!< Move assignment constructor
+    QSegment( QSegment&& other) = delete;   //!< Move constructor
+    QSegment & operator= ( QSegment&& other ) = delete; //!< Move assignment operator
 
     enum {Type = UserType +164};                //!< Definition graphics type (id)
 
@@ -108,7 +108,7 @@ private:
     std::pair<QPolygonF, QPolygonF>  branch_;   //!< hyperbola branches
     std::pair<QPolygonF, QPolygonF>  ellipse_;  //!< ellipses of end-points
     QPen pen_;
-    QPolygonF minBBox;   // used in shape() und paint()
+    QPolygonF selectionPolygon_;   // used in shape() and paint()
 
     static bool s_showUncertainty;
     static QPen s_penSelected;
