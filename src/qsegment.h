@@ -57,7 +57,8 @@ public:
     QSegment( QSegment&& other) = delete;   //!< Move constructor
     QSegment & operator= ( QSegment&& other ) = delete; //!< Move assignment operator
 
-    enum {Type = UserType +164};                //!< Definition graphics type (id)
+    static constexpr int TypeOffset = 164;
+    enum {Type = UserType +TypeOffset};                //!< Definition graphics type (id)
 
     [[nodiscard]] int type() const override { return Type; }  //!< Get graphics type (id)
     [[nodiscard]] QPen pen() const { return pen_;}            //!< Get pen
