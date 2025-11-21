@@ -18,14 +18,13 @@
 
 #include "uncertain.h"
 #include "qlogging.h"
+
+#include "matfun.h"
 #include "usegment.h"
 #include "ustraightline.h"
 
 #include <QDebug>
 #include <QStringLiteral>
-
-#include "qassert.h"
-#include "qtdeprecationdefinitions.h"
 
 #include <cassert>
 #include <cfloat>
@@ -35,39 +34,6 @@
 #include <Eigen/Eigenvalues>
 
 namespace Uncertain {
-
-//! Nullspace of row vector
-Matrix<double,3,2> BasicEntity2D::null( const Vector3d &xs ) 
-{
-    // cf. PCV, eq. (A.120)
-
-    //if ( fabs(xs.norm()-1.) > T_ZERO )
-    //    qDebug() << xs;
-
-#ifdef QT_DEBUG
-    QString const what = QStringLiteral("norm(x) = %1").arg(QString::number(xs.norm()));
-    Q_ASSERT_X(std::fabs(xs.norm() - 1.) <= FLT_EPSILON, Q_FUNC_INFO, what.toStdString().data());
-#endif
-    Eigen::Index  const N = xs.size();
-
-    VectorXd x0 = xs.head(N-1);
-    double   xN = xs(N-1);
-    if ( xN < 0.0 ) {
-        x0 = -x0;
-        xN = -xN;
-    }
-
-    MatrixXd JJ( N, N-1);
-    JJ.topRows(N-1)  = MatrixXd::Identity(N-1,N-1) -x0*x0.adjoint()/(1.+xN);
-    JJ.bottomRows(1) = -x0.adjoint();
-
-    const VectorXd check = JJ.adjoint()*xs;
-    Q_ASSERT_X( check.norm() <= FLT_EPSILON,
-                Q_FUNC_INFO,
-                "not a zero vector");
-
-    return JJ;
-}
 
 
 

@@ -107,13 +107,14 @@ private:
     static constexpr double rankEstimate    = 1e-6;  // rank estimation
     static constexpr double numericalCheck  = 1e-5;  // numerical check constraints
 
-
+    /*
     //! Rotation matrix for minimal rotation
     static Eigen::MatrixXd Rot_ab(const Eigen::VectorXd &a, const Eigen::VectorXd &b);
     //! Nullspace of row vector
     static Eigen::MatrixXd null(const Eigen::VectorXd &xs);
+    [[nodiscard]] static bool is_rank_deficient( Eigen::SparseMatrix<double,Eigen::ColMajor> & AA, double T );
+    */
 
-    [[nodiscard]] static bool is_rank_deficient( Eigen::SparseMatrix<double,Eigen::ColMajor> & BBr, double T );
     static Eigen::Index indexOf(const Eigen::VectorXi &v, Eigen::Index i);
 };
 

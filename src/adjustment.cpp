@@ -19,6 +19,7 @@
 #include "adjustment.h"
 #include "constraints.h"
 #include "global.h"
+#include "matfun.h"
 #include "matrix.h"
 
 #include <QString>
@@ -27,11 +28,9 @@
 #include "qassert.h"
 #include "qcontainerfwd.h"
 #include "qlogging.h"
-#include "qtdeprecationdefinitions.h"
 
 #include <algorithm>
 #include <cassert>
-#include <cfloat>
 #include <cmath>
 #include <memory>
 #include <numeric>
@@ -67,48 +66,6 @@ Index AdjustmentFramework::indexOf(const Eigen::VectorXi &v, const Index i)
     return std::distance( v.begin(), it); */
 }
 
-MatrixXd AdjustmentFramework::Rot_ab(const VectorXd &a, const VectorXd &b)
-{
-    Q_ASSERT( a.size()==b.size());
-#ifdef QT_DEBUG
-    Q_ASSERT( fabs( a.norm()-1.) < FLT_EPSILON );
-    Q_ASSERT( fabs( b.norm()-1.) < FLT_EPSILON );
-#endif
-    return MatrixXd::Identity( a.size(),a.size())
-            +2*b*a.adjoint()
-            -(a+b)*(a+b).adjoint()/(1.+a.dot(b));
-}
-
-MatrixXd AdjustmentFramework::null(const VectorXd &xs)
-{
-    // cf. PCV, eq. (A.120)
-
-    //if ( fabs(xs.norm()-1.) > T_ZERO )
-    //    qDebug() << xs;
-
-#ifdef QT_DEBUG
-    QString const what = QStringLiteral("norm(x) = %1").arg(QString::number(xs.norm()));
-    Q_ASSERT_X(std::fabs(xs.norm() - 1.) <= FLT_EPSILON, Q_FUNC_INFO, what.toStdString().data());
-#endif
-    Eigen::Index  const N = xs.size();
-
-    VectorXd x0 = xs.head(N-1);
-    double   xN = xs(N-1);
-    if ( xN < 0.0 ) {
-        x0 = -x0;
-        xN = -xN;
-    }
-
-    MatrixXd JJ( N, N-1);
-    JJ.topRows(N-1)  = MatrixXd::Identity(N-1,N-1) -x0*x0.adjoint()/(1.+xN);
-    JJ.bottomRows(1) = -x0.adjoint();
-
-    VectorXd const check = JJ.adjoint()*xs;
-#ifdef QT_DEBUG
-    Q_ASSERT_X( check.norm() <= FLT_EPSILON, Q_FUNC_INFO, "not a zero vector");
-#endif
-    return JJ;
-}
 
 std::pair<VectorXd,MatrixXd >
 AdjustmentFramework::getEntity( const Index s,
@@ -433,10 +390,3 @@ void AdjustmentFramework::check_constraints(
     }
 }
 
-//! check if the matrix AA is rank-deficient
-bool AdjustmentFramework::is_rank_deficient( Eigen::SparseMatrix<double,Eigen::ColMajor> & AA, const double T )
-{
-    Eigen::ColPivHouseholderQR<MatrixXd> qr(AA);
-    qr.setThreshold( T );
-    return ( qr.rank() < AA.rows() );
-}

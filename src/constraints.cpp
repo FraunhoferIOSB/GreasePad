@@ -24,13 +24,12 @@
 #include <QStringLiteral>
 
 #include "qassert.h"
-#include "qtdeprecationdefinitions.h"
 
 #include <cassert>
-#include <cfloat>
 #include <cmath>
 #include <cstdlib>
 
+#include "matfun.h"
 
 namespace Constraint {
 
@@ -38,51 +37,6 @@ using Eigen::Vector3d;
 using Eigen::Vector2cd;
 using Eigen::Matrix;
 
-
-MatrixXd ConstraintBase::Rot_ab( const VectorXd &a,
-                                 const VectorXd &b)
-{
-    Q_ASSERT( a.size()==b.size() );
-#ifdef QT_DEBUG
-    Q_ASSERT( std::fabs( a.norm()-1.) < FLT_EPSILON );
-    Q_ASSERT( std::fabs( b.norm()-1.) < FLT_EPSILON );
-#endif
-    return MatrixXd::Identity( a.size(),a.size())
-            +2*b*a.adjoint()
-            -(a+b)*(a+b).adjoint()/(1.+a.dot(b));
-}
-
-MatrixXd ConstraintBase::null( const VectorXd & xs )
-{
-    // cf. PCV, eq. (A.120)
-
-    //if ( fabs(xs.norm()-1.) > T_ZERO )
-    //    qDebug() << xs;
-
-#ifdef QT_DEBUG
-    QString const what = QStringLiteral("norm(x) = %1").arg( QString::number(xs.norm()) );
-    Q_ASSERT_X(fabs(xs.norm() - 1.) <= FLT_EPSILON, "null(x)", what.toStdString().data());
-#endif
-
-    Eigen::Index  const N = xs.size();
-
-    VectorXd x0 = xs.head(N-1);
-    double   xN = xs(N-1);
-    if ( xN < 0.0 ) {
-        x0 = -x0;
-        xN = -xN;
-    }
-
-    MatrixXd JJ( N, N-1);
-    JJ.topRows(N-1)  = MatrixXd::Identity(N-1,N-1) -x0*x0.adjoint()/(1.+xN);
-    JJ.bottomRows(1) = -x0.adjoint();
-
-    VectorXd const check = JJ.adjoint() * xs;
-#ifdef QT_DEBUG
-    Q_ASSERT_X( check.norm() <= FLT_EPSILON, Q_FUNC_INFO, "not a zero vector");
-#endif
-    return JJ;
-}
 
 ConstraintBase::ConstraintBase()
     : m_status(UNEVAL)

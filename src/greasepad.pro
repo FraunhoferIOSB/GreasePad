@@ -60,6 +60,7 @@ HEADERS += \
     mainwindow.h \
     mainscene.h \
     mainview.h \
+    matfun.h \
     matrix.h \
     qconstraints.h \
     qformattool.h \

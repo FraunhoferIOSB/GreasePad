@@ -103,7 +103,7 @@ private:
     Matrix3d m_cov; //!< homogeneous 3x3 covariance matrix
 
     //! Nullspace of row 3-vector
-    static Eigen::Matrix<double, 3, 2> null(const Eigen::Vector3d &xs);
+    //static Eigen::Matrix<double, 3, 2> null(const Eigen::Vector3d &xs);
 };
 
 } // namespace Uncertain

@@ -27,6 +27,7 @@
 #include <memory>
 
 #include "cstdint"
+
 #include "matrix.h"
 
 //! Geometric constraints (relations)
@@ -52,9 +53,9 @@ public:
     virtual ~ConstraintBase() = default;
 
 protected:
-    static MatrixXd null( const VectorXd &xs );  //!< Nullspace of row vector
-    static MatrixXd Rot_ab( const VectorXd &a,
-                            const VectorXd &b);  //!< Minimal rotation between two vectors as rotation matrix
+    // static MatrixXd null( const VectorXd &xs );  //!< Nullspace of row vector
+    //static MatrixXd Rot_ab( const VectorXd &a,
+    //                        const VectorXd &b);  //!< Minimal rotation between two vectors as rotation matrix
 public:
     //! Status: unevaluated, required, obsolete (redundant)
     enum Status : std::uint8_t { UNEVAL=0, REQUIRED, OBSOLETE };
