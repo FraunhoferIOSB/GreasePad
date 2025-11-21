@@ -17,7 +17,7 @@
  */
 
 #include "conics.h"
-#include "global.h"
+#include "matfun.h"
 #include "qsegment.h"
 #include "upoint.h"
 #include "ustraightline.h"
@@ -50,6 +50,9 @@ using Eigen::Vector3d;
 
 using Uncertain::uStraightLine;
 using Uncertain::uPoint;
+
+using Matfun::cof3;
+
 
 bool QConstrained::s_show   = true;
 bool QConstrained::s_showColor = false;
@@ -475,25 +478,6 @@ QUnconstrained::QUnconstrained( const uPoint & ux,
 {
      setVisible( QUnconstrained::show() );
      setPen( s_defaultPen );
-}
-
-Matrix3d QSegment::cof3(const Matrix3d &MM)
-{
-    Matrix3d Cof;
-
-    Cof(0,0) = +MM(1,1)*MM(2,2) -MM(2,1)*MM(1,2);
-    Cof(0,1) = -MM(1,0)*MM(2,2) +MM(2,0)*MM(1,2);
-    Cof(0,2) = +MM(1,0)*MM(2,1) -MM(2,0)*MM(1,1);
-
-    Cof(1,0) = -MM(0,1)*MM(2,2) +MM(2,1)*MM(0,2);
-    Cof(1,1) = +MM(0,0)*MM(2,2) -MM(2,0)*MM(0,2);
-    Cof(1,2) = -MM(0,0)*MM(2,1) +MM(2,0)*MM(0,1);
-
-    Cof(2,0) = +MM(0,1)*MM(1,2) -MM(1,1)*MM(0,2);
-    Cof(2,1) = -MM(0,0)*MM(1,2) +MM(1,0)*MM(0,2);
-    Cof(2,2) = +MM(0,0)*MM(1,1) -MM(1,0)*MM(0,1);
-
-    return Cof;
 }
 
 

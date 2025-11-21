@@ -39,6 +39,8 @@ using Eigen::Matrix;
 
 using Matfun::Rot_ab;
 using Matfun::null;
+using Matfun::cof3;
+
 
 ConstraintBase::ConstraintBase()
     : m_status(UNEVAL)
@@ -143,27 +145,6 @@ VectorXd Copunctual::contradict(const VectorXidx &idx, const VectorXd &l0) const
     tmp << MM.determinant();
     return tmp;
 }
-
-
-//! 3x3 cofactor matrix, i.e., transposed adjugate
-Matrix3d Copunctual::cof3(const Matrix3d &MM)
-{
-    Matrix3d Cof;
-    Cof(0,0) = +MM(1,1)*MM(2,2) -MM(2,1)*MM(1,2);
-    Cof(0,1) = -MM(1,0)*MM(2,2) +MM(2,0)*MM(1,2);
-    Cof(0,2) = +MM(1,0)*MM(2,1) -MM(2,0)*MM(1,1);
-
-    Cof(1,0) = -MM(0,1)*MM(2,2) +MM(2,1)*MM(0,2);
-    Cof(1,1) = +MM(0,0)*MM(2,2) -MM(2,0)*MM(0,2);
-    Cof(1,2) = -MM(0,0)*MM(2,1) +MM(2,0)*MM(0,1);
-
-    Cof(2,0) = +MM(0,1)*MM(1,2) -MM(1,1)*MM(0,2);
-    Cof(2,1) = -MM(0,0)*MM(1,2) +MM(1,0)*MM(0,2);
-    Cof(2,2) = +MM(0,0)*MM(1,1) -MM(1,0)*MM(0,1);
-
-    return Cof;
-}
-
 
 
 MatrixXd Identical::Jacobian( const VectorXidx & idx,

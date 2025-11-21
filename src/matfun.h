@@ -83,6 +83,27 @@ static Matrix3d skew(const Vector3d &x)
     return (Matrix3d() << 0.,-x(2),x(1), x(2),0.,-x(0), -x(1),x(0),0.).finished();
 }
 
+
+//! 3x3 cofactor matrix, i.e., transposed adjugate
+static Matrix3d cof3(const Matrix3d &MM)
+{
+    Matrix3d Cof;
+    Cof(0,0) = +MM(1,1)*MM(2,2) -MM(2,1)*MM(1,2);
+    Cof(0,1) = -MM(1,0)*MM(2,2) +MM(2,0)*MM(1,2);
+    Cof(0,2) = +MM(1,0)*MM(2,1) -MM(2,0)*MM(1,1);
+
+    Cof(1,0) = -MM(0,1)*MM(2,2) +MM(2,1)*MM(0,2);
+    Cof(1,1) = +MM(0,0)*MM(2,2) -MM(2,0)*MM(0,2);
+    Cof(1,2) = -MM(0,0)*MM(2,1) +MM(2,0)*MM(0,1);
+
+    Cof(2,0) = +MM(0,1)*MM(1,2) -MM(1,1)*MM(0,2);
+    Cof(2,1) = -MM(0,0)*MM(1,2) +MM(1,0)*MM(0,2);
+    Cof(2,2) = +MM(0,0)*MM(1,1) -MM(1,0)*MM(0,1);
+
+    return Cof;
+}
+
+
 } // namespace Matfun
 
 

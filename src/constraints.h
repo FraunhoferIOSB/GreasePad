@@ -141,7 +141,7 @@ public:
 private:
     [[nodiscard]] const char* type_name() const override { return "copunctual"; }
 
-    static Matrix3d cof3(const Matrix3d &MM); //!< 3x3 cofactor matrix
+    // static Matrix3d cof3(const Matrix3d &MM); //!< 3x3 cofactor matrix
     static const int s_dof   = 1;
     static const int s_arity = 3;
 };

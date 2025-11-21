@@ -22,6 +22,7 @@
 #include <cmath>
 #include <cstdlib>
 
+#include "matfun.h"
 #include "uncertain.h"
 #include "upoint.h"
 #include "ustraightline.h"
@@ -42,6 +43,8 @@ using Eigen::Vector3d;
 
 
 namespace Uncertain {
+
+using Matfun::cof3;
 
 //! Diag([1,1,0])
 Matrix3d uStraightLine::CC()
@@ -301,26 +304,6 @@ bool uStraightLine::isParallelTo( const uStraightLine & um,
     double const var_d = JJ * Cov_lm * JJ.adjoint();
 
     return d*d/var_d < T_q;
-}
-
-
-//! Coefficent matrix of 3x3 Matrix MM, i.e., transposed adjugate of MM
-Matrix3d uStraightLine::cof3(const Matrix3d &MM)
-{
-    Matrix3d Cof;
-    Cof(0,0) = +MM(1,1)*MM(2,2) -MM(2,1)*MM(1,2);
-    Cof(0,1) = -MM(1,0)*MM(2,2) +MM(2,0)*MM(1,2);
-    Cof(0,2) = +MM(1,0)*MM(2,1) -MM(2,0)*MM(1,1);
-
-    Cof(1,0) = -MM(0,1)*MM(2,2) +MM(2,1)*MM(0,2);
-    Cof(1,1) = +MM(0,0)*MM(2,2) -MM(2,0)*MM(0,2);
-    Cof(1,2) = -MM(0,0)*MM(2,1) +MM(2,0)*MM(0,1);
-
-    Cof(2,0) = +MM(0,1)*MM(1,2) -MM(1,1)*MM(0,2);
-    Cof(2,1) = -MM(0,0)*MM(1,2) +MM(1,0)*MM(0,2);
-    Cof(2,2) = +MM(0,0)*MM(1,1) -MM(1,0)*MM(0,1);
-
-    return Cof;
 }
 
 
