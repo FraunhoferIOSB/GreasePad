@@ -16,9 +16,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "global.h"
-
-
 #include "qstroke.h"
 
 #include <QGraphicsItem>

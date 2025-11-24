@@ -19,8 +19,6 @@
 #ifndef QSTROKE_H
 #define QSTROKE_H
 
-#include "global.h"
-
 #include <QColor>
 #include <QGraphicsItem>
 #include <QObject>
