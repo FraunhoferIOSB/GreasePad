@@ -25,6 +25,7 @@
 #include <QtPreprocessorSupport>
 
 #include "qnamespace.h"
+#include "qobject.h"
 
 
 namespace QEntity {
@@ -48,7 +49,7 @@ bool QStroke::deserialize( QDataStream &in )
     QPolygonF p;
     in >> p;
     setPolygon(p);
-    return in.status()==0;
+    return in.status()==QDataStream::Ok;  // =0
 }
 
 
@@ -75,7 +76,7 @@ void QStroke::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
 
     if ( isSelected() ) {
         painter->setPen( s_penSelected );
-        painter->drawPolygon( boundingRect() );
+        painter->drawRect( boundingRect() );
     }
     painter->setPen( m_pen );
     painter->drawPoints( polygon() );

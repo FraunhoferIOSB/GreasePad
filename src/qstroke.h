@@ -35,9 +35,9 @@ public:
     QStroke();
     explicit QStroke( const QPolygonF & p);
     QStroke( const QStroke &) = delete;    //!< Copy constructor
-    QStroke( const QStroke &&) = delete;   //!< Move constructor
-    QStroke & operator= (const QStroke & ) = delete; //!< Copy assignemt constructor
-    QStroke & operator= (const QStroke &&) = delete; //!< Move assignemt constructor
+    QStroke( QStroke&&) = delete;          //!< Move constructor
+    QStroke & operator= (const QStroke & ) = delete; //!< Copy assignmemt constructor
+    QStroke & operator= (QStroke&&) = delete;        //!< Move assignment constructor
 
     ~QStroke() override = default;
 
