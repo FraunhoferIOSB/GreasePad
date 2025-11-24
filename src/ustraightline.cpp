@@ -18,7 +18,7 @@
 
 #include <cassert>
 #include <cfloat>
-//#define _USE_MATH_DEFINES // for C++
+#define  USE_MATH_DEFINES // for C++
 #include <cmath>
 
 #include "matfun.h"
@@ -45,18 +45,20 @@ namespace Uncertain {
 
 using Matfun::cof3;
 
+template <typename T>
+[[nodiscard]] int sign( T val);
+
 //! Diag([1,1,0])
 Matrix3d uStraightLine::CC()
 {
-    const static Matrix3d tmp = Vector3d(1,1,0).asDiagonal();
-    // (Matrix3d() << 1,0,0,0,1,0,0,0,0).finished();
+    static const Matrix3d tmp = Vector3d(1,1,0).asDiagonal();
     return tmp;
 }
 
 //! skew([1,0,0])
 Matrix3d uStraightLine::S3()
 {
-  const static Matrix3d tmp = (Matrix3d() << 0,-1,0,1,0,0,0,0,0).finished();
+  static const Matrix3d tmp = (Matrix3d() << 0,-1,0,1,0,0,0,0,0).finished();
   return tmp;
 }
 
@@ -73,12 +75,9 @@ uStraightLine::uStraightLine(const Vector3d & l,
 
 
 //! Uncertain straight line approximating the point set {x_i,y_i}
-// uStraightLine::uStraightLine( const VectorXd & xi,  const VectorXd & yi)
 uStraightLine uStraightLine::estim( const VectorXd & xi,
-                                   const VectorXd & yi)
+                                    const VectorXd & yi)
 {
-    // qDebug() << Q_FUNC_INFO;
-
     // centroid ............................................
     double const x0 = xi.mean();
     double const y0 = yi.mean();    // qDebug() << "mean = (" << x0 << "," << y0 << ")";
@@ -99,14 +98,14 @@ uStraightLine uStraightLine::estim( const VectorXd & xi,
     Eigen::Vector2d n  = UU.col(1);
 
     // straight line  l = [n; -n'*x0];  .........................
-    /* m_val */ const Vector3d v = (Vector3d() << n(0), n(1), -(n(0)*x0) -(n(1)*y0)).finished();
+    const Vector3d v = (Vector3d() << n(0), n(1), -(n(0)*x0) -(n(1)*y0)).finished();
 
     // check: point-line incidence, x'l = 0
     Q_ASSERT( std::fabs( (x0*v(0)) +(y0*v(1)) +v(2) ) < FLT_EPSILON);
 
     // estimated variance factor (10.167) .........................
     Q_ASSERT(sv(0) > sv(1));
-    double const evar0 = sv(1) / (I - 2);
+    const double evar0 = sv(1) / (I - 2);
     // qDebug() << "estd_0 = " << sqrt(evar0);
 
     // cov. mat. for l = [0 1 0], (10.166) ........................
@@ -117,15 +116,15 @@ uStraightLine uStraightLine::estim( const VectorXd & xi,
     Q_ASSERT_X( I>0, Q_FUNC_INFO,
                "Division by zero: I (number of points) must be nonzero");
 
-    Vector3d const t = (Vector3d() << 1. / sv(0), 0, 1. / I).finished();
-    Matrix3d const Sigma_ll  = I*t.asDiagonal(); // TODO(meijoc)
+    const Vector3d t = (Vector3d() << 1. / sv(0), 0, 1. / I).finished();
+    const Matrix3d Sigma_ll  = I*t.asDiagonal(); // TODO(meijoc)
 
     // variance propagation .......................................
     Matrix3d HH = Matrix3d::Identity(3,3);
     HH.topLeftCorner(2,2) = UU;
     HH(0,2) = x0;
     HH(1,2) = y0;      //  HH = [UU, x0; 0 0 1]
-    /* m_cov */ const Matrix3d Cov = evar0*(HH.inverse()).transpose()*Sigma_ll* HH.inverse();
+    const Matrix3d Cov = evar0*(HH.inverse()).transpose()*Sigma_ll* HH.inverse();
 
     // TODO(meijoc): warning
     Q_ASSERT_X( isCovMat(Cov ), Q_FUNC_INFO, "invalid covariance matrix");
@@ -133,18 +132,19 @@ uStraightLine uStraightLine::estim( const VectorXd & xi,
     return{ v, Cov};
 }
 
+
 //! Project the uncertain point 'ux' onto uncertain straight line 'this'
 uPoint uStraightLine::project(const uPoint &ux) const
 {
-    Vector3d const l = v();
-    Vector3d const x = ux.v();
-    Vector3d const z = skew(l)*skew(x)*CC()*l;
+    const Vector3d l = v();
+    const Vector3d x = ux.v();
+    const Vector3d z = skew(l)*skew(x)*CC()*l;
 
     // Jacobians
-    Matrix3d AA = -skew(l)*skew(CC()*l);
-    Matrix3d BB = skew(l) * skew(x) * CC() + skew(skew(CC() * l) * x);
+    const Matrix3d AA = -skew(l)*skew(CC()*l);
+    const Matrix3d BB = skew(l) * skew(x) * CC() + skew(skew(CC() * l) * x);
 
-    Matrix3d const Cov_zz = AA * ux.Cov() *AA.transpose()
+    const Matrix3d Cov_zz = AA * ux.Cov() *AA.transpose()
             +BB*Cov()*BB.transpose();
 
     return { z, Cov_zz};
@@ -171,28 +171,12 @@ double uStraightLine::acute(const uStraightLine &um) const
     return alpha;
 }
 
-//! Uncertain straight line connecting two uncorrelated uncertain points
-// uStraightLine::uStraightLine( const uPoint & ux, const uPoint & uy)
-/* uStraightLine uStraightLine::cross( const uPoint & ux,
-                                   const uPoint & uy)
-{
-    // qDebug() << Q_FUNC_INFO;
-    return ux.cross(uy);
-
-    const Matrix3d Sx = skew(ux.v());
-    const Matrix3d Sy = skew(uy.v());
-    const Vector3d m_val = Sx*uy.v();         // cross(x,y)
-
-    Q_ASSERT_X( m_val.norm()>0, Q_FUNC_INFO, "identical points");
-    const Matrix3d m_cov = -Sy*ux.Cov()*Sy -Sx*uy.Cov()*Sx;  // S' = -S
-    return {m_val, m_cov };
-}*/
 
 
 //! Get Euclidean normalized version of this uncertain straight line
 uStraightLine uStraightLine::euclidean() const
 {
-    Eigen::Vector2d const lh = v().head(2);
+    const Eigen::Vector2d lh = v().head(2);
     double const l0 = v(2);
     Matrix3d JJ = Matrix3d::Identity();
     double const n = lh.norm();
@@ -219,9 +203,9 @@ uStraightLine uStraightLine::sphericalNormalized() const
 bool uStraightLine::isVertical( double T_q) const
 {
     // l=[a,b,c], b=0 ?
-    double const d = v(1);
-    Eigen::RowVector3d const JJ = (Eigen::RowVector3d() << 0, 1, 0).finished();
-    double const var_d = JJ * Cov() * JJ.adjoint();
+    const double d = v(1);
+    const Eigen::RowVector3d JJ = (Eigen::RowVector3d() << 0, 1, 0).finished();
+    const double var_d = JJ * Cov() * JJ.adjoint();
     return d*d/var_d < T_q;
 }
 
@@ -229,9 +213,9 @@ bool uStraightLine::isVertical( double T_q) const
 bool uStraightLine::isHorizontal(double T_q) const
 {
     // l=[a,b,c], a=0 ?
-    double const d = v(0);
-    Eigen::RowVector3d const JJ = (Eigen::RowVector3d() << 1, 0, 0).finished();
-    double const var_d = JJ * Cov() * JJ.adjoint();
+    const double d = v(0);
+    const Eigen::RowVector3d JJ = (Eigen::RowVector3d() << 1, 0, 0).finished();
+    const double var_d = JJ * Cov() * JJ.adjoint();
     return d*d/var_d < T_q;
 }
 
@@ -240,10 +224,10 @@ bool uStraightLine::isDiagonal(double T_q) const
 {
     // l=[a,b,c],   abs(a)-abs(b)=0  ?
 
-    double const d = std::fabs(v(0)) - std::fabs(v(1));
-    Eigen::RowVector3d const JJ = (Eigen::RowVector3d() << sign(v(0)), -sign(v(1)), 0)
+    const double d = std::fabs(v(0)) - std::fabs(v(1));
+    const Eigen::RowVector3d JJ = (Eigen::RowVector3d() << sign(v(0)), -sign(v(1)), 0)
                                       .finished();
-    double const var_d = JJ * Cov() * JJ.adjoint();
+    const double var_d = JJ * Cov() * JJ.adjoint();
     return d*d/var_d < T_q;
 }
 
@@ -260,9 +244,8 @@ bool uStraightLine::isOrthogonalTo( const uStraightLine & um,
     Cov_lm.topLeftCorner(3,3) = Cov();
     Cov_lm.bottomRightCorner(3,3) = um.Cov();
 
-    double const d = v().dot(CC() * um.v());
-    double const var_d = JJ * Cov_lm * JJ.adjoint();
-    // double T_d  = d*d/var_d;
+    const double d = v().dot(CC() * um.v());
+    const double var_d = JJ * Cov_lm * JJ.adjoint();
 
     return d*d/var_d <  T_q;
 }
@@ -272,9 +255,9 @@ bool uStraightLine::isCopunctualWith( const uStraightLine & um,
                                       const uStraightLine & un,
                                       const double T_d) const
 {
-    Matrix3d const MM = (Matrix3d() << v(), um.v(), un.v()).finished();
+    const Matrix3d MM = (Matrix3d() << v(), um.v(), un.v()).finished();
 
-    double const d = MM.determinant(); // distance, dof = 1
+    const double d = MM.determinant(); // distance, dof = 1
     Eigen::Matrix<double,9,9> Sigma_lmn;
     Sigma_lmn.fill(0);
     Sigma_lmn.block(0,0,3,3) = Cov();
@@ -286,7 +269,7 @@ bool uStraightLine::isCopunctualWith( const uStraightLine & um,
     JJ.segment( 0, 3) = cofMM.col(0);
     JJ.segment( 3, 3) = cofMM.col(1);
     JJ.segment( 6, 3) = cofMM.col(2);
-    double const var_d = JJ * Sigma_lmn * JJ.adjoint(); // error propagation
+    const double var_d = JJ * Sigma_lmn * JJ.adjoint(); // error propagation
 
     return d*d/var_d < T_d;                  // test statistic T
 }
@@ -296,7 +279,7 @@ bool uStraightLine::isCopunctualWith( const uStraightLine & um,
 bool uStraightLine::isParallelTo( const uStraightLine & um,
                                   const double T_q) const
 {
-    double const d = -v().dot(S3() * um.v()); // (7.24)
+    const double d = -v().dot(S3() * um.v()); // (7.24)
 
     RowVector6d JJ;
     JJ.leftCols(3) = -um.v().adjoint()*S3().adjoint();  // adj(S3)=-S3 ?
@@ -306,7 +289,7 @@ bool uStraightLine::isParallelTo( const uStraightLine & um,
     Cov_lm.topLeftCorner(3,3)     = Cov();
     Cov_lm.bottomRightCorner(3,3) = um.Cov();
 
-    double const var_d = JJ * Cov_lm * JJ.adjoint();
+    const double var_d = JJ * Cov_lm * JJ.adjoint();
 
     return d*d/var_d < T_q;
 }
