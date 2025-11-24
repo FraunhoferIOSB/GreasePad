@@ -21,7 +21,6 @@
 
 #include "matfun.h"
 #include "usegment.h"
-#include "ustraightline.h"
 
 #include <QDebug>
 #include <QStringLiteral>

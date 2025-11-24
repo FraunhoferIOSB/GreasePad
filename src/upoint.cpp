@@ -28,6 +28,7 @@
 #include "qassert.h"
 #include "qtdeprecationdefinitions.h"
 
+#include <cassert>
 #include <cmath>
 #include <cstdlib>
 
