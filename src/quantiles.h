@@ -32,9 +32,9 @@ public:
     //! Get quantile of standard normal distribution
     [[nodiscard]] double quantile_stdNormDistr() const { return quantile_snd_; }
 
-    //! Get quantile of chi-square distribution with two degeree of freedom
+    //! Get quantile of chi-square distribution with two degree of freedom
     [[nodiscard]] double quantile_chi2_1dof() const { return quantile_chi2_1_; }
-    void setAlpha( Stats::Prob alpha );  //!< Set significande level alpha
+    void setAlpha( Stats::Prob alpha );  //!< Set significance level alpha
 
 private:
     double quantile_snd_{};     // Quantile of standard normal distribution N(0,1)
@@ -44,14 +44,14 @@ private:
     const Stats::StandardNormal distr_snd_;
 };
 
-//! Quantiles for reconition of geometric relations
+//! Quantiles for recognition of geometric relations
 struct Recognition
 {
 public:
-    //! Get quantile of chi-square distribution with one degeree of freedom
+    //! Get quantile of chi-square distribution with one degree of freedom
     [[nodiscard]] double quantile_chi2_1dof() const { return quantile_chi2_1dof_; }
 
-    //! Get quantile of chi-square distribution with two degeree of freedom
+    //! Get quantile of chi-square distribution with two degree of freedom
     [[nodiscard]] double quantile_chi2_2dof() const { return quantile_chi2_2dof_; }
     void setAlpha( Stats::Prob alpha );  //!< Set significance level alpha
 
