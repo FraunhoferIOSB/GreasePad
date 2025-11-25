@@ -30,10 +30,10 @@ struct Snapping
 {
 public:
     //! Get quantile of standard normal distribution
-    double quantile_stdNormDistr() const { return quantile_snd_; }
+    [[nodiscard]] double quantile_stdNormDistr() const { return quantile_snd_; }
 
     //! Get quantile of chi-square distribution with two degeree of freedom
-    double quantile_chi2_1dof() const { return quantile_chi2_1_; }
+    [[nodiscard]] double quantile_chi2_1dof() const { return quantile_chi2_1_; }
     void setAlpha( Stats::Prob alpha );  //!< Set significande level alpha
 
 private:
@@ -41,7 +41,7 @@ private:
     double quantile_chi2_1_{};  // Quantile of chi-squared distribution with 1 degree of freedom
 
     const Stats::ChiSquared     distr_chi2_1_{1};
-    const Stats::StandardNormal distr_snd_{};
+    const Stats::StandardNormal distr_snd_;
 };
 
 //! Quantiles for reconition of geometric relations
@@ -49,10 +49,10 @@ struct Recognition
 {
 public:
     //! Get quantile of chi-square distribution with one degeree of freedom
-    double quantile_chi2_1dof() const { return quantile_chi2_1dof_; }
+    [[nodiscard]] double quantile_chi2_1dof() const { return quantile_chi2_1dof_; }
 
     //! Get quantile of chi-square distribution with two degeree of freedom
-    double quantile_chi2_2dof() const { return quantile_chi2_2dof_; }
+    [[nodiscard]] double quantile_chi2_2dof() const { return quantile_chi2_2dof_; }
     void setAlpha( Stats::Prob alpha );  //!< Set significance level alpha
 
 private:
