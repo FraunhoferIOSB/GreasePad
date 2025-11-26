@@ -22,12 +22,11 @@
 #include "mainwindow.h"
 #include "qconstraints.h"
 #include "qformattool.h"
-#include "qsegment.h"
-#include "qstroke.h"
-
 #include "qgraphicsitem.h"
 #include "qlogging.h"
 #include "qnamespace.h"
+#include "qsegment.h"
+#include "qstroke.h"
 #include "qtconfiginclude.h"
 #include "qtdeprecationdefinitions.h"
 #include "qtpreprocessorsupport.h"
@@ -66,11 +65,10 @@
 #include <QToolBar>
 #include <QWheelEvent>
 
-#include <Eigen/src/Core/util/Macros.h>
 
 #include <memory>
 
-
+#include <Eigen/Version>
 
 namespace GUI {
 
