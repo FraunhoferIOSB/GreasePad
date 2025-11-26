@@ -34,6 +34,8 @@
 namespace Uncertain {
 
 using Matfun::null;
+using Matfun::sign;
+
 
 //! Check if matrix MM is a proper covariance matrix
 bool isCovMat( const MatrixXd & MM )

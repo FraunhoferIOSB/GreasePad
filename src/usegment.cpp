@@ -39,7 +39,7 @@ using Eigen::VectorXi;
 using Eigen::Vector3d;
 using Eigen::VectorXd;
 
-
+using Matfun::sign;
 
 namespace Uncertain {
 

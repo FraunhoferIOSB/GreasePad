@@ -131,8 +131,8 @@ private:
 
     static Matrix3d CC();   // Diag([1,1,0])
 
-    template <typename T>
-    int sign(T val) {  return (T(0) <= val) - (val < T(0));  }  // sign(0):=+1
+    /* template <typename T>
+    int sign(T val) {  return (T(0) <= val) - (val < T(0));  }  // sign(0):=+1*/
 
     template <typename T>
     bool sameSign( T a, T b ) const {  return a*b >= 0.; }   // for debugging and assertion

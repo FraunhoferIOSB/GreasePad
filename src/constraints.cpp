@@ -40,6 +40,7 @@ using Eigen::Matrix;
 using Matfun::Rot_ab;
 using Matfun::null;
 using Matfun::cof3;
+using Matfun::sign;
 
 
 ConstraintBase::ConstraintBase()

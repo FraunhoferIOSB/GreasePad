@@ -91,9 +91,9 @@ public:
     [[nodiscard]] virtual std::shared_ptr<ConstraintBase> clone() const = 0;
 
 protected:
-    //! sign(0):=+1
+    /*! sign(0):=+1
     template <typename T>
-    int sign(T val) const { return (T(0) <= val) - (val < T(0));  }
+    int sign(T val) const { return (T(0) <= val) - (val < T(0));  }*/
 
 private:
     Status m_status;    // { UNEVAL=0 | REQUIRED | OBSOLETE };

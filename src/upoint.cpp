@@ -32,6 +32,7 @@
 #include <cmath>
 #include <cstdlib>
 
+using Matfun::sign;
 
 namespace Uncertain {
 

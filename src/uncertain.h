@@ -105,8 +105,8 @@ protected:
     BasicEntity2D() = default;                                     //!< Default constructor
     BasicEntity2D & operator= ( const BasicEntity2D &) = default;  //!< Copy assignment
 
-    template <typename T>
-    int sign(T val) const { return (T(0) <= val) - (val < T(0));  }  // sign(0):=+1
+    /* template <typename T>
+    int sign(T val) const { return (T(0) <= val) - (val < T(0));  }  // sign(0):=+1*/
 
 private:
     Vector3d m_val; //!< homogeneous 3-vector representing the entity

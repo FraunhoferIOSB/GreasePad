@@ -18,7 +18,7 @@
 
 #include <cassert>
 #include <cfloat>
-#define  USE_MATH_DEFINES // for C++
+//#define  USE_MATH_DEFINES // for C++
 #include <cmath>
 
 #include "matfun.h"
@@ -31,7 +31,6 @@
 #include <QDebug>
 
 #include "qassert.h"
-#include "qmath.h"
 #include "qtdeprecationdefinitions.h"
 
 
@@ -40,13 +39,13 @@ using Eigen::VectorXd;
 using Eigen::Matrix3d;
 using Eigen::Vector3d;
 
+using Matfun::sign;
+
 
 namespace Uncertain {
 
 using Matfun::cof3;
 
-template <typename T>
-[[nodiscard]] int sign( T val);
 
 //! Diag([1,1,0])
 Matrix3d uStraightLine::CC()

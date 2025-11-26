@@ -86,6 +86,8 @@ using Uncertain::uDistance;
 
 using Graph::IncidenceMatrix;
 
+using Matfun::sign;
+
 
 bool State::considerOrthogonal_ = true;
 bool State::considerParallel_   = true;
@@ -206,8 +208,8 @@ private:
 
     static VectorXi unique( const VectorXi &x) ;
 
-    template <typename T>
-    [[nodiscard]] int sign( T val) const { return (T(0) <= val) - (val < T(0)); }   // sign(0) := 1
+    /* template <typename T>
+    [[nodiscard]] int sign( T val) const { return (T(0) <= val) - (val < T(0)); }   // sign(0) := 1*/
 };
 
 

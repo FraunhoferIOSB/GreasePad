@@ -25,16 +25,16 @@ using Eigen::Vector3d;
 
 
 //! Nullspace of row vector
-static MatrixXd null( const VectorXd & xs )
+[[maybe_unused]] static MatrixXd null( const VectorXd & xs )
 {
     // cf. PCV, eq. (A.120)
 
 #ifdef QT_DEBUG
-    QString const what = QStringLiteral("norm(x) = %1").arg( QString::number(xs.norm()) );
+    const QString what = QStringLiteral("norm(x) = %1").arg( QString::number(xs.norm()) );
     Q_ASSERT_X(fabs(xs.norm() - 1.) <= FLT_EPSILON, "null(x)", what.toStdString().data());
 #endif
 
-    Eigen::Index  const N = xs.size();
+    const Eigen::Index N = xs.size();
 
     VectorXd x0 = xs.head(N-1);
     double   xN = xs(N-1);
@@ -56,7 +56,7 @@ static MatrixXd null( const VectorXd & xs )
 
 
 
-static MatrixXd Rot_ab( const VectorXd &a, const VectorXd &b)
+[[maybe_unused]] static MatrixXd Rot_ab( const VectorXd &a, const VectorXd &b)
 {
     Q_ASSERT( a.size()==b.size() );
 #ifdef QT_DEBUG
@@ -70,7 +70,7 @@ static MatrixXd Rot_ab( const VectorXd &a, const VectorXd &b)
 
 
 //! check if the matrix AA is rank-deficient
-static bool is_rank_deficient( Eigen::SparseMatrix<double,Eigen::ColMajor> & AA, const double T )
+[[maybe_unused]] static bool is_rank_deficient( Eigen::SparseMatrix<double,Eigen::ColMajor> & AA, const double T )
 {
     Eigen::ColPivHouseholderQR<MatrixXd> qr(AA);
     qr.setThreshold( T );
@@ -78,14 +78,14 @@ static bool is_rank_deficient( Eigen::SparseMatrix<double,Eigen::ColMajor> & AA,
 }
 
 
-static Matrix3d skew(const Vector3d &x)
+[[maybe_unused]] static Matrix3d skew(const Vector3d &x)
 {
     return (Matrix3d() << 0.,-x(2),x(1), x(2),0.,-x(0), -x(1),x(0),0.).finished();
 }
 
 
 //! 3x3 cofactor matrix, i.e., transposed adjugate
-static Matrix3d cof3(const Matrix3d &MM)
+[[maybe_unused]] static Matrix3d cof3(const Matrix3d &MM)
 {
     Matrix3d Cof;
     Cof(0,0) = +MM(1,1)*MM(2,2) -MM(2,1)*MM(1,2);
@@ -103,6 +103,9 @@ static Matrix3d cof3(const Matrix3d &MM)
     return Cof;
 }
 
+//! sign(0):=+1
+template <typename T>
+int sign(T val) { return (T(0) <= val) - (val < T(0));  }
 
 } // namespace Matfun
 
