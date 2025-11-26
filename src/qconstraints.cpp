@@ -17,7 +17,7 @@
  */
 
 
-#include "global.h"
+#include "matrix.h"
 #include "qconstraints.h"
 #include "usegment.h"
 
@@ -30,6 +30,7 @@
 
 #include "qcontainerfwd.h"
 #include "qnamespace.h"
+#include "qsharedpointer.h"
 #include "qstyleoption.h"
 #include "qtypes.h"
 
@@ -46,6 +47,7 @@ namespace QConstraint {
 
 using Eigen::Matrix3d;
 using Eigen::Vector3d;
+using Eigen::Index;
 
 bool QConstraintBase::s_show     =  !false; // TODO(meijoc) change later
 bool QConstraintBase::s_showColor =  false;
@@ -265,9 +267,9 @@ void QAligned::setGeometry( QVector<std::shared_ptr<const uStraightLineSegment>>
                             const Eigen::VectorXidx &idx)
 {
     assert( idx.size()==1 );
-    int const i = idx(0);
-    double const x = 0.5 * (s.at(i)->x()(0) + s.at(i)->y()(0));
-    double const y = 0.5 * (s.at(i)->x()(1) + s.at(i)->y()(1));
+    const Index i = idx(0);
+    const double x = 0.5 * (s.at(i)->x()(0) + s.at(i)->y()(0));
+    const double y = 0.5 * (s.at(i)->x()(1) + s.at(i)->y()(1));
     setPos( m_sc*x, m_sc*y);
     setRotation( s.at(i)->phi_deg() );   // orientation
     update();
@@ -345,10 +347,10 @@ void QOrthogonal::setGeometry( QVector<std::shared_ptr<const uStraightLineSegmen
 {
     // qDebug() << Q_FUNC_INFO;
     assert( idx.size()==2 );
-    int const i = idx(0);
-    int const j = idx(1);
+    const Index i = idx(0);
+    const Index j = idx(1);
 
-    Vector3d xh = s.at(i)->hl().cross(  s.at(j)->hl()   );
+    const Vector3d xh = s.at(i)->hl().cross(  s.at(j)->hl()   );
 
     QConstraintBase::setPos( m_sc*xh(0)/xh(2),  m_sc*xh(1)/xh(2));
     QConstraintBase::setRotation( s.at(i)->phi_deg() );
@@ -406,10 +408,10 @@ void QCopunctual::setGeometry( QVector<std::shared_ptr<const uStraightLineSegmen
                                const Eigen::VectorXidx &idx)
 {
     assert( idx.size()==3 );
-    int const i = idx(0);
-    int const j = idx(1);
-    // int k = idx(2);
-    Vector3d xh = s.at(i)->hl().cross(   s.at(j)->hl()  );
+    const Index i = idx(0);
+    const Index j = idx(1);
+    // const Index k = idx(2); //  2 identical straight lines should not occur
+    const Vector3d xh = s.at(i)->hl().cross(   s.at(j)->hl()  );
     QConstraintBase::setPos( m_sc*xh(0)/xh(2), m_sc*xh(1)/xh(2) );
 }
 
@@ -504,11 +506,11 @@ void QParallel::setGeometry( QVector<std::shared_ptr<const uStraightLineSegment>
                              const Eigen::VectorXidx &idx)
 {
     assert( idx.size()==2 );
-    int const i = idx(0);
-    int const j = idx(1);
+    const Index i = idx(0);
+    const Index j = idx(1);
     constexpr double N = 4;
-    double const x = (s.at(i)->x()(0) + s.at(i)->y()(0) + s.at(j)->x()(0) + s.at(j)->y()(0)) / N;
-    double const y = (s.at(i)->x()(1) + s.at(i)->y()(1) + s.at(j)->x()(1) + s.at(j)->y()(1)) / N;
+    const double x = (s.at(i)->x()(0) + s.at(i)->y()(0) + s.at(j)->x()(0) + s.at(j)->y()(0)) / N;
+    const double y = (s.at(i)->x()(1) + s.at(i)->y()(1) + s.at(j)->x()(1) + s.at(j)->y()(1)) / N;
     setPos( m_sc*x,  m_sc*y);            // position
     setRotation( s.at(i)->phi_deg() );   // orientation
     update();
@@ -587,8 +589,8 @@ void QIdentical::setGeometry( QVector<std::shared_ptr<const uStraightLineSegment
                               const Eigen::VectorXidx &idx)
 {
     assert( idx.size()==2 );
-    int const i = idx(0);
-    int const j = idx(1);
+    const Index i = idx(0);
+    const Index j = idx(1);
 
     Eigen::Matrix<double,2,4> xx;
     xx << s.at(i)->x(), s.at(i)->y(),s.at(j)->x(), s.at(j)->y();

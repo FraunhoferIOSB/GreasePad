@@ -28,7 +28,6 @@
 #include "qsharedpointer.h"
 #include "qtypes.h"
 
-#include <Eigen/Core>
 #include <Eigen/Dense>
 
 #include "matrix.h"
@@ -39,7 +38,7 @@
 
 namespace Uncertain {
 class uStraightLineSegment;
-}
+} // namespace Uncertain
 
 
 //! Graphics: Constraints
