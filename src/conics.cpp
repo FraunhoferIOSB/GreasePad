@@ -76,13 +76,13 @@ Vector3d Hyperbola::centerline() const
 
 double Hyperbola::angle_rad() const
 {
-    return 0.5*atan2( 2.0*C().coeff(0,1), C().coeff(0,0)-C().coeff(1,1));
+    return atan2( 2*C().coeff(0,1), C().coeff(0,0)-C().coeff(1,1)) / 2;
 }
 
 double Hyperbola::angle_deg() const
 {
     constexpr double rho = 180./3.14159;
-    return rho * 0.5 * atan2( 2.0*C().coeff(0,1), C().coeff(0,0)-C().coeff(1,1));
+    return rho * angle_rad();
 }
 
 std::pair<double,double>
