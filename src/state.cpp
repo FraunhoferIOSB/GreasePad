@@ -21,8 +21,9 @@
 #include "qassert.h"
 #include "qcolor.h"
 #include "qcontainerfwd.h"
+#include "qhashfunctions.h"
 #include "qlogging.h"
-#include "qstringliteral.h"
+#include "qsharedpointer.h"
 #include "qtypes.h"
 
 #include <algorithm>
@@ -984,8 +985,10 @@ bool impl::are_identical( const Index a,
                           const Index b)
 {
     // pre-check with acute angle
-    double const alpha = m_segm.at(a)->ul().acute( m_segm.at(b)->ul() );
-    if ( alpha*57.2958 > 20.0 ) {  // 180°/pi = 57.2958°
+    const double alpha = m_segm.at(a)->ul().acute( m_segm.at(b)->ul() );
+    constexpr double rho = 180./3.14159;
+    constexpr double T_deg_pre_check = 20.0;
+    if ( alpha*rho > T_deg_pre_check ) {  // 180°/pi = 57.2958°
         return false;
     }
 
