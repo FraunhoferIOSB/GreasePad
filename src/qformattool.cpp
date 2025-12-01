@@ -78,18 +78,16 @@ void FormatTool::createLayout()
     m_layout->addRow( QStringLiteral("Line style"),  m_styleCombo.get()       );
     m_layout->addRow( QStringLiteral("Marker size"), m_markerSizeSpinBox.get());
 
-    auto line = std::make_unique<QFrame>();
-    line->setFrameShape(QFrame::HLine);
-    line->setFrameShadow(QFrame::Sunken);
-    m_layout->addRow( line.get() );
+    auto separationLine = std::make_unique<QFrame>();
+    separationLine->setFrameShape(QFrame::HLine);
+    separationLine->setFrameShadow(QFrame::Sunken);
+    m_layout->addRow( separationLine.get() );
 
     m_layout->addRow( QStringLiteral("segments: constrained"),      m_checkBoxDefaultConstrained.get());
     m_layout->addRow( QStringLiteral("segments: unconstrained"),    m_checkBoxDefaultUnconstrained.get());
-    //   m_layout->addRow( line);
 
     m_layout->addRow( QStringLiteral("constraints: required") ,  m_checkBoxDefaultRequired.get());
     m_layout->addRow( QStringLiteral("constraints: redundant"),  m_checkBoxDefaultRedundant.get());
-     //  m_layout->addRow( line);
 
     m_layout->addRow( QStringLiteral("strokes/tracks"),     m_checkBoxDefaultStroke.get());
     m_layout->addRow( QStringLiteral("scribble pen"),       m_checkBoxScribblePen.get());
@@ -112,40 +110,32 @@ void FormatTool::establishConnections()
              this,                       &FormatTool::updateMarkerSize );
     connect( m_styleCombo.get(),  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
              this,                &FormatTool::updateLineStyle);
-
-    /* connect( m_buttonBox->button(QDialogButtonBox::Discard),
-             &QAbstractButton::pressed,
-             this,  & FormatTool::slotDiscard); */
-    connect( m_buttonBox->button(QDialogButtonBox::Apply),
-             &QAbstractButton::pressed,
-             this,  & FormatTool::slotApply);
-
-    //   connect( checkBoxDefaultConstrained.get(),  &QCheckBox::stateChanged,
-    //            this,   &QFormatTool::updateDefault);
+    connect( m_buttonBox->button(QDialogButtonBox::Apply),    &QAbstractButton::pressed,
+             this,                       &FormatTool::slotApply);
 }
 
 
 void FormatTool::slotUpdateColor( const QColor & col)
 {
-    // qDebug() << Q_FUNC_INFO;
-    QPalette pal = palette();
-    pal.setColor( QPalette::Button, col );
+    // QPalette pal = palette();
+    // pal.setColor( QPalette::Button, col );
     m_colorPushButton->setPalette( QPalette(col) );
     m_colorPushButton->setText( col.name() );
 
     Q_EMIT signalColorChanged(col);
 }
 
+
 void FormatTool::showColorDialog()
 {
-    m_colorDialog->show();
+    // m_colorDialog->show();
     m_colorDialog->exec();
 
     QColor const color = m_colorDialog->selectedColor();
 
     if ( color.isValid() ) {
-        QPalette pal = palette();
-        pal.setColor( QPalette::Button, color );
+        //QPalette pal = palette();
+        //pal.setColor( QPalette::Button, color );
         m_colorPushButton->setPalette( QPalette(color) );
         m_colorPushButton->setText( color.name() );
     }
