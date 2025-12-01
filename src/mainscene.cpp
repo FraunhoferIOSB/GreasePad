@@ -17,6 +17,7 @@
  */
 
 #include "mainscene.h"
+#include "qtypes.h"
 #include "state.h"
 
 #include <QAction>
@@ -56,10 +57,12 @@ MainScene::MainScene(QObject *parent)
     : QGraphicsScene(parent)
     , m_scribbling(false)
 {
-    // p.setCosmetic(true);
+    constexpr qreal full_HD_width  = 1920;
+    constexpr qreal full_HD_height = 1080;
+
     m_path_item.setPen( s_scribblePen );
 
-    setSceneRect( 0,0,  2*975, 2*540 );  // full HD
+    setSceneRect( 0,0,  full_HD_width, full_HD_height );
 
     actionExportSaveAs = std::make_unique<QAction>( "Export as..." );
     actionExportSaveAs->setDisabled( false );
