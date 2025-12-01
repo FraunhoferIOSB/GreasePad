@@ -81,7 +81,7 @@ void FormatTool::createLayout()
     auto separationLine = std::make_unique<QFrame>();
     separationLine->setFrameShape(QFrame::HLine);
     separationLine->setFrameShadow(QFrame::Sunken);
-    m_layout->addRow( separationLine.get() );
+    m_layout->addRow( separationLine.release() );
 
     m_layout->addRow( QStringLiteral("segments: constrained"),      m_checkBoxDefaultConstrained.get());
     m_layout->addRow( QStringLiteral("segments: unconstrained"),    m_checkBoxDefaultUnconstrained.get());
