@@ -20,6 +20,7 @@
 #include "mainscene.h"
 #include "mainview.h"
 #include "mainwindow.h"
+#include "qconfig.h"         // QT_VERSION_STR
 #include "qconstraints.h"
 #include "qformattool.h"
 #include "qgraphicsitem.h"
@@ -27,7 +28,6 @@
 #include "qnamespace.h"
 #include "qsegment.h"
 #include "qstroke.h"
-#include "qtconfiginclude.h"
 #include "qtdeprecationdefinitions.h"
 #include "qtpreprocessorsupport.h"
 #include "qtypes.h"
@@ -94,9 +94,9 @@ MainWindow::MainWindow(QWidget *parent)
     m_undoStack->setUndoLimit( UndoLimit );
 
 
-    constexpr double alpha = 0.1;
-    State::setAlphaRecognition( alpha );
-    State::setAlphaSnapping(    alpha );
+    constexpr double defaultAlpha = 0.1;
+    State::setAlphaRecognition( defaultAlpha );
+    State::setAlphaSnapping(    defaultAlpha );
 
     createSceneAndView();
     // createUndoView();
@@ -1000,9 +1000,10 @@ void MainWindow::slotBackgroundImageLoad()
 
     QString const fileName = QFileDialog::getOpenFileName( this,   QStringLiteral("Open Image File"),
                                                      QDir::currentPath(), filter);
+    constexpr qreal backgroundZvalue = -1;
     if ( !fileName.isEmpty() ) {
         if ( openImageFile( fileName ) ) {
-            m_pixmap->setZValue( -1 );
+            m_pixmap->setZValue( backgroundZvalue );
             spinBoxOpacity->setEnabled( true);
         }
         else {
