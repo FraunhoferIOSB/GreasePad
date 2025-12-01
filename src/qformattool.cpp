@@ -16,15 +16,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "qformattool.h"
-#include "global.h"
-#include "mainscene.h"
-#include "qconstraints.h"
-
-#include "qlogging.h"
-#include "qnamespace.h"
-#include "qsegment.h"
-#include "qstroke.h"
 
 #include <QCheckBox>
 #include <QColor>
@@ -42,10 +33,18 @@
 #include <QStringLiteral>
 #include <QWidget>
 
+#include "qlogging.h"
+#include "qnamespace.h"
 #include "qtdeprecationdefinitions.h"
 #include "qtmetamacros.h"
 
 #include <memory>
+
+#include "mainscene.h"
+#include "qconstraints.h"
+#include "qformattool.h"
+#include "qsegment.h"
+#include "qstroke.h"
 
 namespace GUI {
 
@@ -79,10 +78,10 @@ void FormatTool::createLayout()
     m_layout->addRow( QStringLiteral("Line style"),  m_styleCombo.get()       );
     m_layout->addRow( QStringLiteral("Marker size"), m_markerSizeSpinBox.get());
 
-    auto * line = new QFrame();
+    auto line = std::make_unique<QFrame>();
     line->setFrameShape(QFrame::HLine);
     line->setFrameShadow(QFrame::Sunken);
-    m_layout->addRow( line );
+    m_layout->addRow( line.get() );
 
     m_layout->addRow( QStringLiteral("segments: constrained"),      m_checkBoxDefaultConstrained.get());
     m_layout->addRow( QStringLiteral("segments: unconstrained"),    m_checkBoxDefaultUnconstrained.get());
@@ -155,6 +154,9 @@ void FormatTool::showColorDialog()
 
 void FormatTool::createElements()
 {
+    constexpr int markerSize = 10;
+    constexpr int lineWidth = 3;
+
     m_colorDialog = std::make_unique<QColorDialog>( Qt::black );
 
     QPalette pal = palette();
@@ -168,7 +170,7 @@ void FormatTool::createElements()
 
     m_lineWidthSpinBox = std::make_unique<QSpinBox>();
     m_lineWidthSpinBox->setSuffix( QStringLiteral(" Pt.") );
-    m_lineWidthSpinBox->setValue( 3 );
+    m_lineWidthSpinBox->setValue( lineWidth );
 
     m_styleCombo = std::make_unique<QComboBox>();
     m_styleCombo->addItem( QStringLiteral("NoPen")          );
@@ -181,7 +183,7 @@ void FormatTool::createElements()
 
     m_markerSizeSpinBox = std::make_unique<QSpinBox>();
     m_markerSizeSpinBox->setSuffix( QStringLiteral(" Pt."));
-    m_markerSizeSpinBox->setValue( 10 );
+    m_markerSizeSpinBox->setValue( markerSize );
 
 
     m_checkBoxDefaultConstrained   = std::make_unique<QCheckBox>("new default");

@@ -49,9 +49,10 @@ using Eigen::Matrix3d;
 using Eigen::Vector3d;
 using Eigen::Index;
 
-bool QConstraintBase::s_show     =  !false; // TODO(meijoc) change later
+constexpr int initialMarkerSize = 10;
+bool QConstraintBase::s_show     =   true;
 bool QConstraintBase::s_showColor =  false;
-int  QConstraintBase::s_defaultMarkerSize = 10;
+int  QConstraintBase::s_defaultMarkerSize = initialMarkerSize;
 QPen QConstraintBase::s_defaultPenReq = QPen();
 QPen QConstraintBase::s_defaultPenRed = QPen();
 QPen QConstraintBase::s_penSelected   = QPen();
