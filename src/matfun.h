@@ -22,6 +22,7 @@ using Eigen::VectorXd;
 using Eigen::SparseMatrix;
 using Eigen::Matrix3d;
 using Eigen::Vector3d;
+using Eigen::Index;
 
 
 //! Nullspace of row vector
@@ -102,6 +103,26 @@ using Eigen::Vector3d;
 
     return Cof;
 }
+
+//! Matlab's find(x,1,'first')
+template <typename T>
+[[nodiscard]] static Index indexOf(const Eigen::Vector<T,Eigen::Dynamic> &v, const T x)
+{
+    for ( Index i=0; i<v.size(); i++) {
+        if ( v(i)==x ) {
+            return i;
+        }
+    }
+    return -1;
+
+    /* Eigen 3.4.0
+    auto it = std::find( v.begin(), v.end(), i);
+    if ( it==v.end() ) {
+        return -1;
+    }
+    return std::distance( v.begin(), it); */
+}
+
 
 //! sign(0):=+1
 template <typename T>

@@ -157,8 +157,8 @@ private:
     void remove_segment(    Index i );
 
     // augment & reduce
-    void search_subtask( const Eigen::RowVectorXi & mapc_,
-                         const Eigen::RowVectorXi & maps_);
+    void search_subtask( const Eigen::VectorXidx & mapc_,
+                         const Eigen::VectorXidx & maps_);
 
     //! Estimation of two points delimiting an uncertain straight line segment
     static std::pair<uPoint,uPoint> uEndPoints( const Eigen::VectorXd & xi,
@@ -188,7 +188,7 @@ private:
     void establish_copunctual( Index a, Index b, Index c );
 
     [[nodiscard]] std::pair<Eigen::VectorXd, SparseMatrix<double> >
-    a_Maker( const Eigen::RowVectorXi & maps_ ) const;
+    a_Maker( const VectorXidx & maps_ ) const;
 
     [[nodiscard]] Index number_of_required_constraints() const; // for statistics only
 
@@ -638,8 +638,8 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
         for (Index k = 0; k < LabelsNewConstrUnique.size(); k++) {
             int const cc = LabelsNewConstrUnique(k);
 
-            Eigen::RowVectorXi const maps_ = CoCoBi.mapHead(cc, m_segm.length());
-            Eigen::RowVectorXi const mapc_ = CoCoBi.mapTail( cc, m_constr.length());
+            const Eigen::VectorXidx maps_ = CoCoBi.mapHead(cc, m_segm.length());
+            const Eigen::VectorXidx mapc_ = CoCoBi.mapTail( cc, m_constr.length());
 
             assert( mapc_.size()> 0);
             qDebug().noquote() << blue << QStringLiteral("Reasoning for connected component #%1/%2...")
@@ -785,8 +785,8 @@ Index impl::find_new_constraints()
     return m_constr.length() -previously;
 }
 
-void impl::search_subtask( const Eigen::RowVectorXi & mapc_,
-                           const Eigen::RowVectorXi & maps_ )
+void impl::search_subtask( const Eigen::VectorXidx & mapc_,
+                           const Eigen::VectorXidx & maps_ )
 {
     // qDebug() << Q_FUNC_INFO;
     assert( mapc_.size()>0 );
@@ -881,9 +881,9 @@ void impl::snap_endpoints( const Index nnc)
         qDebug().noquote() << blue << QString("  snap subtask %1/%2")
                               .arg( cc+1 ).arg( LabelsNewUnique.size() );
 
-        VectorXi m = CoCoBi.mapHead(cc, m_segm.size());
+        const VectorXidx m = CoCoBi.mapHead(cc, m_segm.size());
         for ( Index i=0; i< m.size(); i++) {
-            const int s = m(i); // triggering segment...
+            const Index s = m(i); // triggering segment...
 
             // (1) "is touching" ......................................
             uStraightLineSegment useg( *m_segm.at(s) );
@@ -1084,7 +1084,7 @@ void impl::establish_identical( const Index a,  const Index b)
 }
 
 std::pair<Eigen::VectorXd, SparseMatrix<double> >
-impl::a_Maker( const Eigen::RowVectorXi & maps_) const
+impl::a_Maker( const Eigen::VectorXidx & maps_) const
 {
     // qDebug() << Q_FUNC_INFO;
 
@@ -1284,8 +1284,8 @@ void impl::reasoning_reduce_and_adjust() {
     // greedy search
     for ( int cc=0; cc<number_of_subtasks_; cc++ )
     {
-        RowVectorXi const maps_ = CoCoBi.mapHead(cc, m_segm.length());
-        RowVectorXi mapc_ = CoCoBi.mapTail( cc,  m_constr.length() );
+        const VectorXidx maps_ = CoCoBi.mapHead( cc, m_segm.length());
+        const VectorXidx mapc_ = CoCoBi.mapTail( cc, m_constr.length() );
 
         bool greedySearchRequired = false;
 
@@ -1436,13 +1436,13 @@ void impl::setAltColors() const
         const QColor col =  QColor::fromHsv( hue,255,255,   255);
 
         // (1) segments ...
-        VectorXi idx_s = CoCoBi.mapHead(cc, m_qConstrained.length());
+        const VectorXidx idx_s = CoCoBi.mapHead(cc, m_qConstrained.length());
         for ( Index s=0; s<idx_s.size(); s++) {
             m_qConstrained.at( idx_s(s) )->setAltColor(col);
         }
 
         // (2) constraints ...
-        VectorXi idx_c = CoCoBi.mapTail(cc, m_qConstraint.length());
+        const VectorXidx idx_c = CoCoBi.mapTail(cc, m_qConstraint.length());
         for ( Index c=0; c<idx_c.size(); c++) {
             m_qConstraint.at( idx_c(c) )->setAltColor( col );
         }

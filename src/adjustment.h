@@ -58,8 +58,8 @@ public:
     //! Enforce the constraints of a subtask (adjustment)
     bool enforce_constraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
                               const Graph::IncidenceMatrix *Bi,
-                              const Eigen::RowVectorXi &maps,
-                              const Eigen::RowVectorXi &mapc);
+                              const Eigen::VectorXidx &maps,
+                              const Eigen::VectorXidx &mapc);
 
     //! Get s-th entity, i.e., segment, represented by vector of length len
     [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::MatrixXd> getEntity( Eigen::Index s, int len) const;
@@ -85,15 +85,15 @@ private:
                    const Graph::IncidenceMatrix *Bi,
                    Eigen::SparseMatrix<double, Eigen::ColMajor> & BBr,
                    Eigen::VectorXd & g0,
-                   const Eigen::RowVectorXi & maps,
-                   const Eigen::RowVectorXi & mapc) const;
+                   const Eigen::VectorXidx & maps,
+                   const Eigen::VectorXidx & mapc) const;
     //! compute reduced coordinates
     void reduce ( Eigen::VectorXd &, Eigen::SparseMatrix<double,Eigen::ColMajor> &) const;
 
     void check_constraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
                             const Graph::IncidenceMatrix *bi,
-                            const Eigen::RowVectorXi & maps,
-                            const Eigen::RowVectorXi & mapc ) const;
+                            const Eigen::VectorXidx & maps,
+                            const Eigen::VectorXidx & mapc ) const;
 
     bool verbose = true;
 
@@ -106,8 +106,6 @@ private:
     static constexpr double ReciprocalConditionNumber = 1e-4;  // condition number
     static constexpr double rankEstimate    = 1e-6;  // rank estimation
     static constexpr double numericalCheck  = 1e-5;  // numerical check constraints
-
-    static Eigen::Index indexOf(const Eigen::VectorXi &v, Eigen::Index i);
 };
 
 #endif // ADJUSTMENT_H

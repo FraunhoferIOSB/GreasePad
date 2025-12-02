@@ -47,27 +47,12 @@ using Eigen::Index;
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
 using Eigen::SparseMatrix;
+using Eigen::VectorXidx;
 
 using Matfun::Rot_ab;
 using Matfun::null;
 using Matfun::is_rank_deficient;
-
-Index AdjustmentFramework::indexOf(const Eigen::VectorXi &v, const Index i)
-{
-    for ( Index j=0; j<v.size(); j++) {
-        if ( v(j)==i ) {
-            return j;
-        }
-    }
-    return -1;
-
-    /* Eigen 3.4.0
-    auto it = std::find( v.begin(), v.end(), i);
-    if ( it==v.end() ) {
-        return -1;
-    }
-    return std::distance( v.begin(), it); */
-}
+using Matfun::indexOf;
 
 
 std::pair<VectorXd,MatrixXd >
@@ -108,8 +93,8 @@ void AdjustmentFramework::update( const VectorXd &x)
 
 bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
                                                const IncidenceMatrix * Bi,
-                                               const Eigen::RowVectorXi & maps,
-                                               const Eigen::RowVectorXi & mapc )
+                                               const VectorXidx & maps,
+                                               const VectorXidx & mapc )
 {
     const Index C = mapc.size();
     const Index S = maps.size();
@@ -283,8 +268,8 @@ void AdjustmentFramework::Jacobian(
         const IncidenceMatrix * Bi,
         SparseMatrix<double, Eigen::ColMajor> & BBr,
         VectorXd & g0,
-        const Eigen::RowVectorXi & maps,
-        const Eigen::RowVectorXi & mapc ) const
+        const VectorXidx & maps,
+        const VectorXidx & mapc ) const
 {
     int R = 0; // counter for number of equations
 
@@ -303,7 +288,7 @@ void AdjustmentFramework::Jacobian(
         //     Matlab: [~,idx] = ismember(idx,maps)
         auto idx = Bi->findInColumn( mapc(c) );
         for ( Index i=0; i<idx.size(); i++ ) {
-            idx(i) = indexOf( maps, idx(i) );
+            idx(i) = indexOf<Index>( maps, idx(i) );
         }
 
         auto JJ = con->Jacobian( idx, l0(), l() );
@@ -326,8 +311,8 @@ void AdjustmentFramework::Jacobian(
 void AdjustmentFramework::check_constraints(
         const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
         const IncidenceMatrix * bi,
-        const Eigen::RowVectorXi & maps,
-        const Eigen::RowVectorXi & mapc) const
+        const Eigen::VectorXidx & maps,
+        const Eigen::VectorXidx & mapc) const
 {
     // double d = NAN;       // distance to be checked, d = 0?
     const Index C = mapc.size();
@@ -363,7 +348,7 @@ void AdjustmentFramework::check_constraints(
 
         auto idx = bi->findInColumn( mapc(c) );
         for ( Index i=0; i<idx.size(); i++ ) {
-            idx(i) = indexOf( maps, idx(i) );
+            idx(i) = indexOf<Index>( maps, idx(i) );
         }
 
         const double d =  con->contradict( idx, l0() ).norm();
@@ -380,7 +365,7 @@ void AdjustmentFramework::check_constraints(
 
             auto idxx = bi->findInColumn( mapc(c) );
             for ( Index i=0; i<idxx.size(); i++ ) {
-                const Index idxxx = indexOf(maps, idxx(i));
+                const Index idxxx = indexOf<Index>(maps, idxx(i));
                 deb << idxxx+1;
             }
         }

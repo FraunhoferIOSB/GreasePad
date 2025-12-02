@@ -23,6 +23,9 @@
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 
+#include "matrix.h"
+
+
 //! Sparse incidence matrix and connected components
 namespace Graph {
 
@@ -31,7 +34,8 @@ using Eigen::ColMajor;
 using Eigen::Index;
 using Eigen::Matrix;
 using Eigen::Dynamic;
-using Eigen::VectorXi;
+using Eigen::VectorXidx;
+
 
 //! Connected components (vector with indices/labels)
 class ConnComp
@@ -39,8 +43,8 @@ class ConnComp
 public:
     explicit ConnComp( const SparseMatrix<int, ColMajor> & BB);  //!< Value constructor with sparse matrix
 
-    [[nodiscard]] VectorXi mapHead( int cc, Index n) const;  //!< Get linear indices of the elements in 1...n with label 'cc'.
-    [[nodiscard]] VectorXi mapTail(int cc, Index n) const;  //!< Get linear indices of the elements in n-1...end with label 'cc'.
+    [[nodiscard]] VectorXidx mapHead( int cc, Index n) const;  //!< Get linear indices of the elements in 1...n with label 'cc'.
+    [[nodiscard]] VectorXidx mapTail(int cc, Index n) const;  //!< Get linear indices of the elements in n-1...end with label 'cc'.
     [[nodiscard]] int label( Index i) const;     //!< Get label/index of i-th element
     [[nodiscard]] VectorXi head( Index n) const;   //!< Get labels/indices of first n elements
     [[nodiscard]] VectorXi tail( Index n) const;   //!< Get labels/indices of last n elements
