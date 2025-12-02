@@ -35,7 +35,7 @@
 
 
 
-//! Adjustment framework: obervations, Jacobians, optimization...
+//! Adjustment framework: observations, Jacobians, optimization...
 class AdjustmentFramework
 {
 public:
@@ -46,7 +46,7 @@ public:
     explicit AdjustmentFramework( const std::pair<Eigen::VectorXd, Eigen::SparseMatrix<double> > & p)
         : l_(p.first), Cov_ll_(p.second)
     {
-        // initilization: approx. adjusted observations := observations
+        // initialization: approx. adjusted observations := observations
         l0_ = l_;
     }
 
@@ -99,21 +99,13 @@ private:
 
     Eigen::VectorXd l0_;             // vector of approximate/estimated observations
     const Eigen::VectorXd l_;        // vector of observations.
-    const Eigen::MatrixXd Cov_ll_;   // covariance matrix of vector of observations
+    const Eigen::SparseMatrix<double> Cov_ll_;   // covariance matrix of vector of observations
 
     static constexpr int    nIterMax_ = 10;          // maximal number of iterations
     static constexpr double convergence     = 1e-7;  // Threshold convergence
     static constexpr double ReciprocalConditionNumber = 1e-4;  // condition number
     static constexpr double rankEstimate    = 1e-6;  // rank estimation
     static constexpr double numericalCheck  = 1e-5;  // numerical check constraints
-
-    /*
-    //! Rotation matrix for minimal rotation
-    static Eigen::MatrixXd Rot_ab(const Eigen::VectorXd &a, const Eigen::VectorXd &b);
-    //! Nullspace of row vector
-    static Eigen::MatrixXd null(const Eigen::VectorXd &xs);
-    [[nodiscard]] static bool is_rank_deficient( Eigen::SparseMatrix<double,Eigen::ColMajor> & AA, double T );
-    */
 
     static Eigen::Index indexOf(const Eigen::VectorXi &v, Eigen::Index i);
 };
