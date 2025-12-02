@@ -79,7 +79,7 @@ private:
     [[nodiscard]] static double threshold_numericalCheck() { return numericalCheck; }
 
     void reset() { l0_ = l_;}
-    void update( Eigen::Index start, const Eigen::VectorXd &x );
+    void update( const Eigen::VectorXd &x );  // update of adjusted observatons in l0_
 
     void Jacobian( const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
                    const Graph::IncidenceMatrix *Bi,

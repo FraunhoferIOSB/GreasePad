@@ -86,27 +86,24 @@ AdjustmentFramework::getEntity( const Index s,
 
 
 //! update of parameters (observations) via retraction
-void AdjustmentFramework::update( const Index start,
-                                  const VectorXd &x)
+void AdjustmentFramework::update( const VectorXd &x)
 {
-    const Index idx3 = 3*start;
+    for (Index s=0; s<x.size()/2; s++) {
+        const Index idx3 = 3*s;
 
-    // (1) via normalization ...................................................
-    // l0 := N( l0 + null(l0') * ^Delta l_r )
-    // m.segment(idx3,3) += util::null( m.segment(idx3,3) )*x.segment(2*start,2);
-    // m.segment(idx3,3).normalize();
+        // (1) via normalization ...................................................
+        // l0 := N( l0 + null(l0') * ^Delta l_r )
+        // m.segment(idx3,3) += util::null( m.segment(idx3,3) )*x.segment(2*start,2);
+        // m.segment(idx3,3).normalize();
 
-    // (2) via retraction ......................................................
-    Eigen::Vector3d const v = null(l0_.segment(idx3, 3)) * x.segment(2 * start, 2);
-    double const nv = v.norm();
-    if ( nv<=0.0 ) {
-        return;
+        // (2) via retraction ......................................................
+        const Eigen::Vector3d v = null( l0_.segment(idx3, 3) ) * x.segment(2 * s, 2);
+        const double nv = v.norm();
+        if ( nv >= 0.0 ) {
+            const Eigen::Vector3d p = l0_.segment(idx3, 3);
+            l0_.segment( idx3,3) = cos( nv)*p +sin(nv)*v/nv;
+        }
     }
-
-    Eigen::Vector3d const p = l0_.segment(idx3, 3);
-    assert( nv>0.0 );
-    l0_.segment( idx3,3) = cos( nv)*p +sin(nv)*v/nv;  // nv>0
-    assert( l0_.segment( idx3,3).hasNaN()==false );
 }
 
 bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
@@ -216,9 +213,7 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
         redl = rCov_ll*BBr.adjoint()*lu_decomp.inverse()*cg +lr;
 
         // updates adjusted observations, via retraction
-        for ( Index s=0; s<maps.size(); s++ ) {
-            update( s, redl );
-        }
+        update( redl );
 
         if ( redl.norm() < threshold_convergence() ) {
             break;
