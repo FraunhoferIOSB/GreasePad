@@ -216,10 +216,11 @@ private:
 
 VectorXi impl::find_in_sparse_column( const SparseMatrix<int> &AA, const Index k)
 {
-    int nnz=0;
+    /* int nnz=0;
     for ( SparseMatrix<int>::InnerIterator it(AA,k); it; ++it ) {
         nnz++;
-    }
+    }*/
+    const Eigen::Index nnz = AA.innerVector(k).nonZeros();
 
     VectorXi idx(nnz);
     int i=0;
