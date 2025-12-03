@@ -547,8 +547,11 @@ void impl::find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap)
 
     const Index N = m_segm.length();
 
+
     for ( int i=0; i<N-1; i++)
     {
+         bool are_adjacent = false;
+
         // pre-check (culling) via axis-aligned bounding boxes
         if ( !m_segm.at(i)->bounding_box().overlaps(
                  m_segm.last()->bounding_box()) ) {
@@ -560,36 +563,36 @@ void impl::find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap)
                                       snap.quantile_stdNormDistr(),
                                       snap.quantile_chi2_1dof()) ) {
             x_touches_l.set( i, N-1);
-            Adj.set(i, N-1);
-            Adj.set(N-1, i);
+            are_adjacent = true;
         }
 
         if ( m_segm.last()->touchedBy( m_segm.at(i)->uy(),
                                       snap.quantile_stdNormDistr(),
                                       snap.quantile_chi2_1dof()) ) {
             y_touches_l.set(i,N-1);
-            Adj.set(i, N-1);
-            Adj.set(N-1, i);
+            are_adjacent = true;
         }
 
         if ( m_segm.at(i)->touchedBy( m_segm.last()->ux() ,
                                      snap.quantile_stdNormDistr(),
                                      snap.quantile_chi2_1dof() ) ) {
             x_touches_l.set(N-1,i);
-            Adj.set(i, N-1);
-            Adj.set(N-1, i);
+            are_adjacent = true;
         }
 
         if ( m_segm.at(i)->touchedBy( m_segm.last()->uy(),
                                      snap.quantile_stdNormDistr(),
                                      snap.quantile_chi2_1dof() ) ) {
             y_touches_l.set(N-1,i);
-            Adj.set(i, N-1);
-            Adj.set(N-1, i);
+            are_adjacent = true;
         }
 
         if ( m_segm.at(i)->intersects( *m_segm.last()) )
         {
+            are_adjacent = true;
+        }
+
+        if ( are_adjacent ) {
             Adj.set(i, N-1);
             Adj.set(N-1, i);
         }
