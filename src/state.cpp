@@ -852,7 +852,7 @@ void impl::search_subtask( const Eigen::VectorXidx & mapc_,
     for ( Index s=0; s<maps_.size(); s++ ) {
         //  straight line:  s-th 3-vector
         // const StraightLine ul( a.getEntity(s, 3) );
-        std::pair<VectorXd,MatrixXd> const p = a.getEntity( s, 3);
+        std::pair<VectorXd,MatrixXd> const p = a.getEntity(s);
 
         const uStraightLine ul(  static_cast<Vector3d>(p.first),
                                  static_cast<Matrix3d>(p.second) );

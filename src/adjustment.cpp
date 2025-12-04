@@ -56,17 +56,14 @@ using Matfun::indexOf;
 
 
 std::pair<VectorXd,MatrixXd >
-AdjustmentFramework::getEntity( const Index s,
-                                const int len) const
+AdjustmentFramework::getEntity( const Index s) const
 {
-    // qDebug() << Q_FUNC_INFO;
-
-    Index const offset = len*s;
+    const Index offset = 3*s;
     // vector must be the null space of the covariance matrix
-    MatrixXd const RR = Rot_ab( l_.segment(offset,len),  l0_.segment(offset,len));
+    const MatrixXd RR = Rot_ab( l_.segment(offset,3),  l0_.segment(offset,3));
 
-    return {  l0_.segment(offset,len),
-              RR*Cov_ll_.block(offset,offset,len,len)*RR.adjoint() };
+    return {  l0_.segment(offset,3),
+              RR*Cov_ll_.block(offset,offset,3,3)*RR.adjoint() };
 }
 
 

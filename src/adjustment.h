@@ -62,7 +62,7 @@ public:
                               const Eigen::VectorXidx &mapc);
 
     //! Get s-th entity, i.e., segment, represented by vector of length len
-    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::MatrixXd> getEntity( Eigen::Index s, int len) const;
+    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::MatrixXd> getEntity( Eigen::Index s) const;
 
 private:
     [[nodiscard]] Eigen::VectorXd l0_segment(   Eigen::Index offset, int len) const { return l0_.segment(offset,len);}
