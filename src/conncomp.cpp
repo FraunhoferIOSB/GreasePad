@@ -73,15 +73,17 @@ int ConnComp::label( const Index i) const
 VectorXidx ConnComp::mapHead(const int cc,  const Index n) const
 {
     // (1) Vector length: How many elements with value cc? .........
-    int sz=0;
+    int sz1=0; // TODO(meijoc) remove
     for ( Index s=0; s<n; s++ ) {
         if ( m_comp(s)==cc ) {
-            sz++;
+            sz1++;
         }
     }
+    const Index sz = ( m_comp.head(n).array() == cc ).count();
+    assert( sz==sz1);
 
     // (2) Linear indices of these elements ........................
-    VectorXidx map_(sz);
+    VectorXidx map_(sz1);
     for ( int k=0, s=0; s<n; s++ ) {
         if ( m_comp(s)==cc ) {
             map_( k++ ) = s;
@@ -95,12 +97,14 @@ VectorXidx ConnComp::mapHead(const int cc,  const Index n) const
 VectorXidx ConnComp::mapTail(const int cc, const Index n) const
 {
     // (1) Vector length: How many elements with value cc? .........
-    int sz=0;
+    int sz1=0;  // TODO(meijoc) remove
     for ( Index s=m_comp.size()-n; s<m_comp.size(); s++ ) {
         if ( m_comp(s)==cc ) {
-            sz++;
+            sz1++;
         }
     }
+    const Index sz =  ( m_comp.tail(n).array() == cc ).count();
+    assert( sz==sz1 );
 
     // (2) Linear indices of these elements ........................
     VectorXidx map_(sz);
