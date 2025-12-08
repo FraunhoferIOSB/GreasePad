@@ -6,5 +6,5 @@ authors:
   orcid: "https://orcid.org/0000-0002-9604-8329"
 title: "GreasePad"
 version: 1.2.1
-date-released = "2025-11-19"
+date-released: "2025-11-19"
 repository-code: "https://github.com/FraunhoferIOSB/GreasePad"
