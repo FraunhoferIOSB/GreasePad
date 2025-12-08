@@ -23,6 +23,8 @@ using Eigen::SparseMatrix;
 using Eigen::Matrix3d;
 using Eigen::Vector3d;
 using Eigen::Index;
+using Eigen::Vector;
+using Eigen::Dynamic;
 
 
 //! Nullspace of row vector
@@ -127,6 +129,19 @@ template <typename T>
 //! sign(0):=+1
 template <typename T>
 int sign(T val) { return (T(0) <= val) - (val < T(0));  }
+
+
+//! Matlab's find
+[[nodiscard,maybe_unused]] static Vector<Index,Dynamic> find( const Vector<bool,Dynamic> & cond)
+{
+    Eigen::Vector<Index,Dynamic> idx( cond.count() );
+    for (int i=0, k=0; i< cond.size(); i++) {
+        if ( cond(i) ) {
+            idx(k++) = i;
+        }
+    }
+    return idx;
+}
 
 } // namespace Matfun
 

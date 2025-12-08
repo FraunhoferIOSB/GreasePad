@@ -17,6 +17,7 @@
  */
 
 #include "conncomp.h"
+#include "matfun.h"
 
 #include <Eigen/Core>
 
@@ -72,7 +73,7 @@ int ConnComp::label( const Index i) const
 
 VectorXidx ConnComp::mapHead(const int cc,  const Index n) const
 {
-    // (1) Vector length: How many elements with value cc? .........
+    /*    // (1) Vector length: How many elements with value cc? .........
     int sz1=0; // TODO(meijoc) remove
     for ( Index s=0; s<n; s++ ) {
         if ( m_comp(s)==cc ) {
@@ -90,13 +91,15 @@ VectorXidx ConnComp::mapHead(const int cc,  const Index n) const
         }
     }
 
-    return map_;
+    return map_; */
+
+    return Matfun::find(  m_comp.head(n).array()==cc );
 }
 
 
 VectorXidx ConnComp::mapTail(const int cc, const Index n) const
 {
-    // (1) Vector length: How many elements with value cc? .........
+    /*  // (1) Vector length: How many elements with value cc? .........
     int sz1=0;  // TODO(meijoc) remove
     for ( Index s=m_comp.size()-n; s<m_comp.size(); s++ ) {
         if ( m_comp(s)==cc ) {
@@ -115,7 +118,9 @@ VectorXidx ConnComp::mapTail(const int cc, const Index n) const
         }
     }
 
-    return map_;
+    return map_; */
+
+    return Matfun::find( m_comp.tail(n).array()==cc);
 }
 
 
