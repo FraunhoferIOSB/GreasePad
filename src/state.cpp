@@ -1429,25 +1429,26 @@ void impl::setAltColors() const
 {
     // qDebug() << Q_FUNC_INFO;
 
-    Graph::ConnComp const CoCoBi(Bi.biadjacency());
-    int const N = CoCoBi.number();
+    const Graph::ConnComp CoCoBi(Bi.biadjacency());
+    const int N = CoCoBi.number();
+
     for (int cc=0; cc<N; cc++) {
 
         // (0) color ...
-        int const hue = 359 * cc / N;
+        const int hue = 359 * cc / N;
         assert( hue>=0 && hue<= 359 );
         const QColor col =  QColor::fromHsv( hue,255,255,   255);
 
         // (1) segments ...
         const VectorXidx idx_s = Matfun::find( CoCoBi.head( m_qConstrained.length()).array()==cc ); // CoCoBi.mapHead(cc, m_qConstrained.length());
-        for ( Index s=0; s<idx_s.size(); s++) {
-            m_qConstrained.at( idx_s(s) )->setAltColor(col);
+        for ( const auto s : idx_s ) {
+            m_qConstrained.at( s )->setAltColor(col);
         }
 
         // (2) constraints ...
         const VectorXidx idx_c = Matfun::find( CoCoBi.tail( m_qConstraint.length()).array()==cc );  // CoCoBi.mapTail(cc, m_qConstraint.length());
-        for ( Index c=0; c<idx_c.size(); c++) {
-            m_qConstraint.at( idx_c(c) )->setAltColor( col );
+        for ( const auto c : idx_c ) {
+            m_qConstraint.at( c )->setAltColor( col );
         }
     }
 }
