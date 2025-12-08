@@ -17,6 +17,7 @@
  */
 
 #include "global.h"
+#include "matfun.h"
 
 #include "qassert.h"
 #include "qcolor.h"
@@ -642,8 +643,8 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
         for (Index k = 0; k < LabelsNewConstrUnique.size(); k++) {
             int const cc = LabelsNewConstrUnique(k);
 
-            const Eigen::VectorXidx maps_ = CoCoBi.mapHead(cc, m_segm.length());
-            const Eigen::VectorXidx mapc_ = CoCoBi.mapTail( cc, m_constr.length());
+            const Eigen::VectorXidx maps_ = Matfun::find( CoCoBi.head( m_segm.length()  ).array()==cc); //   CoCoBi.mapHead( cc, m_segm.length());
+            const Eigen::VectorXidx mapc_ = Matfun::find( CoCoBi.tail( m_constr.length()).array()==cc); //   CoCoBi.mapTail( cc, m_constr.length());
 
             assert( mapc_.size()> 0);
             qDebug().noquote() << blue << QStringLiteral("Reasoning for connected component #%1/%2...")
@@ -885,7 +886,7 @@ void impl::snap_endpoints( const Index nnc)
         qDebug().noquote() << blue << QString("  snap subtask %1/%2")
                               .arg( cc+1 ).arg( LabelsNewUnique.size() );
 
-        const VectorXidx m = CoCoBi.mapHead(cc, m_segm.size());
+        const VectorXidx m = Matfun::find( CoCoBi.head( m_segm.size()).array()==cc ); // CoCoBi.mapHead(cc, m_segm.size());
         for ( Index i=0; i< m.size(); i++) {
             const Index s = m(i); // triggering segment...
 
@@ -1288,8 +1289,8 @@ void impl::reasoning_reduce_and_adjust() {
     // greedy search
     for ( int cc=0; cc<number_of_subtasks_; cc++ )
     {
-        const VectorXidx maps_ = CoCoBi.mapHead( cc, m_segm.length());
-        const VectorXidx mapc_ = CoCoBi.mapTail( cc, m_constr.length() );
+        const VectorXidx maps_ = Matfun::find( CoCoBi.head(m_segm.length()).array()==cc  ); // CoCoBi.mapHead( cc, m_segm.length());
+        const VectorXidx mapc_ = Matfun::find( CoCoBi.tail(m_constr.length()).array()==cc ); // CoCoBi.mapTail( cc, m_constr.length() );
 
         bool greedySearchRequired = false;
 
@@ -1440,13 +1441,13 @@ void impl::setAltColors() const
         const QColor col =  QColor::fromHsv( hue,255,255,   255);
 
         // (1) segments ...
-        const VectorXidx idx_s = CoCoBi.mapHead(cc, m_qConstrained.length());
+        const VectorXidx idx_s = Matfun::find( CoCoBi.head( m_qConstrained.length()).array()==cc ); // CoCoBi.mapHead(cc, m_qConstrained.length());
         for ( Index s=0; s<idx_s.size(); s++) {
             m_qConstrained.at( idx_s(s) )->setAltColor(col);
         }
 
         // (2) constraints ...
-        const VectorXidx idx_c = CoCoBi.mapTail(cc, m_qConstraint.length());
+        const VectorXidx idx_c = Matfun::find( CoCoBi.tail( m_qConstraint.length()).array()==cc );  // CoCoBi.mapTail(cc, m_qConstraint.length());
         for ( Index c=0; c<idx_c.size(); c++) {
             m_qConstraint.at( idx_c(c) )->setAltColor( col );
         }
