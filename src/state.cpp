@@ -22,7 +22,6 @@
 #include "qassert.h"
 #include "qcolor.h"
 #include "qcontainerfwd.h"
-#include "qhashfunctions.h"
 #include "qlogging.h"
 #include "qsharedpointer.h"
 #include "qtypes.h"
@@ -1294,13 +1293,12 @@ void impl::reasoning_reduce_and_adjust() {
 
         bool greedySearchRequired = false;
 
-        for ( Index c=0; c<mapc_.size(); c++ ) {
-            if ( m_constr.at( mapc_(c) )->obsolete())  {
+        for ( auto c : mapc_ ) {
+            if ( m_constr.at( c )->obsolete())  {
                 greedySearchRequired = true;
                 // replace constraint
-                m_constr.replace( mapc_(c),
-                                 m_constr.at( mapc_(c) )->clone() );
-                m_constr.at( mapc_(c) )->setStatus( ConstraintBase::UNEVAL );
+                m_constr.replace( c, m_constr.at( c )->clone() );
+                m_constr.at( c )->setStatus( ConstraintBase::UNEVAL );
             }
         }
 
