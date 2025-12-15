@@ -152,7 +152,7 @@ int sign(T val) { return (T(0) <= val) - (val < T(0));  }
 }
 
 
-[[maybe_unused]] static VectorXi unique(const VectorXi &x)
+[[nodiscard,maybe_unused]] static VectorXi unique(const VectorXi &x)
 {
     // qDebug() << Q_FUNC_INFO;
     Q_ASSERT( (x.array()>=0).all() );
