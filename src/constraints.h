@@ -26,8 +26,6 @@
 
 #include <memory>
 
-#include "cstdint"
-
 #include "matrix.h"
 
 //! Geometric constraints (relations)
@@ -58,7 +56,7 @@ protected:
     //                        const VectorXd &b);  //!< Minimal rotation between two vectors as rotation matrix
 public:
     //! Status: unevaluated, required, obsolete (redundant)
-    enum Status : std::uint8_t { UNEVAL=0, REQUIRED, OBSOLETE };
+    enum Status : int { UNEVAL=0, REQUIRED, OBSOLETE };
 
     // virtual void serialize( QDataStream &out) const;  //!< Serialize (Qt)
     // static std::shared_ptr<ConstraintBase> deserialize( QDataStream &in ); //!< Deserialization (Qt)

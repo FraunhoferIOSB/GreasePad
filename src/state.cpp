@@ -333,36 +333,36 @@ bool impl::deserialize( QDataStream & in )
     for ( Index i=0; i<Bi.cols(); i++ ) {
         // auto c = ConstraintBase::deserialize(in);  // calls 'create'
 
-        char *type_name = nullptr;
-        in >> type_name;
+        char type_code = 'x';
+        in >> type_code;
         // qDebug() << Q_FUNC_INFO << type_name;
         if ( in.status()!=0) {
             return false;
         }
 
         std::shared_ptr<ConstraintBase> c;
-        // (1) unary
-        if ( std::strcmp( type_name, "vertical")==0 ){
-            c = std::make_shared<Vertical>(); // create();;
-        }
-        if ( std::strcmp( type_name, "horizontal")==0 ){
-            c = std::make_shared<Horizontal>(); // create();;
-        }
-        if ( std::strcmp( type_name, "diagonal")==0 ){
-            c = std::make_shared<Diagonal>(); // create();
-        }
-
-        // (2) binary
-        if ( std::strcmp( type_name, "orthogonal")==0 ){
-            c = std::make_shared<Orthogonal>(); // create();;
-        }
-        if ( std::strcmp( type_name, "parallel")==0 ){
-            c = std::make_shared<Parallel>(); // create();;
-        }
-
-        // (3) ternary
-        if ( std::strcmp( type_name, "copunctual")==0 ){
-            c = std::make_shared<Copunctual>(); // create();
+        switch (type_code) {
+        case 'v' :
+            c = std::make_shared<Vertical>();
+            break;
+        case 'h' :
+            c = std::make_shared<Horizontal>();
+            break;
+        case 'd' :
+            c = std::make_shared<Diagonal>();
+            break;
+        case 'o' :
+            c = std::make_shared<Orthogonal>();
+            break;
+        case 'p' :
+            c = std::make_shared<Parallel>();
+            break;
+        case 'c' :
+            c = std::make_shared<Copunctual>();
+            break;
+        default:
+            qDebug().noquote() << "constraint: unknown code '" << type_code << "'\n";
+            break;
         }
 
         if ( c==nullptr ) {
@@ -376,7 +376,7 @@ bool impl::deserialize( QDataStream & in )
 
     qDebug().noquote() << "(3) graphics...";
 
-    qDebug().noquote() << "    constraints...";
+    qDebug().noquote() << "(3.1) constraints...";
     for ( const auto & con : std::as_const( m_constr)) {
 
         if ( con->is<Vertical>() ) {
@@ -426,7 +426,7 @@ bool impl::deserialize( QDataStream & in )
         }
     }
 
-    qDebug().noquote() << "    strokes ...";
+    qDebug().noquote() << "(3.2) strokes ...";
     for ( Index i=0; i<Bi.rows(); i++) {
         auto q = std::make_shared<QEntity::QStroke>();
         if( !q->deserialize(in) ) {
@@ -435,7 +435,7 @@ bool impl::deserialize( QDataStream & in )
         m_qStroke.append( q);
     }
 
-    qDebug().noquote() << "    unconstrained segments...";
+    qDebug().noquote() << "(3.3) unconstrained segments...";
     for ( Index i=0; i<Bi.rows(); i++) {
         auto q = std::make_shared<QEntity::QUnconstrained>();
         if( !q->deserialize(in) ) {
@@ -444,7 +444,7 @@ bool impl::deserialize( QDataStream & in )
         m_qUnconstrained.append( q);
     }
 
-    qDebug().noquote() << "    constrained segments...";
+    qDebug().noquote() << "(3.4) constrained segments...";
     for ( Index i=0; i<Bi.rows(); i++) {
         auto q = std::make_shared<QEntity::QConstrained>();
         if( !q->deserialize(in) ) {
@@ -1626,17 +1626,17 @@ QDataStream & operator>> (QDataStream & in,  IncidenceMatrix & AA)
 
 QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c)
 {
-    // qDebug() <<  Q_FUNC_INFO << c.type_name();
-    out << c.type_name();
+    // qDebug() <<  Q_FUNC_INFO << c.type_name() << c.type_name()[0];
+    out << c.type_name()[0]; // first character, {'v','h','d','o','p','c'}
     out << c.status();    // { UNEVAL=0 | REQUIRED | OBSOLETE };
     out << c.enforced();
     return out;
 }
 
-QDataStream & operator>> ( QDataStream &in, ConstraintBase &c )
+static QDataStream & operator>> ( QDataStream &in, ConstraintBase &c )
 {
     // qDebug() << Q_FUNC_INFO;
-    int status = 0;
+    int status = 0;  // underlying type of enum
     in >> status;
     c.setStatus( static_cast<ConstraintBase::Status>(status) );
 
