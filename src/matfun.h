@@ -3,8 +3,10 @@
 
 
 #include <Eigen/Core>
-#include <Eigen/QR>
+// #include <Eigen/QR>
+#include <Eigen/OrderingMethods>
 #include <Eigen/SparseCore>
+#include <Eigen/SparseQR>
 
 #include <cfloat>
 #include <cmath>
@@ -73,10 +75,15 @@ using Eigen::Dynamic;
 
 
 //! check if the matrix AA is rank-deficient
-[[maybe_unused]] static bool is_rank_deficient( Eigen::SparseMatrix<double,Eigen::ColMajor> & AA, const double T )
+[[maybe_unused]] static bool is_rank_deficient( SparseMatrix<double,Eigen::ColMajor> & AA, const double threshold )
 {
-    Eigen::ColPivHouseholderQR<MatrixXd> qr(AA);
-    qr.setThreshold( T );
+    // Eigen::ColPivHouseholderQR<MatrixXd> qr(AA);
+    // qr.setThreshold( T );
+    Eigen::SparseQR<SparseMatrix<double>,Eigen::COLAMDOrdering<int>> qr;
+    AA.makeCompressed();
+    qr.compute(AA);
+    qr.setPivotThreshold( threshold );
+
     return ( qr.rank() < AA.rows() );
 }
 
