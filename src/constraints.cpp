@@ -222,10 +222,10 @@ MatrixXd Parallel::Jacobian(const VectorXidx &idx, const VectorXd &l0, const Vec
 
 VectorXd Parallel::contradict(const VectorXidx &idx, const VectorXd &l0) const
 {
-    Vector3d const a = l0.segment( 3*idx(0), 3);
-    Vector3d const b = l0.segment( 3*idx(1), 3);
+    const Vector3d a = l0.segment( 3*idx(0), 3);
+    const Vector3d b = l0.segment( 3*idx(1), 3);
 
-    VectorXd tmp(1,1);
+    VectorXd tmp(1);
     tmp << a.dot( S3()*b );
     return tmp;
 }
