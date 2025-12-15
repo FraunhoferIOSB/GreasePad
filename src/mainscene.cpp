@@ -120,9 +120,11 @@ void MainScene::mousePressEvent( QGraphicsSceneMouseEvent *event)
     // <Ctrl> + [mouse click]: drag mode ....................................
     if ( event->modifiers() == Qt::Modifier::CTRL )
     {
-        QGraphicsView *mView = views().at(0);
-        mView->setCursor(   Qt::ClosedHandCursor );
-        mView->setDragMode( QGraphicsView::ScrollHandDrag);
+        if (!views().isEmpty()) {
+            QGraphicsView *mView = views().at(0);
+            mView->setCursor( Qt::ClosedHandCursor );
+            mView->setDragMode( QGraphicsView::ScrollHandDrag );
+        }
         return;
     }
 
@@ -158,6 +160,9 @@ void MainScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     // stop dragging ...........................................
     if ( !m_scribbling )
     {
+        if ( views().isEmpty() ) {
+            return;
+        }
         QGraphicsView *mView = views().at(0);
         mView->setCursor(   Qt::ArrowCursor       );
         mView->setDragMode( QGraphicsView::NoDrag );
@@ -226,6 +231,9 @@ void MainScene::export_view_as_pdf( QString &fileName)
 {
     qDebug() << Q_FUNC_INFO;
 
+    if ( views().isEmpty() ) {
+        return;
+    }
     const QRectF rectView = (views().at(0)->mapToScene(
                             views().at(0)->viewport()->geometry())
                         ).boundingRect();
