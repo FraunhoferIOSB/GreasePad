@@ -26,6 +26,7 @@ using Eigen::Matrix3d;
 using Eigen::Vector3d;
 using Eigen::Index;
 using Eigen::Vector;
+using Eigen::VectorXi;
 using Eigen::Dynamic;
 
 
@@ -150,6 +151,36 @@ int sign(T val) { return (T(0) <= val) - (val < T(0));  }
     return idx;
 }
 
+
+[[maybe_unused]] static VectorXi unique(const VectorXi &x)
+{
+    // qDebug() << Q_FUNC_INFO;
+    Q_ASSERT( (x.array()>=0).all() );
+
+    constexpr int INVALID_INDEX = -1;
+
+    if (x.size()==0) {
+        return VectorXi(0);
+    }
+
+    const int m = x.maxCoeff();
+    VectorXi t = VectorXi::Zero(m + 1);
+    for ( auto xi : x ) {
+        t( xi ) = 1;
+    }
+    const int s = t.sum();
+
+    VectorXi u = VectorXi::Constant(s,INVALID_INDEX);
+    for (int uniqueIndex=0, valueIndex=0; valueIndex<m+1; valueIndex++) {
+        if ( t(valueIndex)>0 ) {
+            u( uniqueIndex++) = valueIndex;
+        }
+    }
+
+    Q_ASSERT( (u.array()>=0).all() );
+
+    return u;
+}
 } // namespace Matfun
 
 

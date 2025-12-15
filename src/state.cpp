@@ -87,6 +87,7 @@ using Uncertain::uDistance;
 using Graph::IncidenceMatrix;
 
 using Matfun::sign;
+using Matfun::unique;
 
 
 bool State::considerOrthogonal_ = true;
@@ -205,11 +206,6 @@ private:
     Graph::IncidenceMatrix x_touches_l;  // "End-point x touches straight line l."  TODO transpose!?
     Graph::IncidenceMatrix y_touches_l;  // "End-point y touches straight line l."
     Graph::IncidenceMatrix PP;           // parallelism
-
-    static VectorXi unique( const VectorXi &x) ;
-
-    /* template <typename T>
-    [[nodiscard]] int sign( T val) const { return (T(0) <= val) - (val < T(0)); }   // sign(0) := 1*/
 };
 
 
@@ -229,36 +225,6 @@ VectorXi impl::find_in_sparse_column( const SparseMatrix<int> &AA, const Index k
     }
 
     return idx;
-}
-
-
-VectorXi impl::unique(const VectorXi &x) 
-{
-    // qDebug() << Q_FUNC_INFO;
-
-    Q_ASSERT( (x.array()>=0).all() );
-
-    if (x.size()==0) {
-        return VectorXi(0);
-    }
-
-    int const m = x.maxCoeff();
-    VectorXi t = VectorXi::Zero(m + 1);
-    for ( Index i=0; i<x.size(); i++ ) {
-        t( x(i) ) = 1;
-    }
-    int const s = t.sum();
-
-    VectorXi u = VectorXi::Constant(s,-1);
-    for (int k=0, i=0; i<m+1; i++) {
-        if ( t(i)>0 ) {
-            u( k++) = i;
-        }
-    }
-
-    Q_ASSERT( (u.array()>=0).all() );
-
-    return u;
 }
 
 
