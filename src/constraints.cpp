@@ -185,9 +185,8 @@ MatrixXd Identical::Jacobian( const VectorXidx & idx,
 VectorXd Identical::contradict( const VectorXidx & idx,
                                 const VectorXd & l0) const
 {
-    Vector3d a0 = l0.segment( 3*idx(0),3 );
-    Vector3d b0 = l0.segment( 3*idx(1),3 );
-    Eigen::FullPivLU<MatrixXd> const LU;
+    const Vector3d a0 = l0.segment( 3*idx(0),3 );
+    const Vector3d b0 = l0.segment( 3*idx(1),3 );
 
     // check sign ............................................
     int idx1 = 0;
@@ -197,8 +196,8 @@ VectorXd Identical::contradict( const VectorXidx & idx,
 
     Q_ASSERT( sameSign(a0(idx1), b0(idx2)) );
 
-    Matrix<double, 3, 2> const JJ = null(a0);
-    Eigen::Vector2d const d2 = JJ.adjoint() * (a0 - b0); //  (10.141)
+    const Matrix<double, 3, 2> JJ = null(a0);
+    const Eigen::Vector2d d2 = JJ.adjoint() * (a0 - b0); //  (10.141)
 
     return d2;
 }
