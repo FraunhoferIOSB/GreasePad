@@ -1260,13 +1260,13 @@ QString impl::StatusMsg() const
 
     // Graph::ConnComp const CoCoBi(Bi.biadjacency()); // TODO(meijoc)
     // int const CC = CoCoBi.number();
-    const VectorXi bicoco = conncomp( Bi.biadjacency() );
-    const int CC = bicoco.size() > 0 ? bicoco.maxCoeff()+1 : 0;
+    // const VectorXi bicoco = conncomp( Bi.biadjacency() );
+    // const int CC = bicoco.size() > 0 ? bicoco.maxCoeff()+1 : 0;
+    const int CC = arr_segm.size()>0 ? arr_segm.maxCoeff()+1 : 0;
 
-    QString const s0 = QApplication::tr("%1 connected component%2, ").arg(CC).arg(CC == 1 ? "" : "s");
-    QString const s1 = QApplication::tr("%1 segment%2, ").arg(S).arg(S == 1 ? "" : "s");
-    QString const s2
-        = QApplication::tr("%1 of %2 constraint%3 required.").arg(R).arg(C).arg(C == 1 ? "" : "s");
+    const QString s0 = QApplication::tr("%1 connected component%2, ").arg(CC).arg(CC == 1 ? "" : "s");
+    const QString s1 = QApplication::tr("%1 segment%2, ").arg(S).arg(S == 1 ? "" : "s");
+    const QString s2 = QApplication::tr("%1 of %2 constraint%3 required.").arg(R).arg(C).arg(C == 1 ? "" : "s");
 
     return s0 + s1 + s2;
 }
