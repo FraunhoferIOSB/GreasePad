@@ -16,15 +16,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "conncomp.h"
-
-#include <Eigen/Core>
 
 #include <cassert>
 
 namespace Graph {
 
-ConnComp::ConnComp( const SparseMatrix<int, ColMajor> &BB)
+/* ConnComp::ConnComp( const SparseMatrix<int, ColMajor> &BB)
 {
     // qDebug() << Q_FUNC_INFO;
     assert(   BB.rows()==BB.cols() );
@@ -60,14 +57,14 @@ VectorXi ConnComp::tail( const Index n) const
        return VectorXi(0);
    }
    return m_comp.tail(n);
-}
+}*/
 
-/*! Label of i-th element */
-int ConnComp::label( const Index i) const
+/* ! Label of i-th element */
+/*int ConnComp::label( const Index i) const
 {
     assert( i>=0 &&  i<m_comp.size() ) ;
     return m_comp(i);
-}
+}*/
 
 
 /* VectorXidx ConnComp::mapHead(const int cc,  const Index n) const
@@ -123,7 +120,7 @@ int ConnComp::label( const Index i) const
 }*/
 
 
-//! depth-first search
+/*! depth-first search
 void ConnComp::dfs( const SparseMatrix<int,ColMajor> &CC,
                     const int c,
                     const Index v)
@@ -136,6 +133,6 @@ void ConnComp::dfs( const SparseMatrix<int,ColMajor> &CC,
             dfs( CC, c, it.row() );
         }
     }
-}
+}*/
 
 } // namespace Graph

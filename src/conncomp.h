@@ -34,10 +34,46 @@ using Eigen::ColMajor;
 using Eigen::Index;
 using Eigen::Matrix;
 using Eigen::Dynamic;
+using Eigen::VectorXi;
 using Eigen::VectorXidx;
 
 
-//! Connected components (vector with indices/labels)
+[[nodiscard,maybe_unused]] static VectorXi conncomp(const SparseMatrix<int, ColMajor> &AA)
+{
+
+    static VectorXi m_comp;    // index vector components, 0-based
+    static Eigen::Vector<bool,Dynamic> m_visited;    // for each vertex: visited?
+
+    struct s {
+        static void depthFirstSearch( const SparseMatrix<int,ColMajor> & CC, int c, Index v)
+        {
+            m_visited(v) = true;
+            m_comp(v) = c;
+
+            for ( SparseMatrix<int,ColMajor>::InnerIterator it(CC,v); it; ++it) {
+                if ( !m_visited(it.index()) ) {
+                    depthFirstSearch( CC, c, it.row() );
+                }
+            }
+        }
+    };
+
+    const Index V = AA.rows(); // number of vertices
+    constexpr int INVALID_INDEX = -1;
+    m_visited.setConstant( V,false);
+    m_comp.setConstant( V,INVALID_INDEX);
+    int num_connected_components = 0;
+    for ( Index v=0; v<V; v++ ) {
+        if ( !m_visited(v) ) {
+            s::depthFirstSearch( AA, num_connected_components++, v );
+        }
+    }
+
+    return m_comp;
+}
+
+
+/* Connected components (vector with indices/labels)
 class ConnComp
 {
 public:
@@ -58,7 +94,7 @@ private:
 
     VectorXi m_comp;                     // index vector components, 0-based
     Matrix<bool,Dynamic,1> m_visited;    // for each vertex: visited?
-};
+};*/
 
 } // namespace Graph
 

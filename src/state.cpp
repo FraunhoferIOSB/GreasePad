@@ -16,8 +16,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "global.h"
-#include "matfun.h"
 
 #include "qassert.h"
 #include "qcolor.h"
@@ -37,7 +35,9 @@
 #include "adjustment.h"
 #include "conncomp.h"
 #include "constraints.h"
+#include "global.h"
 #include "mainscene.h"
+#include "matfun.h"
 #include "matrix.h"
 #include "qconstraints.h"
 #include "qsegment.h"
@@ -84,8 +84,10 @@ using Uncertain::uStraightLine;
 using Uncertain::uStraightLineSegment;
 using Uncertain::uDistance;
 
+using Graph::conncomp;
 using Graph::IncidenceMatrix;
 
+using Matfun::find;
 using Matfun::sign;
 using Matfun::unique;
 
@@ -206,6 +208,9 @@ private:
     Graph::IncidenceMatrix x_touches_l;  // "End-point x touches straight line l."  TODO transpose!?
     Graph::IncidenceMatrix y_touches_l;  // "End-point y touches straight line l."
     Graph::IncidenceMatrix PP;           // parallelism
+
+    Eigen::ArrayXi arr_segm;
+    Eigen::ArrayXi arr_constr;
 };
 
 
@@ -419,6 +424,11 @@ bool impl::deserialize( QDataStream & in )
         m_qConstrained.append( q);
     }
 
+    // connected components
+    VectorXi bicoco = conncomp( Bi.biadjacency() );
+    arr_segm   = bicoco.head( m_segm.size() ).array();
+    arr_constr = bicoco.tail( m_constr.size() ).array();
+
     return true;
 }
 
@@ -452,15 +462,17 @@ void impl::graphicItemsAdd( QGraphicsScene *sc) const
         Q_ASSERT( !item->scene() );
         sc->addItem( item.get() );
     }
+    qDebug() << Q_FUNC_INFO;
 }
 
 
 bool State::reduce()
 {
-    // qDebug() <<  Q_FUNC_INFO;
+    qDebug() <<  Q_FUNC_INFO;
     pImpl()->remove_elements();   // ... but do not delete
     pImpl()->reasoning_reduce_and_adjust();
     pImpl()->replaceGraphics();
+
     return true;
 }
 
@@ -599,17 +611,23 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
                 .arg(num_new_constraints_==1 ? "" : "s");
 
     // (2) check for independence and consistency ...............
-    Graph::ConnComp const CoCoBi(Bi.biadjacency());
+    // Graph::ConnComp const CoCoBi(Bi.biadjacency());
+    const VectorXi bicoco = conncomp( Bi.biadjacency());
+    arr_segm   = bicoco.head( m_segm.length()  ).array();
+    arr_constr = bicoco.tail( m_constr.length()).array();
 
     if (num_new_constraints_ > 0) {
-        VectorXi const LabelsNewConstrIndividual = CoCoBi.tail( num_new_constraints_);
-        VectorXi LabelsNewConstrUnique = unique( LabelsNewConstrIndividual);
+        // VectorXi const LabelsNewConstrIndividual = CoCoBi.tail( num_new_constraints_);
+        const VectorXi LabelsNewConstrIndividual = bicoco.tail( num_new_constraints_);
+        const VectorXi LabelsNewConstrUnique = unique( LabelsNewConstrIndividual);
 
         for (Index k = 0; k < LabelsNewConstrUnique.size(); k++) {
             int const cc = LabelsNewConstrUnique(k);
 
-            const Eigen::VectorXidx maps_ = Matfun::find( CoCoBi.head( m_segm.length()  ).array()==cc); //   CoCoBi.mapHead( cc, m_segm.length());
-            const Eigen::VectorXidx mapc_ = Matfun::find( CoCoBi.tail( m_constr.length()).array()==cc); //   CoCoBi.mapTail( cc, m_constr.length());
+            // const Eigen::VectorXidx maps_ = Matfun::find( CoCoBi.head( m_segm.length()  ).array()==cc); //   CoCoBi.mapHead( cc, m_segm.length());
+            // const Eigen::VectorXidx mapc_ = Matfun::find( CoCoBi.tail( m_constr.length()).array()==cc); //   CoCoBi.mapTail( cc, m_constr.length());
+            const Eigen::VectorXidx maps_ = find( arr_segm  ==cc);
+            const Eigen::VectorXidx mapc_ = find( arr_constr==cc);
 
             assert( mapc_.size()> 0);
             qDebug().noquote() << blue << QStringLiteral("Reasoning for connected component #%1/%2...")
@@ -758,7 +776,7 @@ Index impl::find_new_constraints()
 void impl::search_subtask( const Eigen::VectorXidx & mapc_,
                            const Eigen::VectorXidx & maps_ )
 {
-    // qDebug() << Q_FUNC_INFO;
+    qDebug() << Q_FUNC_INFO;
     assert( mapc_.size()>0 );
 
     AdjustmentFramework a{ a_Maker( maps_)};
@@ -838,11 +856,16 @@ void impl::snap_endpoints( const Index nnc)
 {
     // qDebug() << Q_FUNC_INFO;
 
-    Graph::ConnComp const CoCoBi( Bi.biadjacency() );
-    VectorXi LabelsNew = CoCoBi.tail( nnc);  // possibly empty
+    // Graph::ConnComp const CoCoBi( Bi.biadjacency() );
+    // VectorXi LabelsNew = CoCoBi.tail( nnc);  // possibly empty
+
+    const VectorXi bicoco = conncomp( Bi.biadjacency());  // redundant computation!
+    VectorXi LabelsNew = bicoco.tail( nnc);  // possibly empty
+
 
     LabelsNew.conservativeResize(LabelsNew.rows()+1, LabelsNew.cols());
-    LabelsNew.coeffRef(LabelsNew.rows()-1) = CoCoBi.label( m_segm.size()-1 );
+    // LabelsNew.coeffRef(LabelsNew.rows()-1) = CoCoBi.label( m_segm.size()-1 );
+    LabelsNew.coeffRef(LabelsNew.rows()-1) = bicoco( m_segm.size()-1 );
 
     VectorXi LabelsNewUnique = unique(LabelsNew);
 
@@ -851,7 +874,8 @@ void impl::snap_endpoints( const Index nnc)
         qDebug().noquote() << blue << QString("  snap subtask %1/%2")
                               .arg( cc+1 ).arg( LabelsNewUnique.size() );
 
-        const VectorXidx m = Matfun::find( CoCoBi.head( m_segm.size()).array()==cc ); // CoCoBi.mapHead(cc, m_segm.size());
+        // const VectorXidx m = Matfun::find( CoCoBi.head( m_segm.size()).array()==cc ); // CoCoBi.mapHead(cc, m_segm.size());
+        const VectorXidx m = find( arr_segm==cc );
         for ( Index i=0; i< m.size(); i++) {
             const Index s = m(i); // triggering segment...
 
@@ -886,7 +910,8 @@ void impl::snap_endpoints( const Index nnc)
             // (2) "touched by" ................................
             for ( SparseMatrix<int,ColMajor>::InnerIterator it( x_touches_l, s) ; it; ++it) {
                 Index const n = it.row(); // neighbor of segment s
-                if ( ( CoCoBi.label(n) != cc) && ( !y_touches_l.isSet(it.index(),s) ) ) {
+                // if ( ( CoCoBi.label(n) != cc) && ( !y_touches_l.isSet(it.index(),s) ) ) {
+                if ( ( bicoco(n) != cc) && ( !y_touches_l.isSet(it.index(),s) ) ) {
                     auto us = std::make_shared<uStraightLineSegment>(  *m_segm.at(n));
                     if (us->move_x_to(m_segm.at(s)->hl())) {
                         m_segm.replace( n, us);
@@ -896,7 +921,7 @@ void impl::snap_endpoints( const Index nnc)
 
             for (SparseMatrix<int, ColMajor>::InnerIterator it(y_touches_l, s); it; ++it) {
                 Index const n = it.row() ; // neighbor of segment s
-                if ( (CoCoBi.label(n) != cc) && ( !x_touches_l.isSet(it.index(),s) )) {
+                if ( ( bicoco(n) != cc) && ( !x_touches_l.isSet(it.index(),s) )) {
                     auto us = std::make_shared<uStraightLineSegment>(
                         *m_segm.at(n)); // static_cast<int>(n)));
                     if (us->move_y_to(m_segm.at(s)->hl())) {
@@ -1233,8 +1258,10 @@ QString impl::StatusMsg() const
     const Index C = m_constr.length();
     const Index R = number_of_required_constraints();
 
-    Graph::ConnComp const CoCoBi(Bi.biadjacency()); // TODO(meijoc)
-    int const CC = CoCoBi.number();
+    // Graph::ConnComp const CoCoBi(Bi.biadjacency()); // TODO(meijoc)
+    // int const CC = CoCoBi.number();
+    const VectorXi bicoco = conncomp( Bi.biadjacency() );
+    const int CC = bicoco.size() > 0 ? bicoco.maxCoeff()+1 : 0;
 
     QString const s0 = QApplication::tr("%1 connected component%2, ").arg(CC).arg(CC == 1 ? "" : "s");
     QString const s1 = QApplication::tr("%1 segment%2, ").arg(S).arg(S == 1 ? "" : "s");
@@ -1245,17 +1272,23 @@ QString impl::StatusMsg() const
 }
 
 
-void impl::reasoning_reduce_and_adjust() {
-
+void impl::reasoning_reduce_and_adjust()
+{
     // connected components / subtasks
-    Graph::ConnComp const CoCoBi(Bi.biadjacency());
-    int const number_of_subtasks_ = CoCoBi.number();
+    // Graph::ConnComp const CoCoBi(Bi.biadjacency());
+    // int const number_of_subtasks_ = CoCoBi.number();
+    const VectorXi bicoco = conncomp( Bi.biadjacency() );
+    arr_segm   = bicoco.head( m_segm.length()  ).array();
+    arr_constr = bicoco.tail( m_constr.length()).array();
+    const int number_of_subtasks_ = bicoco.size()>0 ? bicoco.maxCoeff()+1 : 0;
 
     // greedy search
     for ( int cc=0; cc<number_of_subtasks_; cc++ )
     {
-        const VectorXidx maps_ = Matfun::find( CoCoBi.head(m_segm.length()).array()==cc  ); // CoCoBi.mapHead( cc, m_segm.length());
-        const VectorXidx mapc_ = Matfun::find( CoCoBi.tail(m_constr.length()).array()==cc ); // CoCoBi.mapTail( cc, m_constr.length() );
+        // const VectorXidx maps_ = Matfun::find( CoCoBi.head(m_segm.length()).array()==cc  ); // CoCoBi.mapHead( cc, m_segm.length());
+        // const VectorXidx mapc_ = Matfun::find( CoCoBi.tail(m_constr.length()).array()==cc ); // CoCoBi.mapTail( cc, m_constr.length() );
+        const VectorXidx maps_ = find(   arr_segm==cc );
+        const VectorXidx mapc_ = find( arr_constr==cc );
 
         bool greedySearchRequired = false;
 
@@ -1273,6 +1306,7 @@ void impl::reasoning_reduce_and_adjust() {
             search_subtask( mapc_, maps_ );  // reduce
         }
     }
+    qDebug() <<  Q_FUNC_INFO;
 }
 
 void impl::remove_elements()
@@ -1393,10 +1427,15 @@ void impl::append( const QPolygonF & track)
 
 void impl::setAltColors() const
 {
-    // qDebug() << Q_FUNC_INFO;
+    qDebug() << Q_FUNC_INFO;
 
-    const Graph::ConnComp CoCoBi(Bi.biadjacency());
-    const int N = CoCoBi.number();
+    // const Graph::ConnComp CoCoBi(Bi.biadjacency());
+    // const int N = CoCoBi.number();
+    const VectorXi bicoco = conncomp( Bi.biadjacency() );
+
+    //arr_segm   = bicoco.head( m_qConstrained.length() ).array();
+    //arr_constr = bicoco.tail( m_qConstraint.length()  ).array();
+    const int N = bicoco.size() > 0 ? bicoco.maxCoeff()+1 : 0;
 
     for (int cc=0; cc<N; cc++) {
 
@@ -1406,17 +1445,20 @@ void impl::setAltColors() const
         const QColor col =  QColor::fromHsv( hue,255,255,   255);
 
         // (1) segments ...
-        const VectorXidx idx_s = Matfun::find( CoCoBi.head( m_qConstrained.length()).array()==cc ); // CoCoBi.mapHead(cc, m_qConstrained.length());
+        // const VectorXidx idx_s = Matfun::find( CoCoBi.head( m_qConstrained.length()).array()==cc ); // CoCoBi.mapHead(cc, m_qConstrained.length());
+        const VectorXidx idx_s = find( arr_segm==cc );
         for ( const auto s : idx_s ) {
             m_qConstrained.at( s )->setAltColor(col);
         }
 
         // (2) constraints ...
-        const VectorXidx idx_c = Matfun::find( CoCoBi.tail( m_qConstraint.length()).array()==cc );  // CoCoBi.mapTail(cc, m_qConstraint.length());
+        // const VectorXidx idx_c = Matfun::find( CoCoBi.tail( m_qConstraint.length()).array()==cc );  // CoCoBi.mapTail(cc, m_qConstraint.length());
+        const VectorXidx idx_c = find( arr_constr==cc );
         for ( const auto c : idx_c ) {
             m_qConstraint.at( c )->setAltColor( col );
         }
     }
+    qDebug() << Q_FUNC_INFO;
 }
 
 bool State::deserialize( QDataStream & in)

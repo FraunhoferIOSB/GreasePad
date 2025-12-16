@@ -11,6 +11,7 @@
 #include <cfloat>
 #include <cmath>
 
+#include <QDebug>
 #include <QString>
 #include <QStringLiteral>
 #include <qassert.h>
@@ -31,7 +32,7 @@ using Eigen::Dynamic;
 
 
 //! Nullspace of row vector
-[[maybe_unused]] static MatrixXd null( const VectorXd & xs )
+[[nodiscard,maybe_unused]] static MatrixXd null( const VectorXd & xs )
 {
     // cf. PCV, eq. (A.120)
 
@@ -40,7 +41,7 @@ using Eigen::Dynamic;
     Q_ASSERT_X(fabs(xs.norm() - 1.) <= FLT_EPSILON, "null(x)", what.toStdString().data());
 #endif
 
-    const Eigen::Index N = xs.size();
+    const Index N = xs.size();
 
     VectorXd x0 = xs.head(N-1);
     double   xN = xs(N-1);
@@ -181,6 +182,8 @@ int sign(T val) { return (T(0) <= val) - (val < T(0));  }
 
     return u;
 }
+
+
 } // namespace Matfun
 
 
