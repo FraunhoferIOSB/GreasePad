@@ -153,7 +153,7 @@ private:
     void find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap);
     void merge_segment ( Index a );
     bool identities_removed();
-    void snap_endpoints( Index nnc);
+    void snap_endpoints( const VectorXi & bicoco, Index nnc);
 
     // reduce
     void remove_constraint( Index i );
@@ -640,7 +640,7 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
     } // if ( num_new_constraints_ > 0 )
 
     // (3) snap all segments adjacent to new segment .............
-    snap_endpoints( num_new_constraints_ );
+    snap_endpoints( bicoco, num_new_constraints_ );
 }
 
 Index impl::find_new_constraints()
@@ -852,14 +852,14 @@ void impl::search_subtask( const Eigen::VectorXidx & mapc_,
     }
 }
 
-void impl::snap_endpoints( const Index nnc)
+void impl::snap_endpoints( const VectorXi & bicoco,  const Index nnc)
 {
     // qDebug() << Q_FUNC_INFO;
 
     // Graph::ConnComp const CoCoBi( Bi.biadjacency() );
     // VectorXi LabelsNew = CoCoBi.tail( nnc);  // possibly empty
 
-    const VectorXi bicoco = conncomp( Bi.biadjacency());  // redundant computation!
+    // const VectorXi bicoco = conncomp( Bi.biadjacency());  // redundant computation!
     VectorXi LabelsNew = bicoco.tail( nnc);  // possibly empty
 
 
