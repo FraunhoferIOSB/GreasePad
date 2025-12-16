@@ -27,12 +27,16 @@
 
 #include <QTextStream>
 
-inline QTextStream & green(  QTextStream & out)  { out << "\033[0;32m"; return out; }
-inline QTextStream & red(    QTextStream & out)  { out << "\033[0;31m"; return out; }
-inline QTextStream & blue(   QTextStream & out)  { out << "\033[0;34m"; return out; }
-inline QTextStream & black ( QTextStream & out)  { out << "\033[0;30m"; return out; }
-//inline QTextStream & yellow( QTextStream & out)  { out << "\033[0;33m"; return out; }
-//inline QTextStream & purple( QTextStream & out)  { out << "\033[0;35m"; return out; }
-//inline QTextStream & cyan (  QTextStream & out)  { out << "\033[4;36m"; return out; }
+namespace TextColor {
+
+[[nodiscard]] inline QTextStream & green(  QTextStream & out)  { out << "\033[0;32m"; return out; }
+[[nodiscard]] inline QTextStream & red(    QTextStream & out)  { out << "\033[0;31m"; return out; }
+[[nodiscard]] inline QTextStream & blue(   QTextStream & out)  { out << "\033[0;34m"; return out; }
+[[nodiscard]] inline QTextStream & black ( QTextStream & out)  { out << "\033[0;30m"; return out; }
+[[nodiscard]] inline QTextStream & yellow( QTextStream & out)  { out << "\033[0;33m"; return out; }
+[[nodiscard]] inline QTextStream & purple( QTextStream & out)  { out << "\033[0;35m"; return out; }
+[[nodiscard]] inline QTextStream & cyan (  QTextStream & out)  { out << "\033[4;36m"; return out; }
+
+} // namespace TextColor
 
 #endif // GLOBAL_H

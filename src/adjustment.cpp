@@ -56,6 +56,12 @@ using Matfun::is_rank_deficient;
 using Matfun::indexOf;
 
 
+using TextColor::black;
+using TextColor::blue;
+using TextColor::green;
+using TextColor::red;
+
+
 std::pair<VectorXd,MatrixXd >
 AdjustmentFramework::getEntity( const Index s) const
 {

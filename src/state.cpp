@@ -91,6 +91,9 @@ using Matfun::find;
 using Matfun::sign;
 using Matfun::unique;
 
+using TextColor::black;
+using TextColor::blue;
+
 
 bool State::considerOrthogonal_ = true;
 bool State::considerParallel_   = true;
