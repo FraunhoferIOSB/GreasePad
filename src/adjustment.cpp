@@ -31,6 +31,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cfloat>  // DBL_EPSION
 #include <cmath>
 #include <memory>
 #include <numeric>
@@ -81,7 +82,7 @@ void AdjustmentFramework::update( const VectorXd &x)
         // (2) via retraction ......................................................
         const Eigen::Vector3d v = null( l0_.segment(idx3, 3) ) * x.segment(2 * s, 2);
         const double nv = v.norm();
-        if ( nv >= 0.0 ) {
+        if ( nv > DBL_EPSILON ) {
             const Eigen::Vector3d p = l0_.segment(idx3, 3);
             l0_.segment( idx3,3) = cos( nv)*p +sin(nv)*v/nv;
         }
