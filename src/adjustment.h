@@ -65,12 +65,12 @@ public:
     [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::MatrixXd> getEntity( Eigen::Index s) const;
 
 private:
-    [[nodiscard]] Eigen::VectorXd l0_segment(   Eigen::Index offset, int len) const { return l0_.segment(offset,len);}
-    [[nodiscard]] Eigen::VectorXd l_segment(    Eigen::Index offset, int len) const { return l_.segment(offset,len);}
-    [[nodiscard]] Eigen::MatrixXd Cov_ll_block( Eigen::Index offset, int n) const   { return Cov_ll_.block( offset,offset,n,n); }
+    // [[nodiscard]] Eigen::VectorXd l0_segment(   Eigen::Index offset, int len) const { return l0_.segment(offset,len);}
+    // [[nodiscard]] Eigen::VectorXd l_segment(    Eigen::Index offset, int len) const { return l_.segment(offset,len);}
+    // [[nodiscard]] Eigen::MatrixXd Cov_ll_block( Eigen::Index offset, int n) const   { return Cov_ll_.block( offset,offset,n,n); }
 
-    [[nodiscard]] Eigen::VectorXd l0() const { return l0_ ;}
-    [[nodiscard]] Eigen::VectorXd l() const  { return l_; }
+    //  Eigen::VectorXd l0() const { return l0_ ;}
+    // [[nodiscard]] Eigen::VectorXd l() const  { return l_; }
 
     [[nodiscard]] static int nIterMax() { return nIterMax_; }
     [[nodiscard]] static double threshold_convergence() { return convergence; }
@@ -78,7 +78,7 @@ private:
     [[nodiscard]] static double threshold_rankEstimate() { return rankEstimate;   }
     [[nodiscard]] static double threshold_numericalCheck() { return numericalCheck; }
 
-    void reset() { l0_ = l_;}
+    // void reset() { l0_ = l_;}
     void update( const Eigen::VectorXd &x );  // update of adjusted observatons in l0_
 
     void Jacobian( const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,

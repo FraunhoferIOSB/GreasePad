@@ -31,7 +31,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cfloat>  // DBL_EPSION
 #include <cmath>
 #include <memory>
 #include <numeric>
@@ -77,6 +76,8 @@ AdjustmentFramework::getEntity( const Index s) const
 //! update of parameters (observations) via retraction
 void AdjustmentFramework::update( const VectorXd &x)
 {
+    constexpr double kNormEps = 1e-8;
+
     for (Index s=0; s<x.size()/2; s++) {
         const Index idx3 = 3*s;
 
@@ -88,7 +89,7 @@ void AdjustmentFramework::update( const VectorXd &x)
         // (2) via retraction ......................................................
         const Eigen::Vector3d v = null( l0_.segment(idx3, 3) ) * x.segment(2 * s, 2);
         const double nv = v.norm();
-        if ( nv > DBL_EPSILON ) {
+        if ( nv > kNormEps ) {
             const Eigen::Vector3d p = l0_.segment(idx3, 3);
             l0_.segment( idx3,3) = cos( nv)*p +sin(nv)*v/nv;
         }
@@ -145,7 +146,7 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
             return acc += constr->at(i)->required() ? constr->at(i)->dof() : 0;} );
 
 
-    reset(); // set adjusted observations  l0 := l
+    l0_ = l_; // reset(); // set adjusted observations  l0 := l
 
 
     VectorXd redl;
@@ -247,15 +248,15 @@ void AdjustmentFramework::reduce (
         Index const offset3 = 3 * s;
         Index const offset2 = 2 * s;
 
-        Eigen::Matrix<double, 3, 2> const NN = null(l0_segment(offset3, 3));
+        Eigen::Matrix<double, 3, 2> const NN = null( l0_.segment(offset3, 3) );
 
         // (i) reduced coordinates of observations
-        lr.segment(offset2,2) = NN.adjoint() * l_segment(offset3,3);
+        lr.segment(offset2,2) = NN.adjoint() * l_.segment(offset3,3);
 
         // (ii) covariance matrix, reduced coordinates
-        Eigen::Matrix3d const RR = Rot_ab(l_segment(offset3, 3), l0_segment(offset3, 3));
+        Eigen::Matrix3d const RR = Rot_ab(l_.segment(offset3, 3), l0_.segment(offset3, 3) );
         Eigen::Matrix<double, 2, 3> const JJ = NN.adjoint() * RR;
-        Eigen::Matrix2d Cov_rr = JJ*Cov_ll_block( offset3,3)*JJ.adjoint();
+        Eigen::Matrix2d Cov_rr = JJ*Cov_ll_.block( offset3,offset3,3,3)*JJ.adjoint();
 
         // rCov_ll.block(offset2, offset2, 2, 2) = Cov_rr; // not for sparse matrices
         for ( int i=0; i<2; i++ ) {
@@ -295,7 +296,7 @@ void AdjustmentFramework::Jacobian(
             idx(i) = indexOf<Index>( maps, idx(i) );
         }
 
-        auto JJ = con->Jacobian( idx, l0(), l() );
+        auto JJ = con->Jacobian( idx, l0_, l_ );
         int const dof = con->dof();
         for ( Index i=0; i< con->arity(); i++ )   {
             // dof rows for this constraint
@@ -305,7 +306,7 @@ void AdjustmentFramework::Jacobian(
                 BBr.coeffRef( R+r, (2*idx(i))+1 ) = JJ(r,(2*i)+1);
             }
         }
-        g0.segment(R,dof) = con->contradict( idx, l0() );
+        g0.segment(R,dof) = con->contradict( idx, l0_ );
         R += dof;
     }
 
@@ -328,12 +329,12 @@ void AdjustmentFramework::check_constraints(
         if (verbose) {
             qDebug().noquote()
                     << QStringLiteral("straight line #%1: [").arg(s+1, 2)
-                    << l0_segment(3*s,3).x() << ","
-                    << l0_segment(3*s,3).y() << ","
-                    << l0_segment(3*s,3).z() << "], \tnorm ="
-                    << l0_segment(3*s,3).norm();
+                    << l0_.segment(3*s,3).x() << ","
+                    << l0_.segment(3*s,3).y() << ","
+                    << l0_.segment(3*s,3).z() << "], \tnorm ="
+                    << l0_.segment(3*s,3).norm();
         }
-        const double d = 1.0 -l0_segment(3*s,3).norm();
+        const double d = 1.0 -l0_.segment(3*s,3).norm();
         if ( std::fabs( d ) > threshold_numericalCheck() ) {
             // QApplication::beep();
             qDebug().noquote() <<  red << QStringLiteral("intrinsic constraint %1  check = %2").arg(s).arg(d) << black;
@@ -355,7 +356,7 @@ void AdjustmentFramework::check_constraints(
             idx(i) = indexOf<Index>( maps, idx(i) );
         }
 
-        const double d =  con->contradict( idx, l0() ).norm();
+        const double d =  con->contradict( idx, l0_ ).norm();
         con->setEnforced(  fabs(d) < threshold_numericalCheck()  );
 
 #ifdef QT_DEBUG
