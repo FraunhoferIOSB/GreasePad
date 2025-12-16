@@ -187,6 +187,33 @@ private:
     const double m_lambda;  // rate, inverse scale
 };
 
+
+
+//! Uniform distribution U(a,b)
+class ContinuousUniform : private Distribution
+{
+public:
+    explicit ContinuousUniform( double, double);
+    ContinuousUniform (const ContinuousUniform & other) = delete;   //!< Copy constructor
+    ContinuousUniform (const ContinuousUniform && other) = delete;  //!< Move constructor
+    ContinuousUniform & operator = (const ContinuousUniform & other) = delete;  //!< Assignment operator
+    ContinuousUniform & operator = (const ContinuousUniform && other) = delete;  //!< Move assignment operator
+
+    virtual ~ContinuousUniform() = default;
+
+    [[nodiscard]] double pdf(  double x ) const override;    //!< Probability density function
+    [[nodiscard]] Prob cdf(  double x ) const override;    //!< Cumulative distribution function
+    [[nodiscard]] double icdf( Prob P) const override;     //!< Inverse cumulative distribution function
+    [[nodiscard]] double mean()   const override { return (b-a)/2; }  //!< Mean
+    [[nodiscard]] double var()    const override { return (b-a)*(b-a)/12.; }  //!< Variance
+    [[nodiscard]] double mode()   const override { return NAN; }  //!< Mode of distribution
+    [[nodiscard]] double rnd()    const override;            //!< Random number
+
+private:
+    const double a;
+    const double b;
+};
+
 } // namespace Stats
 
 #endif // STATISTICS_H

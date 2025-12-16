@@ -344,14 +344,17 @@ double Gamma::rnd() const
 {
     // Marsaglia's simple transformation-rejection method
     Stats::StandardNormal const rng;
+    const Stats::ContinuousUniform unif(0,1);
+
     const double d = m_alpha -1.0/3.0;
     double v = NAN;
     while ( true ) {
         double const x = rng.rnd();
 
         // rand(): [0,RANDMAX] (int)
-        double const u = static_cast<double>(rand() + 1)
-                         / static_cast<double>(RAND_MAX + 1); // (0,1]
+        // double const u = static_cast<double>(rand() + 1)
+        //                  / static_cast<double>(RAND_MAX + 1); // (0,1]
+        const double u = unif.rnd();
         v = pow( 1.0 + x/sqrt(9.0*d), 3.0);
         if  ( v>0.0  &&  log(u) > x*x/2.0 +d -d*v +d*log(v) ) {
             break;
@@ -367,6 +370,51 @@ double Gamma::mode() const
         return (m_alpha -1.0)/m_beta;
     }
     return std::numeric_limits<double>::quiet_NaN();
+}
+
+
+
+ContinuousUniform::ContinuousUniform(const double a, const double b) : a(a), b(b)
+{
+    assert( b>a );
+}
+
+
+//! uniformly distributed random number in [a,b], b>a
+double ContinuousUniform::rnd() const
+{
+    const double u = static_cast<double>(rand()) / static_cast<double>(RAND_MAX);
+    return a +u*(b -a);
+}
+
+
+double ContinuousUniform::pdf( const double x) const
+{
+    if ( x<a ) {
+        return 0;
+    }
+    if ( x>b ) {
+        return 0;
+    }
+    return 1./(b -a);
+}
+
+
+Prob ContinuousUniform::cdf( const double x) const
+{
+    if ( x<a ) {
+        return Prob(0);
+    }
+    if ( x>b ) {
+        return Prob(1);
+    }
+    return Prob( (x-a)/(b-a) );
+}
+
+
+double ContinuousUniform::icdf( const Prob P ) const
+{
+    return a +P()*(b-a);
 }
 
 } // namespace Stats
