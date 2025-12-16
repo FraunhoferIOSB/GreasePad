@@ -204,7 +204,7 @@ public:
     [[nodiscard]] double pdf(  double x ) const override;    //!< Probability density function
     [[nodiscard]] Prob cdf(  double x ) const override;    //!< Cumulative distribution function
     [[nodiscard]] double icdf( Prob P) const override;     //!< Inverse cumulative distribution function
-    [[nodiscard]] double mean()   const override { return (b-a)/2; }  //!< Mean
+    [[nodiscard]] double mean()   const override { return (a+b)/2; }  //!< Mean
     [[nodiscard]] double var()    const override { return (b-a)*(b-a)/12.; }  //!< Variance
     [[nodiscard]] double mode()   const override { return NAN; }  //!< Mode of distribution
     [[nodiscard]] double rnd()    const override;            //!< Random number
