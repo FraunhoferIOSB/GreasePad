@@ -1427,38 +1427,27 @@ void impl::append( const QPolygonF & track)
 
 void impl::setAltColors() const
 {
-    qDebug() << Q_FUNC_INFO;
-
-    // const Graph::ConnComp CoCoBi(Bi.biadjacency());
-    // const int N = CoCoBi.number();
-    const VectorXi bicoco = conncomp( Bi.biadjacency() );
-
-    //arr_segm   = bicoco.head( m_qConstrained.length() ).array();
-    //arr_constr = bicoco.tail( m_qConstraint.length()  ).array();
-    const int N = bicoco.size() > 0 ? bicoco.maxCoeff()+1 : 0;
+    const int N = arr_segm.size()>0 ? arr_segm.maxCoeff()+1 : 0;
 
     for (int cc=0; cc<N; cc++) {
 
         // (0) color ...
         const int hue = 359 * cc / N;
         assert( hue>=0 && hue<= 359 );
-        const QColor col =  QColor::fromHsv( hue,255,255,   255);
+        const QColor col =  QColor::fromHsv( hue,255,255, 255);  // hue, saturation, value, alpha
 
         // (1) segments ...
-        // const VectorXidx idx_s = Matfun::find( CoCoBi.head( m_qConstrained.length()).array()==cc ); // CoCoBi.mapHead(cc, m_qConstrained.length());
         const VectorXidx idx_s = find( arr_segm==cc );
         for ( const auto s : idx_s ) {
             m_qConstrained.at( s )->setAltColor(col);
         }
 
         // (2) constraints ...
-        // const VectorXidx idx_c = Matfun::find( CoCoBi.tail( m_qConstraint.length()).array()==cc );  // CoCoBi.mapTail(cc, m_qConstraint.length());
         const VectorXidx idx_c = find( arr_constr==cc );
         for ( const auto c : idx_c ) {
             m_qConstraint.at( c )->setAltColor( col );
         }
     }
-    qDebug() << Q_FUNC_INFO;
 }
 
 bool State::deserialize( QDataStream & in)
