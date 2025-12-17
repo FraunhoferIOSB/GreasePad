@@ -22,7 +22,6 @@
 #include <memory>
 
 #include "quantiles.h"
-#include "statistics.h"
 
 #include <QDataStream>
 #include <QPolygonF>

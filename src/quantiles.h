@@ -19,8 +19,9 @@
 #ifndef QUANTILES_H
 #define QUANTILES_H
 
-#include "statistics.h"
-
+#include "statistics/chisquared.h"
+#include "statistics/exponential.h"
+#include "statistics/prob.h"
 
 //! Quantiles for recognition and snapping
 namespace Quantiles {
@@ -41,8 +42,9 @@ private:
     double quantile_chi2_1_{};  // Quantile of chi-squared distribution with 1 degree of freedom
 
     const Stats::ChiSquared     distr_chi2_1_{1};
-    const Stats::StandardNormal distr_snd_;
+    // const Stats::StandardNormal distr_snd_;
 };
+
 
 //! Quantiles for recognition of geometric relations
 struct Recognition

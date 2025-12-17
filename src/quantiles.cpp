@@ -17,7 +17,9 @@
  */
 
 #include "quantiles.h"
-#include "statistics.h"
+
+#include "statistics/normal.h"
+#include "statistics/prob.h"
 
 #include <cassert>
 

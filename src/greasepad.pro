@@ -69,6 +69,12 @@ HEADERS += \
     quantiles.h \
     state.h \
     statistics.h \
+    statistics/chisquared.h \
+    statistics/exponential.h \
+    statistics/gamma.h \
+    statistics/normal.h \
+    statistics/prob.h \
+    statistics/uniform.h \
     uncertain.h \
     upoint.h \
     usegment.h \
