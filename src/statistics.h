@@ -80,9 +80,9 @@ public:
     [[nodiscard]] double pdf(  double x ) const override;    //!< Probability density function
     [[nodiscard]] Prob cdf(  double x ) const override;    //!< Cumulative distribution function
     [[nodiscard]] double icdf( Prob P) const override;     //!< Inverse cumulative distribution function
-    [[nodiscard]] double mean()   const override { return 0.0; }  //!< Mean
-    [[nodiscard]] double var()    const override { return 1.0; }  //!< Variance
-    [[nodiscard]] double mode()   const override { return 0.0; }  //!< Mode of distribution
+    [[nodiscard]] double mean()   const override { return 0.; }  //!< Mean
+    [[nodiscard]] double var()    const override { return 1.; }  //!< Variance
+    [[nodiscard]] double mode()   const override { return 0.; }  //!< Mode of distribution
     [[nodiscard]] double rnd()    const override;            //!< Random number
 
 private:

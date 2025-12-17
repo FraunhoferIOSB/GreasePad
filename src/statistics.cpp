@@ -36,11 +36,11 @@ namespace Stats {
 
 double StandardNormal::icdf( const Prob P ) const
 {
-    if (P() < DBL_EPSILON) {
+    if ( P()<0 ) {
         return -DBL_MAX;
     }
 
-    double const alpha0 = 1.0-P();
+    double const alpha0 = 1.-P();
     // K-R Koch, (241.8), alpha > 0.5
     const double alpha = (alpha0 < 0.5) ? 1. - alpha0 : alpha0;
 
@@ -83,7 +83,7 @@ Prob StandardNormal::cdf( const double x) const
     //  Koch (241.5), 1e-5
     // N.R. p. 221? 1e-7
 
-    if ( x<0.0 ) {
+    if ( x<0 ) {
        return Prob( cdf(-x).complement() );  // 1-cdf()
     }
 
@@ -96,6 +96,7 @@ Prob StandardNormal::cdf( const double x) const
     return Prob( 1.0-exp(-0.5*x*x)*(a1 +(a2 +a3*t)*t)*t *s_normalizing_constant );
 }
 
+
 double StandardNormal::rnd() const
 {
     // Marsaglia's polar method
@@ -103,14 +104,16 @@ double StandardNormal::rnd() const
     double u = NAN;
     double v = NAN;
 
-    // std::srand(time(NULL));  // #include <ctime>
-    do {
-        u = 2.0*std::rand()/static_cast<double>(RAND_MAX) -1.0;
-        v = 2.0*std::rand()/static_cast<double>(RAND_MAX) -1.0;
-        s = u*u +v*v;
-    } while ( s >=1 || std::fabs(s)<1e-6 );
+    constexpr double threshold = 1e-6;
 
-    return u*std::sqrt( -2.0*std::log(s)/s );
+    const ContinuousUniform uniform(-1,1);
+    do {
+        u = uniform.rnd();
+        v = uniform.rnd();
+        s = u*u +v*v;
+    } while ( s >=1 || fabs(s)<threshold );
+
+    return u*std::sqrt( -2*log(s)/s );
 }
 
 
@@ -224,7 +227,7 @@ double ChiSquared::icdf( const Prob P) const
         double const alpha_n = 1. - cdf(q)();
         double const summand = (alpha_n - alpha) / pdf(q);
         q += summand;
-        if ( abs(summand) < threshold ) {
+        if ( fabs(summand) < threshold ) {
             break;
         }
     }
