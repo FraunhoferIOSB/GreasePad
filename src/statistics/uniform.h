@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <random>
 
 #include "statistics/prob.h"
 
@@ -65,7 +66,11 @@ inline double ContinuousUniform::pdf( const double x) const
 //! uniformly distributed random number in [a,b], b>a
 inline double ContinuousUniform::rnd() const
 {
-    const double u = static_cast<double>(rand()) / static_cast<double>(RAND_MAX);
+    // const double u = static_cast<double>(rand()) / static_cast<double>(RAND_MAX);
+    static thread_local std::mt19937 engine{ std::random_device{} () };
+    static thread_local std::uniform_real_distribution<double> dist(0.0, 1.0);
+    const double u = dist(engine);
+
     return a +u*(b -a);
 }
 

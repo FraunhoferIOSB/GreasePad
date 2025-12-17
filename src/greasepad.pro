@@ -43,7 +43,6 @@ SOURCES += \
     qstroke.cpp \
     quantiles.cpp \
     state.cpp \
-    statistics.cpp \
     uncertain.cpp \
     upoint.cpp \
     usegment.cpp \
