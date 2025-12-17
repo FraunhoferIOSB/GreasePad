@@ -350,7 +350,7 @@ double Gamma::rnd() const
         const double x = normal.rnd();   // ~N(0,1)
         const double u = uniform.rnd();  // ~U(0,1)
         v = pow( 1.+x/sqrt(9.*d), 3.);
-        if  ( v>0  &&  log(u) > 0.5*x*x +d -d*v +d*log(v) ) {
+        if  ( v>0  &&  log(u) < 0.5*x*x +d -d*v +d*log(v) ) {
             break;
         }
     }
