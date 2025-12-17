@@ -123,8 +123,8 @@ private:
 class ChiSquared : private Distribution
 {
 public:
-    explicit ChiSquared( int df );                    //!< Value Constructor
-    ChiSquared( const ChiSquared &  other) = delete;   //!< Copy constructor
+    explicit ChiSquared( int nu );                    //!< Value Constructor
+    ChiSquared (const ChiSquared &  other) = delete;   //!< Copy constructor
     ChiSquared (const ChiSquared && other) = delete;  //!< Move constructor
     ChiSquared & operator = (const ChiSquared & other) = delete;  //!< Assignment constructor
     ChiSquared & operator = (const ChiSquared && other) = delete;  //!< Move assignment constructor
@@ -134,17 +134,17 @@ public:
     [[nodiscard]] double pdf( double x) const override;    //!< Probability density function
     [[nodiscard]] Prob cdf( double x) const override;    //!< Cumulative distribution function
     [[nodiscard]] double icdf( Prob P) const override;   //!< Inverse cumulative distribution function
-    [[nodiscard]] double mean()   const override { return m_nu;   }    //!< Mean
-    [[nodiscard]] double var()    const override { return 2*m_nu; }    //!< Variance
-    [[nodiscard]] double mode()   const override { return std::fmax( m_nu-2, 0.0); } //!< mode
+    [[nodiscard]] double mean()   const override { return nu;   }    //!< Mean
+    [[nodiscard]] double var()    const override { return 2*nu; }    //!< Variance
+    [[nodiscard]] double mode()   const override { return fmax( nu-2, 0.); } //!< mode
     [[nodiscard]] double rnd()    const override;    //!< Random number
-    [[nodiscard]] int dof() const { return m_nu; }   //!< Get degrees of freedom
+    [[nodiscard]] int dof() const { return nu; }   //!< Get degrees of freedom
 
 private:
     static double GammaFctHalfInt( double x);
     constexpr static unsigned int factorial( unsigned int n);
 
-    const int m_nu; // degrees of freedom
+    const int nu; // degrees of freedom
 };
 
 
