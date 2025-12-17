@@ -267,16 +267,18 @@ constexpr unsigned int ChiSquared::factorial( const unsigned int n)
 
 double Exponential::rnd() const
 {
-    // u ~ U[0,1]
-    double const u = (std::rand() + 1) / static_cast<double>(RAND_MAX);
+    const ContinuousUniform uniform(0,1);
+    const double u = uniform.rnd();  // ~U(0,1)
+
     // assert( u>0.0) ;
-    return -log(u)/m_lambda;
+    return -log(u)/lambda;
 }
 
+
 Exponential::Exponential( const double lambda)
-    : m_lambda(lambda)
+    : lambda(lambda)
 {
-    assert( lambda>0.0 );
+    assert( lambda>0 );
 }
 
 

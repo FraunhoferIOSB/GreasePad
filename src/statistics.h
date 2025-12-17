@@ -161,30 +161,30 @@ public:
     virtual ~Exponential() = default;
 
     //! Probability density function
-    [[nodiscard]] double pdf( double x) const override {
-        return x>=0.0 ? m_lambda*exp(-m_lambda*x) : 0.0;
+    [[nodiscard]] double pdf( const double x) const override {
+        return x>=0 ? lambda*exp(-lambda*x) : 0.;
     }
 
     //! Cumulative distribution function
-    [[nodiscard]] Prob cdf( double x) const override {
-        return x>=0.0 ? Prob( 1.0-exp(-m_lambda*x)) : Prob(0);
+    [[nodiscard]] Prob cdf( const double x) const override {
+        return x>=0 ? Prob( 1.-exp(-lambda*x)) : Prob(0);
     }
 
     //! Inverse cumulative distribution function
     [[nodiscard]]  double icdf( const Prob P) const override {
-        return -log(1.0 -P())/m_lambda;
+        return -log( 1.-P() )/lambda;
     }
 
-    [[nodiscard]]  double mean()   const override { return 1.0/m_lambda; }  //!< mean
-    [[nodiscard]]  double var()    const override { return 1.0/(m_lambda*m_lambda); } //!< Variance
-    [[nodiscard]] double mode()   const override { return 0.0; }  //!< mode
+    [[nodiscard]]  double mean()   const override { return 1./lambda; }  //!< mean
+    [[nodiscard]]  double var()    const override { return 1./(lambda*lambda); } //!< Variance
+    [[nodiscard]] double mode()   const override { return 0.; }  //!< mode
     [[nodiscard]] double rnd()    const override;  //!< Random number
 
-    [[nodiscard]] double rate()  const {return m_lambda; }  //!< Get rate (inverse scale)
-    [[nodiscard]] double scale() const {return 1./m_lambda;}   //!< Get scale (inverse ratse)
+    [[nodiscard]] double rate()  const {return lambda; }  //!< Get rate (inverse scale)
+    [[nodiscard]] double scale() const {return 1./lambda;}   //!< Get scale (inverse rate)
 
 private:
-    const double m_lambda;  // rate, inverse scale
+    const double lambda;  // rate, inverse scale
 };
 
 
