@@ -105,17 +105,17 @@ public:
     [[nodiscard]] double pdf(  double x ) const override;   //!< Probability density function
     [[nodiscard]] Prob cdf(  double x ) const override;   //!< Cumulative distribution function
     [[nodiscard]] double icdf( Prob P ) const override;   //!< Inverse cumulative distribution function
-    [[nodiscard]] double mean()   const override { return m_alpha/m_beta;  }
-    [[nodiscard]] double var()    const override { return m_alpha/(m_beta*m_beta); }
+    [[nodiscard]] double mean()   const override { return alpha/beta;  }
+    [[nodiscard]] double var()    const override { return alpha/(beta*beta); }
     [[nodiscard]] double mode()   const override;   //!< Mode of distribution
     [[nodiscard]] double rnd()    const override;   //!< Random number
-    [[nodiscard]] double shape() const { return m_alpha;   }  //!< Get value of shape parameter
-    [[nodiscard]] double rate()  const { return m_beta;    }  //!< Get rate (inverse scale)
-    [[nodiscard]] double scale() const { return 1./m_beta; }  //!< Get value of scale parameter (inverse rate)
+    [[nodiscard]] double shape() const { return alpha;   }  //!< Get value of shape parameter
+    [[nodiscard]] double rate()  const { return beta;    }  //!< Get rate (inverse scale)
+    [[nodiscard]] double scale() const { return 1./beta; }  //!< Get value of scale parameter (inverse rate)
 
 private:
-    const double m_alpha;  //  > 0 shape
-    const double m_beta;   //  > 0 rate
+    const double alpha;  //  > 0 shape
+    const double beta;   //  > 0 rate
 };
 
 

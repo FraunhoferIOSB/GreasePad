@@ -280,22 +280,18 @@ Exponential::Exponential( const double lambda)
 }
 
 
-Gamma::Gamma( const double alpha,
-              const double beta)
-    : m_alpha(alpha), m_beta(beta)
+Gamma::Gamma( const double alpha, const double beta)
+    : alpha(alpha), beta(beta)
 {
-    assert( m_alpha > 0. );
-    assert( m_beta  > 0. );
+    assert( alpha > 0 && "parameter alpha not positive" );
+    assert( beta  > 0 && "parameter beta not positive" );
 }
 
 
 double Gamma::pdf( const double x ) const
 {
-    assert( x >= 0.0 );
-    return pow( m_beta, m_alpha)
-            / std::tgamma(m_alpha)
-            * pow( x, m_alpha-1.0 )
-            * exp( -m_beta*x);
+    assert( x>=0 );
+    return pow( beta, alpha)/ std::tgamma(alpha) * pow( x, alpha-1.0 ) * exp( -beta*x);
 }
 
 
@@ -303,39 +299,44 @@ double Gamma::pdf( const double x ) const
 Prob Gamma::cdf( const double x) const
 {
     // K.R. Koch (243.11)
-    assert( x>0.0 );
-    double sum = 0.0;
-    double den = 1.0;
-    for ( int j=1; j<100; j++) {
-        // (alpha+1)*(alpha+2)* ...*(alpha+j)
-        den *= m_alpha+j;
-        double const Delta = pow(m_beta * x, j) / den;
+    assert( x>0 );
+    constexpr int numIterMax = 100;
+    constexpr double threshold = 1e-6;
+
+    double sum = 0.;
+    double den = 1.;
+
+    for ( int j=1; j<numIterMax; j++) {
+        den *= alpha+j;                    // (alpha+1)*(alpha+2)* ...*(alpha+j)
+        double const Delta = pow(beta * x, j) / den;
         sum += Delta;
-        if ( Delta < 1e-6) {
+        if ( Delta < threshold ) {
             break;
         }
     }
     return Prob(
-        (1.0+sum) * pow(m_beta,m_alpha)
-            * pow(x,m_alpha) * exp(-m_beta*x)
-            / std::tgamma(m_alpha+1.0)
+        (1.+sum) * pow(beta,alpha) * pow(x,alpha) * exp(-beta*x)/ std::tgamma(alpha+1.)
         );
 }
 
+
 double Gamma::icdf( const Prob P ) const
 {
+    constexpr int numIterMax = 100;
+    constexpr double threshold = 1e-7;
+
     double y_old = mean();
-    // double y_new = NAN;
-    for ( int i=0; i<100; i++) {
-        double const h = (cdf(y_old)() - P()) / pdf(y_old);
+
+    for ( int i=0; i<numIterMax; i++) {
+        const double h = ( cdf(y_old)() -P() ) / pdf(y_old);
         const double y_new = y_old -h;
-        if ( std::fabs( h ) < 1e-7 ) {
+        if ( fabs( h ) < threshold ) {
             return y_new;
         }
         y_old = y_new;
     }
 
-    // TO DO case not converged.
+    // TO DO handle case not converged.
     return y_old;
 }
 
@@ -343,38 +344,35 @@ double Gamma::icdf( const Prob P ) const
 double Gamma::rnd() const
 {
     // Marsaglia's simple transformation-rejection method
-    Stats::StandardNormal const rng;
-    const Stats::ContinuousUniform unif(0,1);
+    const Stats::StandardNormal normal;
+    const Stats::ContinuousUniform uniform(0,1);
 
-    const double d = m_alpha -1.0/3.0;
+    const double d = alpha -1./3.;
     double v = NAN;
-    while ( true ) {
-        double const x = rng.rnd();
 
-        // rand(): [0,RANDMAX] (int)
-        // double const u = static_cast<double>(rand() + 1)
-        //                  / static_cast<double>(RAND_MAX + 1); // (0,1]
-        const double u = unif.rnd();
-        v = pow( 1.0 + x/sqrt(9.0*d), 3.0);
-        if  ( v>0.0  &&  log(u) > x*x/2.0 +d -d*v +d*log(v) ) {
+    while ( true ) {
+        const double x = normal.rnd();   // ~N(0,1)
+        const double u = uniform.rnd();  // ~U(0,1)
+        v = pow( 1.+x/sqrt(9.*d), 3.);
+        if  ( v>0  &&  log(u) > 0.5*x*x +d -d*v +d*log(v) ) {
             break;
         }
     }
-    return d*v*m_beta;
+    return d*v*beta;
 }
 
 
 double Gamma::mode() const
 {
-    if ( m_alpha >= 1.0 ) {
-        return (m_alpha -1.0)/m_beta;
+    if ( alpha >= 1 ) {
+        return (alpha -1.)/beta;
     }
     return std::numeric_limits<double>::quiet_NaN();
 }
 
 
 
-ContinuousUniform::ContinuousUniform(const double a, const double b) : a(a), b(b)
+ContinuousUniform::ContinuousUniform( const double a, const double b) : a(a), b(b)
 {
     assert( b>a );
 }
