@@ -34,7 +34,7 @@ namespace Stats {
 // National Bureau of Standards, Washington (1964).
 // Abramowitz and Stegun Approximations 26.2.23
 
-double StandardNormal::icdf( const Prob P ) const
+double StandardNormal::icdf( const Prob P )
 {
     if ( P()<0 ) {
         return -DBL_MAX;
@@ -68,7 +68,7 @@ double StandardNormal::icdf( const Prob P ) const
  * \param x real-valued parameter
  * \return value of probability density function
  */
-double StandardNormal::pdf( const double x) const
+double StandardNormal::pdf( const double x)
 {
     return s_normalizing_constant*exp(-0.5*x*x);
 }
@@ -97,7 +97,7 @@ Prob StandardNormal::cdf( const double x) const
 }
 
 
-double StandardNormal::rnd() const
+double StandardNormal::rnd()
 {
     // Marsaglia's polar method
     double s = NAN;
@@ -141,7 +141,7 @@ double ChiSquared::GammaFctHalfInt( const double x)
         pr = pr*i;
     }
 
-    return  pr*sqrt_pi/(double)pow(2,p);
+    return  pr*sqrt_pi/static_cast<double>( pow(2,p) );
 }
 
 
@@ -214,7 +214,7 @@ double ChiSquared::icdf( const Prob P) const
 
     // approx., K.-R. Koch (261.11)
     const StandardNormal normal;
-    const double xa = normal.icdf(P);
+    const double xa = Stats::StandardNormal::icdf(P);
     const auto df = static_cast<double>(nu);
     const double t = 2./(9.*df);
     double q = df* pow(  xa*sqrt( t )+1.-t,  3 );
@@ -343,14 +343,13 @@ double Gamma::icdf( const Prob P ) const
 double Gamma::rnd() const
 {
     // Marsaglia's simple transformation-rejection method
-    const Stats::StandardNormal normal;
     const Stats::ContinuousUniform uniform(0,1);
 
     const double d = alpha -1./3.;
     double v = NAN;
 
     while ( true ) {
-        const double x = normal.rnd();   // ~N(0,1)
+        const double x = Stats::StandardNormal::rnd();   // ~N(0,1)
         const double u = uniform.rnd();  // ~U(0,1)
         v = pow( 1.+x/sqrt(9.*d), 3.);
         if  ( v>0  &&  log(u) < 0.5*x*x +d -d*v +d*log(v) ) {

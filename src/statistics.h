@@ -42,31 +42,8 @@ private:
 };
 
 
-//! Base class for parametric probability distributions
-class Distribution
-{
-public:
-    Distribution (const Distribution & other) = delete;   //!< Copy constructor
-    Distribution & operator = (const Distribution & other) = delete;  //!< Assignment constructor
-    Distribution (const Distribution && other) = delete;  //!< Move constructor
-    Distribution & operator = (const Distribution && other) = delete;  //!< Move assignment constructor
-
-    [[nodiscard]] virtual double pdf( double x) const = 0;   //!< Probability density function
-    [[nodiscard]] virtual Prob cdf( double x) const = 0;   //!< Cumulative distribution function
-    [[nodiscard]] virtual double icdf( Prob P) const = 0;  //!< Inverse cumulative distribution function
-    [[nodiscard]] virtual double mean()   const = 0;         //!< Mean
-    [[nodiscard]] virtual double var()    const = 0;         //!< Variance
-    [[nodiscard]] virtual double mode()   const = 0;         //!< Mode of distribution
-    [[nodiscard]] virtual double rnd()    const = 0;         //!< Random number
-
-protected:
-    ~Distribution() = default;
-    Distribution() = default;
-};
-
-
 //! Standard normal distribution
-class StandardNormal : private Distribution
+class StandardNormal
 {
 public:
     StandardNormal() = default;
@@ -77,13 +54,13 @@ public:
 
     virtual ~StandardNormal() = default;
 
-    [[nodiscard]] double pdf(  double x ) const override;    //!< Probability density function
-    [[nodiscard]] Prob cdf(  double x ) const override;    //!< Cumulative distribution function
-    [[nodiscard]] double icdf( Prob P) const override;     //!< Inverse cumulative distribution function
-    [[nodiscard]] double mean()   const override { return 0.; }  //!< Mean
-    [[nodiscard]] double var()    const override { return 1.; }  //!< Variance
-    [[nodiscard]] double mode()   const override { return 0.; }  //!< Mode of distribution
-    [[nodiscard]] double rnd()    const override;            //!< Random number
+    [[nodiscard]] static double pdf( double x );    //!< Probability density function
+    [[nodiscard]] Prob cdf( double x ) const;    //!< Cumulative distribution function
+    [[nodiscard]] static double icdf( Prob P);     //!< Inverse cumulative distribution function
+    [[nodiscard]] static double mean() { return 0.; }  //!< Mean
+    [[nodiscard]] static double var()  { return 1.; }  //!< Variance
+    [[nodiscard]] static double mode() { return 0.; }  //!< Mode of distribution
+    [[nodiscard]] static double rnd();                 //!< Random number
 
 private:
     constexpr static const double s_normalizing_constant =  0.398942280401433; // = 1/sqrt(2*pi);
@@ -91,7 +68,7 @@ private:
 
 
 //! Gamma distribution
-class Gamma : private Distribution
+class Gamma
 {
 public:
     Gamma( double alpha, double beta);        //!< Value constructor
@@ -102,13 +79,13 @@ public:
 
     virtual ~Gamma() = default;
 
-    [[nodiscard]] double pdf(  double x ) const override;   //!< Probability density function
-    [[nodiscard]] Prob cdf(  double x ) const override;   //!< Cumulative distribution function
-    [[nodiscard]] double icdf( Prob P ) const override;   //!< Inverse cumulative distribution function
-    [[nodiscard]] double mean()   const override { return alpha/beta;  }
-    [[nodiscard]] double var()    const override { return alpha/(beta*beta); }
-    [[nodiscard]] double mode()   const override;   //!< Mode of distribution
-    [[nodiscard]] double rnd()    const override;   //!< Random number
+    [[nodiscard]] double pdf(  double x ) const;   //!< Probability density function
+    [[nodiscard]] Prob cdf(  double x ) const;   //!< Cumulative distribution function
+    [[nodiscard]] double icdf( Prob P ) const;   //!< Inverse cumulative distribution function
+    [[nodiscard]] double mean()   const { return alpha/beta;  }
+    [[nodiscard]] double var()    const { return alpha/(beta*beta); }
+    [[nodiscard]] double mode()   const;   //!< Mode of distribution
+    [[nodiscard]] double rnd()    const;   //!< Random number
     [[nodiscard]] double shape() const { return alpha;   }  //!< Get value of shape parameter
     [[nodiscard]] double rate()  const { return beta;    }  //!< Get rate (inverse scale)
     [[nodiscard]] double scale() const { return 1./beta; }  //!< Get value of scale parameter (inverse rate)
@@ -120,7 +97,7 @@ private:
 
 
 //! Chi-squared distribution
-class ChiSquared : private Distribution
+class ChiSquared
 {
 public:
     explicit ChiSquared( int nu );                    //!< Value Constructor
@@ -131,13 +108,13 @@ public:
 
     virtual ~ChiSquared() = default;
 
-    [[nodiscard]] double pdf( double x) const override;    //!< Probability density function
-    [[nodiscard]] Prob cdf( double x) const override;    //!< Cumulative distribution function
-    [[nodiscard]] double icdf( Prob P) const override;   //!< Inverse cumulative distribution function
-    [[nodiscard]] double mean()   const override { return nu;   }    //!< Mean
-    [[nodiscard]] double var()    const override { return 2*nu; }    //!< Variance
-    [[nodiscard]] double mode()   const override { return fmax( nu-2, 0.); } //!< mode
-    [[nodiscard]] double rnd()    const override;    //!< Random number
+    [[nodiscard]] double pdf( double x) const;    //!< Probability density function
+    [[nodiscard]] Prob cdf( double x) const;    //!< Cumulative distribution function
+    [[nodiscard]] double icdf( Prob P) const;   //!< Inverse cumulative distribution function
+    [[nodiscard]] double mean()   const { return nu;   }    //!< Mean
+    [[nodiscard]] double var()    const { return 2*nu; }    //!< Variance
+    [[nodiscard]] double mode()   const { return fmax( nu-2, 0.); } //!< mode
+    [[nodiscard]] double rnd()    const;           //!< Random number
     [[nodiscard]] int dof() const { return nu; }   //!< Get degrees of freedom
 
 private:
@@ -149,7 +126,7 @@ private:
 
 
 //! Exponential distribution
-class Exponential : private Distribution
+class Exponential
 {
 public:
     explicit Exponential( double lambda);         //!< Value constructor
@@ -161,24 +138,24 @@ public:
     virtual ~Exponential() = default;
 
     //! Probability density function
-    [[nodiscard]] double pdf( const double x) const override {
+    [[nodiscard]] double pdf( const double x) const {
         return x>=0 ? lambda*exp(-lambda*x) : 0.;
     }
 
     //! Cumulative distribution function
-    [[nodiscard]] Prob cdf( const double x) const override {
+    [[nodiscard]] Prob cdf( const double x) const {
         return x>=0 ? Prob( 1.-exp(-lambda*x)) : Prob(0);
     }
 
     //! Inverse cumulative distribution function
-    [[nodiscard]]  double icdf( const Prob P) const override {
+    [[nodiscard]]  double icdf( const Prob P) const {
         return -log( 1.-P() )/lambda;
     }
 
-    [[nodiscard]]  double mean()   const override { return 1./lambda; }  //!< mean
-    [[nodiscard]]  double var()    const override { return 1./(lambda*lambda); } //!< Variance
-    [[nodiscard]] double mode()   const override { return 0.; }  //!< mode
-    [[nodiscard]] double rnd()    const override;  //!< Random number
+    [[nodiscard]] double mean()   const { return 1./lambda; }  //!< mean
+    [[nodiscard]] double var()    const { return 1./(lambda*lambda); } //!< Variance
+    [[nodiscard]] static double mode() { return 0.; }          //!< mode
+    [[nodiscard]] double rnd()    const;  //!< Random number
 
     [[nodiscard]] double rate()  const {return lambda; }  //!< Get rate (inverse scale)
     [[nodiscard]] double scale() const {return 1./lambda;}   //!< Get scale (inverse rate)
@@ -190,7 +167,7 @@ private:
 
 
 //! Uniform distribution U(a,b)
-class ContinuousUniform : private Distribution
+class ContinuousUniform
 {
 public:
     explicit ContinuousUniform( double, double);
@@ -201,13 +178,12 @@ public:
 
     virtual ~ContinuousUniform() = default;
 
-    [[nodiscard]] double pdf(  double x ) const override;    //!< Probability density function
-    [[nodiscard]] Prob cdf(  double x ) const override;    //!< Cumulative distribution function
-    [[nodiscard]] double icdf( Prob P) const override;     //!< Inverse cumulative distribution function
-    [[nodiscard]] double mean()   const override { return (a+b)/2; }  //!< Mean
-    [[nodiscard]] double var()    const override { return (b-a)*(b-a)/12.; }  //!< Variance
-    [[nodiscard]] double mode()   const override { return NAN; }  //!< Mode of distribution
-    [[nodiscard]] double rnd()    const override;            //!< Random number
+    [[nodiscard]] double pdf(  double x ) const;    //!< Probability density function
+    [[nodiscard]] Prob cdf(  double x ) const;    //!< Cumulative distribution function
+    [[nodiscard]] double icdf( Prob P) const;     //!< Inverse cumulative distribution function
+    [[nodiscard]] double mean()   const { return (a+b)/2; }  //!< Mean
+    [[nodiscard]] double var()    const { return (b-a)*(b-a)/12.; }  //!< Variance
+    [[nodiscard]] double rnd()    const;            //!< Random number
 
 private:
     const double a;
