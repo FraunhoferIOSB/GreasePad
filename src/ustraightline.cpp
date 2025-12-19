@@ -140,8 +140,8 @@ uPoint uStraightLine::project(const uPoint &ux) const
     const Vector3d z = skew(l)*skew(x)*CC()*l;
 
     // Jacobians
-    const Matrix3d AA = -skew(l)*skew(CC()*l);
-    const Matrix3d BB = skew(l) * skew(x) * CC() + skew(skew(CC() * l) * x);
+    const Matrix3d AA = -skew(l)*skew<double>(CC()*l);
+    const Matrix3d BB = skew(l) * skew(x) * CC() + skew<double>(skew<double>(CC() * l) * x);
 
     const Matrix3d Cov_zz = AA * ux.Cov() *AA.transpose()
             +BB*Cov()*BB.transpose();

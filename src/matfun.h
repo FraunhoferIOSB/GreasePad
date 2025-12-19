@@ -26,6 +26,7 @@ using Eigen::SparseMatrix;
 using Eigen::Matrix3d;
 using Eigen::Vector3d;
 using Eigen::Index;
+using Eigen::Matrix;
 using Eigen::Vector;
 using Eigen::VectorXi;
 using Eigen::Dynamic;
@@ -90,9 +91,11 @@ using Eigen::Dynamic;
 }
 
 
-[[maybe_unused]] static Matrix3d skew(const Vector3d &x)
+//! skew-symmetric matrix S(x) from vector x
+template <typename T>
+[[maybe_unused]] static Matrix<T,3,3> skew(const Vector<T,3> &x)
 {
-    return (Matrix3d() << 0.,-x(2),x(1), x(2),0.,-x(0), -x(1),x(0),0.).finished();
+    return (Matrix<T,3,3>() << 0.,-x(2),x(1), x(2),0.,-x(0), -x(1),x(0),0.).finished();
 }
 
 

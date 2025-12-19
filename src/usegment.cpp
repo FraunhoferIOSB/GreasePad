@@ -113,11 +113,11 @@ uStraightLineSegment::uStraightLineSegment( const uPoint & ux,
     //Matrix3d JJlx = -Sy;
     //Matrix3d JJly = Sx;
 
-    Matrix3d const JJmx = -sign(yh) * (Sx * CC() * Sy + skew(CC() * l));
+    Matrix3d const JJmx = -sign(yh) * (Sx * CC() * Sy + skew<double>(CC() * l));
     Matrix3d const JJmy = +sign(yh) * UUx;
 
     Matrix3d const JJnx = -sign(xh)*UUy;
-    Matrix3d const JJny = +sign(xh)*( Sy*CC()*Sx -skew( CC()*l ));
+    Matrix3d const JJny = +sign(xh)*( Sy*CC()*Sx -skew<double>( CC()*l ));
 
     /* JJ = [ ...
         JJlx, JJly; ...
