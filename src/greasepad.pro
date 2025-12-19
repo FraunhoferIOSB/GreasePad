@@ -29,7 +29,6 @@ SOURCES += \
     aabb.cpp \
     adjustment.cpp \
     conics.cpp \
-    conncomp.cpp \
     constraints.cpp \
     main.cpp \
     mainwindow.cpp \
