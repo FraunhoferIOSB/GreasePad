@@ -153,7 +153,19 @@ int sign(T val) { return (T(0) <= val) - (val < T(0));  }
 }
 
 
-[[nodiscard,maybe_unused]] static VectorXi unique(const VectorXi &x)
+//! Unique values in vector
+template <typename T>
+ [[nodiscard,maybe_unused]] static Vector<T, Dynamic> unique( const Vector<T,Dynamic> &x)
+{
+    auto u = x;
+    std::sort( u.begin(), u.end() );
+    auto last = std::unique( u.begin(), u.end() );  // remove consecutive (adjacent) duplicates
+    auto n = std::distance( u.begin(), last);
+    return u.head(n);
+}
+
+
+/* [[nodiscard,maybe_unused]] static VectorXi unique(const VectorXi &x)
 {
     // qDebug() << Q_FUNC_INFO;
     Q_ASSERT( (x.array()>=0).all() );
@@ -181,7 +193,7 @@ int sign(T val) { return (T(0) <= val) - (val < T(0));  }
     Q_ASSERT( (u.array()>=0).all() );
 
     return u;
-}
+} */
 
 
 } // namespace Matfun
