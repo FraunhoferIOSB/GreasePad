@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,12 +33,16 @@ namespace Uncertain {
 
 class uPoint;
 class uStraightLine;
+
 using Eigen::Matrix;
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
 using Eigen::Matrix3d;
 using Eigen::Vector2d;
 using Eigen::Vector3d;
+
+using Geometry::Aabb;
+
 
 //! Uncertain straight line segment
 class uStraightLineSegment

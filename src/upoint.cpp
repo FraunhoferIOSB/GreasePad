@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "aabb.h"
+
 #include "uncertain.h"
 #include "upoint.h"
 #include "ustraightline.h"

@@ -23,6 +23,8 @@
 #include <cmath>
 
 
+namespace Geometry {
+
 //! Axis-aligned bounding box
 class Aabb {
 
@@ -62,5 +64,6 @@ private:
     double m_y_max = 0;
 };
 
+} // namespace Geometry
 
 #endif // AABB_H
