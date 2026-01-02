@@ -26,7 +26,6 @@ contains(QMAKE_CC, gcc) {
 
 
 SOURCES += \
-    aabb.cpp \
     adjustment.cpp \
     conics.cpp \
     constraints.cpp \

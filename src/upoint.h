@@ -19,9 +19,9 @@
 #ifndef UPOINT_H
 #define UPOINT_H
 
+#include "aabb.h"     // axis-aligned bounding box
 #include "uncertain.h"
 
-class Aabb;    // axis-aligned bounding box
 
 namespace Uncertain {
 
