@@ -32,7 +32,10 @@
 
 #include "matrix.h"
 
+#include <functional>
+#include <map>
 #include <memory>
+#include <string>
 
 
 
@@ -257,6 +260,48 @@ private:
     static constexpr double s_sc    = 0.2;
     static constexpr double s_shear = 0.1;
 };
+
+class Factory {
+private:
+    std::map<std::string, std::function <std::shared_ptr<QConstraintBase >() > > m_map;
+
+    ~Factory() {
+        // qDebug() << Q_FUNC_INFO;
+        m_map.clear();
+    }
+    Factory & operator= (const Factory & other) {
+        if (this == &other) {
+            return *this;
+        }
+        return *this;
+    }
+
+public:
+    Factory(const Factory & ) = delete;  // not clonable
+    Factory(const Factory && ) = delete; // not movable
+    Factory & operator= ( Factory &&) = delete;
+
+    Factory() {
+        m_map["horizontal"] = [] {return QAligned::create();    };
+        m_map["vertical"]   = [] {return QAligned::create();    };
+        m_map["diagonal"]   = [] {return QAligned::create();    };
+        m_map["orthogonal"] = [] {return QOrthogonal::create(); };
+        m_map["copunctual"] = [] {return QCopunctual::create(); };
+        m_map["parallel"]   = [] {return QParallel::create();   };
+    }
+    static Factory *getInstance(){
+        static Factory instance;
+        return & instance;
+    }
+    std::shared_ptr<QConstraintBase> create(const std::string &s) {
+        // assert( m_map.find(c) != m_map.end() && "unknown key");  // C++20: contains(c)
+        if ( m_map.find(s)== m_map.end() ) {
+            return nullptr;
+        }
+        return m_map[s]();
+    }
+};
+
 
 } // namespace QConstraint
 

@@ -326,29 +326,8 @@ bool impl::deserialize( QDataStream & in )
     qDebug().noquote() << "(3) graphics...";
 
     qDebug().noquote() << "(3.1) constraints...";
-    std::shared_ptr<QConstraint::QConstraintBase> q;
     for ( const auto & con : std::as_const( m_constr)) {
-
-        qDebug() << "type = " << con->type_name();
-        if ( con->is<Vertical>() ) {
-            q = QConstraint::QAligned::create();
-        }
-        if ( con->is<Horizontal>() ) {
-            q = QConstraint::QAligned::create();
-        }
-        if ( con->is<Diagonal>() ) {
-            q = QConstraint::QAligned::create();
-        }
-        if ( con->is<Orthogonal>() ) {
-            q = QConstraint::QOrthogonal::create();
-        }
-        if ( con->is<Parallel>() ) {
-            q = QConstraint::QParallel::create();
-        }
-        if ( con->is<Copunctual>() ) {
-            q = QConstraint::QCopunctual::create();
-        }
-
+        auto q = QConstraint::Factory::getInstance()->create( con->type_name());
         if ( !q->deserialize( in ) ) {
             return false;
         }
