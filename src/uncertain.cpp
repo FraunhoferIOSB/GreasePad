@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "uncertain.h"
-#include "qlogging.h"
 
 #include "matfun.h"
+#include "uncertain.h"
 #include "usegment.h"
 
 #include <QDebug>
@@ -31,31 +30,13 @@
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
+
 namespace Uncertain {
 
 using Matfun::null;
 using Matfun::sign;
 
 
-//! Check if matrix MM is a proper covariance matrix
-bool isCovMat( const MatrixXd & MM )
-{
-    // qDebug() << Q_FUNC_INFO;
-    const Eigen::SelfAdjointEigenSolver<MatrixXd> eig( MM, Eigen::ComputeEigenvectors);
-    Eigen::VectorXcd ev = eig.eigenvalues();
-
-#ifdef QT_DEBUG
-    if ( (ev.real().array() < -DBL_EPSILON ).any() ) {
-        for ( Eigen::Index i=0; i< ev.size(); i++) {
-            qDebug().noquote() << QStringLiteral( "(%1,%2)")
-                        .arg( ev(i).real() )
-                        .arg( ev(i).imag() );
-        }
-    }
-#endif
-
-    return (ev.real().array() >= -DBL_EPSILON ).all();
-}
 
 //! Spherically normalize the entity
 void BasicEntity2D::normalizeSpherical()

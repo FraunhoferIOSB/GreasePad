@@ -18,6 +18,7 @@
 
 
 #include "matfun.h"
+#include "statistics/iscov.h"
 #include "uncertain.h"
 #include "upoint.h"
 #include "ustraightline.h"
@@ -33,9 +34,13 @@
 #include <cmath>
 #include <cstdlib>
 
-using Matfun::sign;
 
 namespace Uncertain {
+
+using Matfun::sign;
+
+using Stats::isCovMat;
+
 
 //! Construction of uncertain point via 3-vector x and its covariance matrix
 uPoint::uPoint(const Vector3d &x,

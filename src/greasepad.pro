@@ -70,6 +70,7 @@ HEADERS += \
     statistics/chisquared.h \
     statistics/exponential.h \
     statistics/gamma.h \
+    statistics/iscov.h \
     statistics/normal.h \
     statistics/prob.h \
     statistics/uniform.h \

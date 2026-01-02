@@ -22,6 +22,7 @@
 #include <cmath>
 
 #include "matfun.h"
+#include "statistics/iscov.h"
 #include "uncertain.h"
 #include "upoint.h"
 #include "ustraightline.h"
@@ -41,6 +42,7 @@ using Eigen::Vector3d;
 
 using Matfun::sign;
 
+using Stats::isCovMat;
 
 namespace Uncertain {
 
