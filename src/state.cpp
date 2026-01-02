@@ -315,90 +315,44 @@ bool impl::deserialize( QDataStream & in )
         }
 
         std::shared_ptr<ConstraintBase> c;
-        /* switch (type_code) {
-        case 'v' :
-            c = std::make_shared<Vertical>();
-            break;
-        case 'h' :
-            c = std::make_shared<Horizontal>();
-            break;
-        case 'd' :
-            c = std::make_shared<Diagonal>();
-            break;
-        case 'o' :
-            c = std::make_shared<Orthogonal>();
-            break;
-        case 'p' :
-            c = std::make_shared<Parallel>();
-            break;
-        case 'c' :
-            c = std::make_shared<Copunctual>();
-            break;
-        default:
-            qDebug().noquote() << "constraint: unknown code '" << type_code << "'\n";
-            break;
-        }*/
-
         c = Constraint::Factory::getInstance()->create(type_code);
         if ( c==nullptr ) {
             return false;
         }
-
         in >> *c;  // .get();
-
         m_constr.append( c );
     }
 
     qDebug().noquote() << "(3) graphics...";
 
     qDebug().noquote() << "(3.1) constraints...";
+    std::shared_ptr<QConstraint::QConstraintBase> q;
     for ( const auto & con : std::as_const( m_constr)) {
 
+        qDebug() << "type = " << con->type_name();
         if ( con->is<Vertical>() ) {
-            auto q = QConstraint::QAligned::create();
-            if ( !q->deserialize( in ) ) {
-                return false;
-            }
-            m_qConstraint.append( q);
+            q = QConstraint::QAligned::create();
         }
-
         if ( con->is<Horizontal>() ) {
-            auto q = QConstraint::QAligned::create();
-            if ( !q->deserialize( in ) ) {
-                return false;
-            }
-            m_qConstraint.append( q);
+            q = QConstraint::QAligned::create();
         }
-
         if ( con->is<Diagonal>() ) {
-            auto q = QConstraint::QAligned::create();
-            if ( !q->deserialize( in ) ) {
-                return false;
-            }
-            m_qConstraint.append( q);
+            q = QConstraint::QAligned::create();
         }
-
         if ( con->is<Orthogonal>() ) {
-            auto q = QConstraint::QOrthogonal::create();
-            if ( !q->deserialize( in ) ) {
-                return false;
-            }
-            m_qConstraint.append( q);
+            q = QConstraint::QOrthogonal::create();
         }
         if ( con->is<Parallel>() ) {
-            auto q = QConstraint::QParallel::create();
-            if ( !q->deserialize( in ) ) {
-                return false;
-            }
-            m_qConstraint.append( q);
+            q = QConstraint::QParallel::create();
         }
         if ( con->is<Copunctual>() ) {
-            auto q = QConstraint::QCopunctual::create();
-            if ( !q->deserialize( in ) ) {
-                return false;
-            }
-            m_qConstraint.append( q);
+            q = QConstraint::QCopunctual::create();
         }
+
+        if ( !q->deserialize( in ) ) {
+            return false;
+        }
+        m_qConstraint.append( q);
     }
 
     qDebug().noquote() << "(3.2) strokes ...";
