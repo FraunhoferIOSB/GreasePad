@@ -27,7 +27,6 @@ contains(QMAKE_CC, gcc) {
 
 SOURCES += \
     adjustment.cpp \
-    conics.cpp \
     constraints.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -49,10 +48,10 @@ SOURCES += \
 HEADERS += \
     adjustment.h \
     commands.h \
-    conics.h \
     conncomp.h \
     constraints.h \
     geometry/aabb.h \
+    geometry/conics.h \
     geometry/minrot.h \
     global.h \
     mainwindow.h \

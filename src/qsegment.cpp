@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "conics.h"
+
+#include "geometry/conics.h"
 #include "matfun.h"
 #include "qsegment.h"
 #include "upoint.h"
@@ -236,11 +237,11 @@ void QSegment::setShape( const uPoint &ux,
     // two ellipses ...............................................
     uPoint ux2 = x2.euclidean();
     Matrix3d CC = cof3( k2*ux2.Cov() -ux2.v()*ux2.v().adjoint() );
-    Conic::Ellipse const ell_x(CC);
+    Geometry::Ellipse const ell_x(CC);
 
     ux2 = y2.euclidean();
     CC = cof3( k2*ux2.Cov() -ux2.v()*ux2.v().adjoint() );
-    Conic::Ellipse const ell_y(CC);
+    Geometry::Ellipse const ell_y(CC);
 
     ellipse_.first  = toPoly( ell_x.poly( nSupport ) );
     ellipse_.second = toPoly( ell_y.poly( nSupport ) );
@@ -251,7 +252,7 @@ void QSegment::setShape( const uPoint &ux,
     // uStraightLine ul = uStraightLine::cross(x2,y2);
     ul = ul.euclidean();
     CC = k2*ul.Cov() -ul.v()*ul.v().adjoint();
-    Conic::Hyperbola const hyp( CC );
+    Geometry::Hyperbola const hyp( CC );
 
     // Two polar lines ............................................
     Vector3d const lx = ell_y.polar(x2.v()).normalized();
