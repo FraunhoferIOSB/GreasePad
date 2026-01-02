@@ -90,8 +90,7 @@ bool BasicEntity2D::isIdenticalTo( const BasicEntity2D & us,
     Vector2d const d = JJ.adjoint()*( a.v() -b.v() );     // (10.141)
     Eigen::Matrix2d const Cov_dd = JJ.adjoint() * (a.Cov() + b.Cov()) * JJ;
 
-    // return d.adjoint()*Cov_dd.inverse()*d < T;    // dof = 2
-    return d.dot(Cov_dd.inverse()*d) < T;    // dof = 2
+    return d.dot(Cov_dd.ldlt().solve(d) ) < T;    // dof = 2
 }
 
 } // namespace Uncertain

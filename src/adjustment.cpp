@@ -202,7 +202,7 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
         cg = -g0  -BBr*lr;
 
         // estimated update of reduced coordinates observations
-        redl = rCov_ll*BBr.adjoint()*lu_decomp.inverse()*cg +lr;
+        redl = rCov_ll*BBr.adjoint()*lu_decomp.solve(cg) +lr;
 
         // updates adjusted observations, via retraction
         update( redl );
