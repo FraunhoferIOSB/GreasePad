@@ -47,12 +47,12 @@ SOURCES += \
     ustraightline.cpp
 
 HEADERS += \
-    aabb.h \
     adjustment.h \
     commands.h \
     conics.h \
     conncomp.h \
     constraints.h \
+    geometry/aabb.h \
     global.h \
     mainwindow.h \
     mainscene.h \

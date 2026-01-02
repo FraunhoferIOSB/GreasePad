@@ -19,7 +19,7 @@
 #ifndef UPOINT_H
 #define UPOINT_H
 
-#include "aabb.h"     // axis-aligned bounding box
+#include "geometry/aabb.h"     // axis-aligned bounding box
 #include "uncertain.h"
 
 

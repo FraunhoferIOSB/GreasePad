@@ -19,7 +19,7 @@
 #ifndef USEGMENT_H
 #define USEGMENT_H
 
-#include "aabb.h"
+#include "geometry/aabb.h"
 
 #include <QDataStream> // Qt
 
@@ -28,6 +28,7 @@
 
 #include <cmath>
 #include <memory> // C++
+
 
 namespace Uncertain {
 
