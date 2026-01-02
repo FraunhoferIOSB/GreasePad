@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 #include <cmath>
 #include <cstdlib>
 
+#include "geometry/minrot.h"
 #include "matfun.h"
 
 namespace Constraint {
@@ -37,7 +38,8 @@ using Eigen::Vector3d;
 using Eigen::Vector2cd;
 using Eigen::Matrix;
 
-using Matfun::Rot_ab;
+using Geometry::Rot_ab;
+
 using Matfun::null;
 using Matfun::cof3;
 using Matfun::sign;

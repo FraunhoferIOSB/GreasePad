@@ -53,6 +53,7 @@ HEADERS += \
     conncomp.h \
     constraints.h \
     geometry/aabb.h \
+    geometry/minrot.h \
     global.h \
     mainwindow.h \
     mainscene.h \

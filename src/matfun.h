@@ -63,20 +63,6 @@ using Eigen::Dynamic;
 }
 
 
-
-[[maybe_unused]] static MatrixXd Rot_ab( const VectorXd &a, const VectorXd &b)
-{
-    Q_ASSERT( a.size()==b.size() );
-#ifdef QT_DEBUG
-    Q_ASSERT( std::fabs( a.norm()-1.) < FLT_EPSILON );
-    Q_ASSERT( std::fabs( b.norm()-1.) < FLT_EPSILON );
-#endif
-    return MatrixXd::Identity( a.size(),a.size())
-           +2*b*a.adjoint()
-           -(a+b)*(a+b).adjoint()/(1.+a.dot(b));
-}
-
-
 //! check if the matrix AA is rank-deficient
 [[maybe_unused]] static bool is_rank_deficient( SparseMatrix<double,Eigen::ColMajor> & AA, const double threshold )
 {
