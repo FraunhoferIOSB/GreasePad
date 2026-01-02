@@ -17,6 +17,7 @@
  */
 
 
+#include "matfun.h"
 #include "uncertain.h"
 #include "upoint.h"
 #include "ustraightline.h"

@@ -26,7 +26,7 @@
 #include <cmath>
 #include <utility>
 
-#include "matfun.h"
+#include "geometry/skew.h"
 
 
 //! Uncertain geometric entities
@@ -34,7 +34,8 @@ namespace Uncertain {
 
 using Eigen::Matrix3d;
 using Eigen::Vector3d;
-using Matfun::skew;
+
+using Geometry::skew;
 
 
 //! Check if matrix is covariance matrix

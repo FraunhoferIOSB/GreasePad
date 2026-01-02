@@ -31,7 +31,7 @@
 #include "qassert.h"
 #include "qlogging.h"
 
-#include "matfun.h"
+#include "geometry/skew.h"
 
 
 //! conics, rotations, bounding boxes, cross product
@@ -41,8 +41,6 @@ using Eigen::Matrix3d;
 using Eigen::Vector3d;
 using Eigen::Matrix2d;
 using Eigen::Vector2d;
-
-using Matfun::skew;
 
 
 //! Base class for conics

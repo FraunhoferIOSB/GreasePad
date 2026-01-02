@@ -53,6 +53,7 @@ HEADERS += \
     geometry/aabb.h \
     geometry/conics.h \
     geometry/minrot.h \
+    geometry/skew.h \
     global.h \
     mainwindow.h \
     mainscene.h \

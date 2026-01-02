@@ -77,14 +77,6 @@ using Eigen::Dynamic;
 }
 
 
-//! skew-symmetric matrix S(x) from vector x
-template <typename T>
-[[maybe_unused]] static Matrix<T,3,3> skew(const Vector<T,3> &x)
-{
-    return (Matrix<T,3,3>() << 0.,-x(2),x(1), x(2),0.,-x(0), -x(1),x(0),0.).finished();
-}
-
-
 //! 3x3 cofactor matrix, i.e., transposed adjugate
 [[maybe_unused]] static Matrix3d cof3(const Matrix3d &MM)
 {
