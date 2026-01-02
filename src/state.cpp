@@ -1547,31 +1547,26 @@ std::pair<uPoint,uPoint> impl::uEndPoints( const Eigen::VectorXd & xi,
     Q_ASSERT( xi.size()>0 );
     Q_ASSERT( yi.size()==xi.size() );
 
-    // const uStraightLine l(xi,yi);
     const uStraightLine l = uStraightLine::estim(xi,yi);
     const double phi  = l.angle_rad();
     const VectorXd zi = sin(phi)*xi -cos(phi)*yi;
 
     int idx = 0;
-
-    Vector3d x1;
     zi.minCoeff( &idx);
-    x1 << xi(idx), yi(idx), 1;
-
-    Vector3d x2;
+    const Vector3d x1 (xi(idx), yi(idx), 1);
     zi.maxCoeff( &idx);
-    x2 << xi(idx), yi(idx), 1;
+    const Vector3d x2 (xi(idx), yi(idx), 1);
 
     const Matrix3d Zeros = Matrix3d::Zero(3,3);
-    Matrix3d Cov_xx = Matrix3d::Zero();
 
-    uDistance const ud1 = uPoint(x1, Zeros).distanceEuclideanTo(l);
-    Cov_xx.diagonal() << ud1.var_d(), ud1.var_d(), 0.;      // isotropic
-    uPoint const first_ = l.project(uPoint(x1, Cov_xx));
+    const uDistance ud1 = uPoint(x1, Zeros).distanceEuclideanTo(l);
+    const Matrix3d Cov1_xx = Vector3d( ud1.var_d(), ud1.var_d(), 0).asDiagonal(); // isotropic
 
-    uDistance const ud2 = uPoint(x2, Zeros).distanceEuclideanTo(l);
-    Cov_xx.diagonal() << ud2.var_d(), ud2.var_d(), 0.;
-    uPoint const second_ = l.project(uPoint(x2, Cov_xx));
+    const uDistance ud2 = uPoint(x2, Zeros).distanceEuclideanTo(l);
+    const Matrix3d Cov2_xx = Vector3d( ud2.var_d(), ud2.var_d(), 0.).asDiagonal();
+
+    const uPoint first_  = l.project(uPoint(x1, Cov1_xx));
+    const uPoint second_ = l.project(uPoint(x2, Cov2_xx));
 
     return { first_, second_};
 }
