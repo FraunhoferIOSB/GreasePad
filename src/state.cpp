@@ -315,7 +315,7 @@ bool impl::deserialize( QDataStream & in )
         }
 
         std::shared_ptr<ConstraintBase> c;
-        switch (type_code) {
+        /* switch (type_code) {
         case 'v' :
             c = std::make_shared<Vertical>();
             break;
@@ -337,8 +337,9 @@ bool impl::deserialize( QDataStream & in )
         default:
             qDebug().noquote() << "constraint: unknown code '" << type_code << "'\n";
             break;
-        }
+        }*/
 
+        c = Constraint::Factory::getInstance()->create(type_code);
         if ( c==nullptr ) {
             return false;
         }

@@ -24,6 +24,8 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
+#include <functional>
+#include <map>
 #include <memory>
 
 #include "matrix.h"
@@ -251,6 +253,51 @@ private:
 
     template <typename T>
     bool sameSign( T a, T b ) const {  return a*b >= 0.; }   // for debugging and assertion
+};
+
+
+class Factory {
+private:
+    std::map<char, std::function <std::shared_ptr<ConstraintBase >() > > m_map;
+
+    ~Factory() {
+        // qDebug() << Q_FUNC_INFO;
+        m_map.clear();
+    }
+    Factory & operator= (const Factory & other) {
+        if (this == &other) {
+            return *this;
+        }
+        return *this;
+    }
+
+public:
+    Factory(const Factory & ) = delete;  // not clonable
+    Factory(const Factory && ) = delete; // not movable
+    Factory & operator= ( Factory &&) = delete;
+
+    Factory() {
+        // qDebug() << Q_FUNC_INFO;
+        // qDebug() << typeid(Horizontal).name();
+        // qDebug() << typeid(Horizontal).hash_code();
+        m_map['h'] = [] {return std::make_shared<Horizontal>(); };
+        m_map['v'] = [] {return std::make_shared<Vertical>();   };
+        m_map['d'] = [] {return std::make_shared<Diagonal>();   };
+        m_map['o'] = [] {return std::make_shared<Orthogonal>(); };
+        m_map['c'] = [] {return std::make_shared<Copunctual>(); };
+        m_map['p'] = [] {return std::make_shared<Parallel>();   };
+    }
+    static Factory *getInstance(){
+        static Factory instance;
+        return & instance;
+    }
+    std::shared_ptr<ConstraintBase> create(const char c) {
+        // assert( m_map.find(c) != m_map.end() && "unknown key");  // C++20: contains(c)
+        if ( m_map.find(c)== m_map.end() ) {
+            return nullptr;
+        }
+        return m_map[c]();
+    }
 };
 
 } // namespace Constraint
