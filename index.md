@@ -93,7 +93,7 @@ Mid point of a triangle's side using a trapezoid
 <a name="copyright"></a>
 ## Copyright
 
-Copyright (c) 2022-2025 Jochen Meidow, [Fraunhofer IOSB](http://www.iosb.fraunhofer.de), Germany.
+Copyright (c) 2022-2026 Jochen Meidow, [Fraunhofer IOSB](http://www.iosb.fraunhofer.de), Germany.
 
 
 <a name="licensing"></a>
@@ -123,7 +123,7 @@ Details on the utilized methods can be found in the following papers:
 - J. Meidow (2023) [Geometric Reasoning for the freehand-drawn Delineation of 2D Geometries](https://doi.org/10.1016/j.isprsjprs.2023.05.001). ISPRS Journal of Photogrammetry and Remote Sensing, vol. 201, pp. 67-77
 - J. Meidow and L. Lucks (2019) [Draw and Order - Modeless Interactive Acquisition of Outlines](https://doi.org/10.5194/isprs-annals-IV-2-W7-103-2019). ISPRS - Annals of Photogrammetry, Remote Sensing and Spatial Information Sciences, vol. IV-2/W7, pp. 103-110
 - J. Meidow, H. Hammer, and L. Lucks (2020) [Delineation and Construction of 2D Geometries by Freehand Drawing and Geometric Reasoning](https://www.isprs-ann-photogramm-remote-sens-spatial-inf-sci.net/V-5-2020/77/2020/). ISPRS - Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences, vol. V-5-2020, pp. 77-84
-
+- J. Meidow and H. Hammer (2025) [Minimal rotations in arbitrary dimensions with applications to hypothesis testing and parameter estimation](https://10.1016/j.ophoto.2025.100085). ISPRS Open Journal of Photogrammetry and Remote Sensing, vol. 15, p. 100085
 
 
 <a name ="acknowledgments"></a>
