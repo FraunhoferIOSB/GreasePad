@@ -14,7 +14,7 @@ https://fraunhoferiosb.github.io/GreasePad/
 
 ### Copyright
 
-Copyright (c) 2022-2025 Jochen Meidow, [Fraunhofer IOSB](http::/www.iosb.fraunhofer.de), Germany.
+Copyright (c) 2022-2026 Jochen Meidow, [Fraunhofer IOSB](http::/www.iosb.fraunhofer.de), Germany.
 
 
 ### Licensing
