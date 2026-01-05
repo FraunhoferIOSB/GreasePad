@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -157,6 +157,7 @@ private:
     void merge_segment ( Index a );
     bool identities_removed();
     void snap_endpoints( const VectorXi & bicoco, Index nnc);
+    void update_segments( const VectorXidx & maps, const AdjustmentFramework & a);
 
     // reduce
     void remove_constraint( Index i );
@@ -769,25 +770,32 @@ void impl::search_subtask( const Eigen::VectorXidx & mapc_,
     // update segments: project end points onto adjusted line ..............................
 
     qDebug() << "update segments...";
+    update_segments( maps_ , a);
+}
 
+
+//! project end points of segments onto adjusted lines
+void impl::update_segments( const VectorXidx & maps_,
+                            const AdjustmentFramework & a)
+{
     for ( Index s=0; s<maps_.size(); s++ ) {
         //  straight line:  s-th 3-vector
-        // const StraightLine ul( a.getEntity(s, 3) );
-        std::pair<VectorXd,MatrixXd> const p = a.getEntity(s);
+        const std::pair<Vector3d,Matrix3d> p = a.getEntity(s);
+        const uStraightLine ul( p.first, p.second );
 
-        const uStraightLine ul(  static_cast<Vector3d>(p.first),
-                                 static_cast<Matrix3d>(p.second) );
         const uPoint ux = m_segm.at( maps_(s) )->ux();
-        const uPoint uy = m_segm.at(maps_(s))->uy();
+        const uPoint uy = m_segm.at( maps_(s) )->uy();
 
-        uPoint const ua = ul.project(ux).sphericalNormalized();
-        uPoint const ub = ul.project(uy).sphericalNormalized();
+        const uPoint ua = ul.project(ux).sphericalNormalized();
+        const uPoint ub = ul.project(uy).sphericalNormalized();
 
         // qDebug() << QString("subtask: replace segment %1 due to adjustment").arg(s);
-        auto us = std::make_shared<uStraightLineSegment>(ua,ub);
+        const auto us = std::make_shared<uStraightLineSegment>(ua,ub);
         m_segm.replace( maps_(s), us);
+
     }
 }
+
 
 void impl::snap_endpoints( const VectorXi & bicoco,  const Index nnc)
 {
