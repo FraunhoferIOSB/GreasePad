@@ -280,20 +280,20 @@ void AdjustmentFramework::Jacobian(
 {
     int R = 0; // counter for number of equations
 
-    for ( Index c=0; c<mapc.size(); c++ )
+    for ( const auto & c : mapc)
     {
         //qDebug().noquote() << QStringLiteral("constraint #%1 (status = %2)").arg( c+1).arg(
            //                       constr_.at(mapc_(c))->status());
 
         // !! not required ==> obsolete or(!) unevaluated
-        const auto & con = constr->at( mapc(c) );
+        const auto & con = constr->at( c );
         if ( con->status() != ConstraintBase::REQUIRED )  { // observe the "!="
             continue;
         }
 
         // (first) location of idx(i) in vector 'maps',
         //     Matlab: [~,idx] = ismember(idx,maps)
-        auto idx = Bi->findInColumn( mapc(c) );
+        auto idx = Bi->findInColumn( c );
         for ( Index i=0; i<idx.size(); i++ ) {
             idx(i) = indexOf<Index>( maps, idx(i) );
         }
