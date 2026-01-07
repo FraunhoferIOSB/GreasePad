@@ -624,7 +624,7 @@ Index impl::find_new_constraints()
     // concurrence & parallelism (1) ..................................
     if ( State::considerCopunctual() || State::considerParallel() ) {
         // Find walks of length 2 between the vertices of the graph.
-        VectorXidx nbs = spfind<int>( WW.col(c) );
+        const VectorXidx nbs = spfind<int>( WW.col(c) );
         for ( Index n=0; n<nbs.rows()-1; n++) {
             const Index a = nbs(n);  // [a] is a walk of length 2 away from [c].
 
@@ -642,7 +642,7 @@ Index impl::find_new_constraints()
             if ( State::considerCopunctual() ) {
                 // [a] and [c] are adjacent and have at least one common neighbor.
                 // Find all common neighbors of [a] and [c].
-                VectorXidx nbnb = Adj.findInColumn(a); // neighbors of [a].
+                const VectorXidx nbnb = spfind<int>( Adj.col(a) ); // neighbors of [a].
                 for ( Index m=0; m<nbnb.rows()-1; m++) {
                     const Index b = nbnb(m);
 
@@ -667,7 +667,7 @@ Index impl::find_new_constraints()
 
     // parallelism (2) ......................................
     // case: straight line segment connects two segments
-    VectorXidx idx = Adj.findInColumn(c); // neighbors of [c]
+    const VectorXidx idx = spfind<int>( Adj.col(c) ); // neighbors of [c]
 
     // Check all pairs of neighbors.
     for ( Index i=0; i<idx.rows(); i++) {
@@ -1043,7 +1043,7 @@ void impl::remove_constraint( const Index i )
 
     if ( m_constr.at(i)->is<Parallel>() )
     {
-        VectorXidx idx = Bi.findInColumn( i);
+        const VectorXidx idx = spfind<int>( Bi.col(i) );
         Q_ASSERT_X( idx.size() == 2, Q_FUNC_INFO,
                     QStringLiteral("parallel with %1 entities")
                     .arg( QString::number(idx.size())).toUtf8() );
@@ -1284,7 +1284,7 @@ void impl::replaceGraphics() {
     for( int c=0; c<m_constr.length(); c++)
     {
         bool modified = false;
-        const VectorXidx idxx = Bi.findInColumn(c);
+        const VectorXidx idxx = spfind<int>( Bi.col(c) );
 
         if ( m_constr.at(c).use_count()==1 ) {
             modified = true; // actually not modified, but added

@@ -67,21 +67,6 @@ SparseMatrix<int> IncidenceMatrix::biadjacency() const {
 }
 
 
-VectorXidx IncidenceMatrix::findInColumn( const Index c ) const
-{
-    Eigen::Index const nnz = innerVector(c).nonZeros();
-
-    VectorXidx idx( nnz );
-    int i=0;
-    for ( SparseMatrix<int>::InnerIterator it(*this,c); it; ++it) {
-        idx(i++) = it.index();
-    }
-
-    return idx;
-}
-
-
-
 void IncidenceMatrix::remove_column( const Index c) {
 
     // qDebug() << Q_FUNC_INFO;

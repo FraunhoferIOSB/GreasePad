@@ -46,7 +46,6 @@ public:
         return *this;
     }
 
-    [[nodiscard]] Eigen::VectorXidx findInColumn( Index c ) const;    //!< Matlab: find(A(:,c))
     [[nodiscard]] bool isSet( Index r, Index c) const;     //!< Check if r and c are related
     [[nodiscard]] SparseMatrix<int> biadjacency() const;   //!< Create biadjacency matrix [O, A; A', O]
 

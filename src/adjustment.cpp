@@ -55,7 +55,7 @@ using Geometry::Rot_ab;
 using Matfun::null;
 using Matfun::is_rank_deficient;
 using Matfun::indexOf;
-
+using Matfun::spfind;
 
 using TextColor::black;
 using TextColor::blue;
@@ -293,7 +293,7 @@ void AdjustmentFramework::Jacobian(
 
         // (first) location of idx(i) in vector 'maps',
         //     Matlab: [~,idx] = ismember(idx,maps)
-        auto idx = Bi.findInColumn( c );
+        auto idx = spfind<int>( Bi.col(c) );
         for ( Index i=0; i<idx.size(); i++ ) {
             idx(i) = indexOf<Index>( maps, idx(i) );
         }
@@ -353,7 +353,7 @@ void AdjustmentFramework::check_constraints(
             continue;
         }
 
-        auto idx = bi.findInColumn( mapc(c) );
+        auto idx = spfind<int>( bi.col(mapc(c)) );
         for ( Index i=0; i<idx.size(); i++ ) {
             idx(i) = indexOf<Index>( maps, idx(i) );
         }
@@ -370,7 +370,7 @@ void AdjustmentFramework::check_constraints(
             deb << (con->required() ? green : blue) << msg1 << black;
             deb << (con->enforced() ? black : red)  << msg2 << black;
 
-            auto idxx = bi.findInColumn( mapc(c) );
+            const auto idxx = spfind<int>( bi.col(mapc(c)) );
             for ( Index i=0; i<idxx.size(); i++ ) {
                 const Index idxxx = indexOf<Index>(maps, idxx(i));
                 deb << idxxx+1;
