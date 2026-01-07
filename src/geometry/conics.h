@@ -44,10 +44,10 @@ using Eigen::Vector2d;
 
 
 //! Base class for conics
-class ConicBase
+class Conic
 {
 public:
-    explicit ConicBase(Matrix3d other) //!< Value constructor
+    explicit Conic(Matrix3d other) //!< Value constructor
         : CC(std::move(other))
     {
         constexpr double T_sym = 1e-6;
@@ -105,11 +105,11 @@ private:
 
 
 //! Ellipse
-class Ellipse : public ConicBase
+class Ellipse : public Conic
 {
 public:
     explicit Ellipse(const Matrix3d &CC ) //!< Value constructor (uncertain point)
-        : ConicBase(CC)
+        : Conic(CC)
     {
         // check if matrix represents an ellipse
         assert( C().topLeftCorner(2,2).determinant() > 0.0 );  // PCV Table 5.8
@@ -150,11 +150,11 @@ public:
 
 
 //! Hyperbola
-class Hyperbola : public ConicBase
+class Hyperbola : public Conic
 {
 public:
     explicit Hyperbola(const Matrix3d &CC) //!< Value constructor (uncertain straight line)
-        : ConicBase(CC)
+        : Conic(CC)
     {
         // check if matrix represents a hyperbola
         assert( C().topLeftCorner(2,2).determinant() < 0.0); // PCV Table 5.8
