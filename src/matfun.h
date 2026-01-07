@@ -23,6 +23,7 @@ namespace Matfun {
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::SparseMatrix;
+using Eigen::SparseVector;
 using Eigen::Matrix3d;
 using Eigen::Vector3d;
 using Eigen::Index;
@@ -132,6 +133,21 @@ int sign(T val) { return (T(0) <= val) - (val < T(0));  }
     }
     return idx;
 }
+
+//! find indices of sparse vectors
+template <typename T>
+[[nodiscard,maybe_unused]] static Vector<Index,Dynamic> spfind( const SparseVector<T> & v)
+{
+    Vector<Index,Dynamic> idx( v.nonZeros() );
+
+    int i=0;
+    for ( typename SparseVector<T>::InnerIterator it(v); it; ++it) {
+        idx(i++) = it.index();
+    }
+
+    return idx;
+}
+
 
 
 //! Unique values in vector
