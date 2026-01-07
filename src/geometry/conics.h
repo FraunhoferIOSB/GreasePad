@@ -173,13 +173,13 @@ public:
 
     [[nodiscard]] std::pair<double,double> lengthsSemiAxes() const  //!< Get lengths/2 of axes
     {
-        auto ev = eigenvalues();
-        double const Delta = C().determinant();
-        double const D = C().topLeftCorner(2, 2).determinant();
-        assert( -Delta/( ev.first*D ) >= 0. );
-        assert( +Delta/( ev.second*D) >= 0. );
-        double const a = std::sqrt(-Delta / (ev.first * D));
-        double const b = std::sqrt(+Delta / (ev.second * D));
+        const auto ev = eigenvalues();
+        const double Delta = C().determinant();
+        const double D = C().topLeftCorner(2, 2).determinant();
+        assert( -Delta/( ev(0)*D) >= 0. );
+        assert( +Delta/( ev(1)*D) >= 0. );
+        const double a = std::sqrt(-Delta / (ev(0) * D));
+        const double b = std::sqrt(+Delta / (ev(1) * D));
 
         return {a,b};
     }
@@ -213,13 +213,16 @@ public:
 
 
 private:
-    [[nodiscard]] std::pair<double,double> eigenvalues() const
+    [[nodiscard]] Vector2d eigenvalues() const
     {
-        double const p = -C().topLeftCorner(2, 2).trace();
-        double const q = C().topLeftCorner(2, 2).determinant();
+        const double p = -C().topLeftCorner(2, 2).trace();
+        const double q = C().topLeftCorner(2, 2).determinant();
 
-        double const ev0 = -p / 2 - std::sqrt(p * p / 4 - q);
-        double const ev1 = -p / 2 + std::sqrt(p * p / 4 - q);
+        const double radicant = p*p/4 -q;
+        assert( radicant >=0 );
+
+        const double ev0 = -p/2 -std::sqrt(radicant);
+        const double ev1 = -p/2 +std::sqrt(radicant);
 
         return {ev0,ev1};
     }
