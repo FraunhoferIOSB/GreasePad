@@ -90,6 +90,7 @@ using Graph::IncidenceMatrix;
 using Matfun::find;
 using Matfun::sign;
 using Matfun::unique;
+using Matfun::spfind;
 
 using TextColor::black;
 using TextColor::blue;
@@ -152,7 +153,6 @@ public:
 private:
     // augment
     Index find_new_constraints();
-    static VectorXi find_in_sparse_column( const SparseMatrix<int> &AA, Index k);
     void find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap);
     void merge_segment ( Index a );
     bool identities_removed();
@@ -216,25 +216,6 @@ private:
     Eigen::ArrayXi arr_segm;
     Eigen::ArrayXi arr_constr;
 };
-
-
-
-VectorXi impl::find_in_sparse_column( const SparseMatrix<int> &AA, const Index k)
-{
-    /* int nnz=0;
-    for ( SparseMatrix<int>::InnerIterator it(AA,k); it; ++it ) {
-        nnz++;
-    }*/
-    const Eigen::Index nnz = AA.innerVector(k).nonZeros();
-
-    VectorXi idx(nnz);
-    int i=0;
-    for (SparseMatrix<int>::InnerIterator it(AA, k); it; ++it) {
-        idx(i++) = it.index();
-    }
-
-    return idx;
-}
 
 
 State::State( const State & other)
@@ -643,10 +624,9 @@ Index impl::find_new_constraints()
     // concurrence & parallelism (1) ..................................
     if ( State::considerCopunctual() || State::considerParallel() ) {
         // Find walks of length 2 between the vertices of the graph.
-
-        VectorXi nbs = find_in_sparse_column( WW, c);
+        VectorXidx nbs = spfind<int>( WW.col(c) );
         for ( Index n=0; n<nbs.rows()-1; n++) {
-            const int a = nbs(n);  // [a] is a walk of length 2 away from [c].
+            const Index a = nbs(n);  // [a] is a walk of length 2 away from [c].
 
             if ( !Adj.isSet(a,c) ) {
                 // [a] and [c] are no neighbors.
