@@ -98,8 +98,8 @@ void AdjustmentFramework::update( const VectorXd &x)
     }
 }
 
-bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
-                                               const IncidenceMatrix * Bi,
+bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
+                                               const IncidenceMatrix & Bi,
                                                const VectorXidx & maps,
                                                const VectorXidx & mapc )
 {
@@ -125,7 +125,7 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
 
     const Index numReq = std::count_if(
         mapc.begin(), mapc.end(),
-        [&constr](Index i){ return constr->at(i)->required();} );
+        [&constr](Index i){ return constr.at(i)->required();} );
 
     if ( verbose ) {
         qDebug().noquote() << QStringLiteral("%1 constraint%2 recognized...")
@@ -145,7 +145,7 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
     const int E = std::accumulate(
         mapc.begin(),  mapc.end(),    0,
         [&constr](int acc, int i){
-            return acc += constr->at(i)->required() ? constr->at(i)->dof() : 0;} );
+            return acc += constr.at(i)->required() ? constr.at(i)->dof() : 0;} );
 
 
     l0_ = l_; // reset(); // set adjusted observations  l0 := l
@@ -271,8 +271,8 @@ void AdjustmentFramework::reduce (
 
 
 void AdjustmentFramework::Jacobian(
-        const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
-        const IncidenceMatrix * Bi,
+        const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
+        const IncidenceMatrix &  Bi,
         SparseMatrix<double, Eigen::ColMajor> & BBr,
         VectorXd & g0,
         const VectorXidx & maps,
@@ -286,14 +286,14 @@ void AdjustmentFramework::Jacobian(
            //                       constr_.at(mapc_(c))->status());
 
         // !! not required ==> obsolete or(!) unevaluated
-        const auto & con = constr->at( c );
+        const auto & con = constr.at( c );
         if ( con->status() != ConstraintBase::REQUIRED )  { // observe the "!="
             continue;
         }
 
         // (first) location of idx(i) in vector 'maps',
         //     Matlab: [~,idx] = ismember(idx,maps)
-        auto idx = Bi->findInColumn( c );
+        auto idx = Bi.findInColumn( c );
         for ( Index i=0; i<idx.size(); i++ ) {
             idx(i) = indexOf<Index>( maps, idx(i) );
         }
@@ -316,10 +316,10 @@ void AdjustmentFramework::Jacobian(
 
 //! check constraints (required and non-required)
 void AdjustmentFramework::check_constraints(
-        const QVector<std::shared_ptr<Constraint::ConstraintBase> > *constr,
-        const IncidenceMatrix * bi,
-        const Eigen::VectorXidx & maps,
-        const Eigen::VectorXidx & mapc) const
+    const QVector<std::shared_ptr<ConstraintBase> > &constr,
+    const IncidenceMatrix &bi,
+    const Eigen::VectorXidx & maps,
+    const Eigen::VectorXidx & mapc) const
 {
     // double d = NAN;       // distance to be checked, d = 0?
     const Index C = mapc.size();
@@ -348,12 +348,12 @@ void AdjustmentFramework::check_constraints(
     //constexpr int width = 25;
     for ( int c=0; c<C; c++ )
     {
-        const auto & con = constr->at( mapc(c) );
+        const auto & con = constr.at( mapc(c) );
         if ( con->unevaluated() ) {
             continue;
         }
 
-        auto idx = bi->findInColumn( mapc(c) );
+        auto idx = bi.findInColumn( mapc(c) );
         for ( Index i=0; i<idx.size(); i++ ) {
             idx(i) = indexOf<Index>( maps, idx(i) );
         }
@@ -370,7 +370,7 @@ void AdjustmentFramework::check_constraints(
             deb << (con->required() ? green : blue) << msg1 << black;
             deb << (con->enforced() ? black : red)  << msg2 << black;
 
-            auto idxx = bi->findInColumn( mapc(c) );
+            auto idxx = bi.findInColumn( mapc(c) );
             for ( Index i=0; i<idxx.size(); i++ ) {
                 const Index idxxx = indexOf<Index>(maps, idxx(i));
                 deb << idxxx+1;

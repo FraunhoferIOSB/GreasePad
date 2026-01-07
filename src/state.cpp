@@ -732,12 +732,9 @@ void impl::search_subtask( const Eigen::VectorXidx & mapc_,
             // add constraint tentative and  check dependency/consistency:
             m_constr.at( mapc_(c) )->setStatus( ConstraintBase::REQUIRED );
 
-            // number of equations (not constraints!):
-            //const int E = number_of_required_equations( mapc_ ); TODO
-            last_constraint_required =  a.enforce_constraints( &m_constr,
-                                                               &Bi,
+            // enforce constraints (adjustment)
+            last_constraint_required =  a.enforce_constraints( m_constr, Bi,
                                                                maps_, mapc_ );
-
 
             if ( !last_constraint_required ) {
                 m_constr.at( mapc_(c) )->setStatus( ConstraintBase::OBSOLETE );
@@ -753,7 +750,7 @@ void impl::search_subtask( const Eigen::VectorXidx & mapc_,
                               .arg( C==1 ? "constraint" : "consistent constraints" ) << black;
         // number of equations (not constraints!):
         // const int E = number_of_required_equations( mapc_ );  TODO
-        last_constraint_required = a.enforce_constraints( &m_constr, &Bi,
+        last_constraint_required = a.enforce_constraints( m_constr, Bi,
                                                           maps_, mapc_);
     }
     // Q_ASSERT_X( last_constraint_required, "greedy search", "final adjustment with inconsistent set");
