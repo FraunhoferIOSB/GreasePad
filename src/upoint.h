@@ -20,6 +20,7 @@
 #define UPOINT_H
 
 #include "geometry/aabb.h"     // axis-aligned bounding box
+#include "udistance.h"
 #include "uncertain.h"
 
 

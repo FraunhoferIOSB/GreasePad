@@ -23,7 +23,6 @@
 #include <Eigen/Dense>
 
 #include <cassert>
-#include <cmath>
 #include <utility>
 
 #include "geometry/skew.h"
@@ -36,37 +35,6 @@ using Eigen::Matrix3d;
 using Eigen::Vector3d;
 
 using Geometry::skew;
-
-
-//! Uncertain distance
-class uDistance
-{
-public:
-    //! Construct uncertain distance with distance and its variance
-    uDistance( const double d, const double var_d) : m_d(d), m_var_d(var_d) {}
-
-    //! Get variance of distance
-    [[nodiscard]] double var_d() const { return m_var_d; }
-
-    //! Get distance
-    [[nodiscard]] double d() const { return m_d; }
-
-    //! Check if distance is greater than zero.
-    [[nodiscard]] bool isGreaterThanZero( const double T) const {
-        if (m_var_d <= 0.0) {return false;}
-        return m_d / std::sqrt(m_var_d) > -T;
-    }
-
-    //! Check if distance is less than zero.
-    [[nodiscard]] bool isLessThanZero(    const double T) const {
-        if (m_var_d <= 0.0) {return false;}
-        return m_d / std::sqrt(m_var_d) < +T;
-    }
-
-private:
-    double     m_d;
-    double m_var_d;
-};
 
 
 //! Base class for uncertain geometric entities, represented by 3-vectors
@@ -102,15 +70,9 @@ protected:
     BasicEntity2D() = default;                                     //!< Default constructor
     BasicEntity2D & operator= ( const BasicEntity2D &) = default;  //!< Copy assignment
 
-    /* template <typename T>
-    int sign(T val) const { return (T(0) <= val) - (val < T(0));  }  // sign(0):=+1*/
-
 private:
     Vector3d m_val; //!< homogeneous 3-vector representing the entity
     Matrix3d m_cov; //!< homogeneous 3x3 covariance matrix
-
-    //! Nullspace of row 3-vector
-    //static Eigen::Matrix<double, 3, 2> null(const Eigen::Vector3d &xs);
 };
 
 } // namespace Uncertain

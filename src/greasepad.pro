@@ -74,6 +74,7 @@ HEADERS += \
     statistics/normal.h \
     statistics/prob.h \
     statistics/uniform.h \
+    udistance.h \
     uncertain.h \
     upoint.h \
     usegment.h \
