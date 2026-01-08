@@ -117,9 +117,11 @@ template <typename T>
 }
 
 
-//! sign(0):=+1
+//! signum function with sign(0):=+1
 template <typename T>
-int sign(T val) { return (T(0) <= val) - (val < T(0));  }
+constexpr int sign(T val) noexcept {
+    return (T(0) <= val) - (val < T(0));
+}
 
 
 //! Matlab's find
