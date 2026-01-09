@@ -251,8 +251,8 @@ private:
     static const int s_dof   = 2;
     static const int s_arity = 2;
 
-    template <typename T>
-    bool sameSign( T a, T b ) const {  return a*b >= 0.; }   // for debugging and assertion
+    //template <typename T>
+    //bool sameSign( T a, T b ) const {  return a*b >= 0.; }   // for debugging and assertion
 };
 
 

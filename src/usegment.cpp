@@ -146,24 +146,20 @@ uStraightLineSegment::uStraightLineSegment( const uPoint & ux,
 
 
 //! Check if the 'this' and the uncertain straight line segment 'ut' intersect (deterministic)
-bool uStraightLineSegment::intersects(const uStraightLineSegment &ut) const
+bool uStraightLineSegment::intersects( const uStraightLineSegment &ut) const
 {
-    double const d1 = ut.hx().dot( hl() );
-    double const d2 = ut.hy().dot( hl() );
-    if (sameSign(d1, d2)) {
+    const double d1 = ut.hx().dot( hl() );
+    const double d2 = ut.hy().dot( hl() );
+    if ( d1*d2 >= 0  ) {   // same sign?
         return false;
     }
 
-    double const d3 = hx().dot( ut.hl() );
-    double const d4 = hy().dot( ut.hl() );
+    const double d3 = hx().dot( ut.hl() );
+    const double d4 = hy().dot( ut.hl() );
 
-    // redundant boolean literal in conditional return statement:
-    /* if ( sameSign( d3,d4) )
-         return false;
-    return true; */
-
-    return !sameSign(d3,d4);
+    return !(d3*d4 >=0 );
 }
+
 
 //! Check if one of the endpoints of the uncertain straight line segment 'other' is incident.
 bool uStraightLineSegment::touches( const uStraightLineSegment & other,
