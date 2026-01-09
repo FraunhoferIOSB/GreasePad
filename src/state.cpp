@@ -44,7 +44,7 @@
 #include "qstroke.h"
 #include "quantiles.h"
 #include "state.h"
-#include "uncertain.h"
+#include "udistance.h"
 #include "upoint.h"
 #include "usegment.h"
 #include "ustraightline.h"
@@ -156,7 +156,7 @@ private:
     void find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap);
     void merge_segment ( Index a );
     bool identities_removed();
-    void snap_endpoints( const VectorXi & bicoco, Index nnc);
+    void snap_endpoints( const VectorXi & bicoco, Index numNewConstr);
     void update_segments( const VectorXidx & maps, const AdjustmentFramework & a);
 
     // reduce
@@ -774,32 +774,22 @@ void impl::update_segments( const VectorXidx & maps_,
 }
 
 
-void impl::snap_endpoints( const VectorXi & bicoco,  const Index nnc)
+void impl::snap_endpoints( const VectorXi & bicoco, const Index numNewConstr)
 {
     // qDebug() << Q_FUNC_INFO;
 
-    // Graph::ConnComp const CoCoBi( Bi.biadjacency() );
-    // VectorXi LabelsNew = CoCoBi.tail( nnc);  // possibly empty
-
-    // const VectorXi bicoco = conncomp( Bi.biadjacency());  // redundant computation!
-    VectorXi LabelsNew = bicoco.tail( nnc);  // possibly empty
-
-
+    VectorXi LabelsNew = bicoco.tail( numNewConstr);  // possibly empty
     LabelsNew.conservativeResize(LabelsNew.rows()+1, LabelsNew.cols());
-    // LabelsNew.coeffRef(LabelsNew.rows()-1) = CoCoBi.label( m_segm.size()-1 );
     LabelsNew.coeffRef(LabelsNew.rows()-1) = bicoco( m_segm.size()-1 );
 
-    VectorXi LabelsNewUnique = unique(LabelsNew);
+    const VectorXi LabelsNewUnique = unique(LabelsNew);
 
-    for (Index ll = 0; ll < LabelsNewUnique.size(); ll++) {
-        int const cc = LabelsNewUnique(ll);
+    for ( const int cc : LabelsNewUnique ) {
         qDebug().noquote() << blue << QString("  snap subtask %1/%2")
                               .arg( cc+1 ).arg( LabelsNewUnique.size() );
 
-        // const VectorXidx m = Matfun::find( CoCoBi.head( m_segm.size()).array()==cc ); // CoCoBi.mapHead(cc, m_segm.size());
         const VectorXidx m = find( arr_segm==cc );
-        for ( Index i=0; i< m.size(); i++) {
-            const Index s = m(i); // triggering segment...
+        for ( const auto s : m) {
 
             // (1) "is touching" ......................................
             uStraightLineSegment useg( *m_segm.at(s) );
@@ -831,10 +821,9 @@ void impl::snap_endpoints( const VectorXi & bicoco,  const Index nnc)
 
             // (2) "touched by" ................................
             for ( SparseMatrix<int,ColMajor>::InnerIterator it( x_touches_l, s) ; it; ++it) {
-                Index const n = it.row(); // neighbor of segment s
-                // if ( ( CoCoBi.label(n) != cc) && ( !y_touches_l.isSet(it.index(),s) ) ) {
+                const Index n = it.row(); // neighbor of segment s
                 if ( ( bicoco(n) != cc) && ( !y_touches_l.isSet(it.index(),s) ) ) {
-                    auto us = std::make_shared<uStraightLineSegment>(  *m_segm.at(n));
+                    auto us = std::make_shared<uStraightLineSegment>(  *m_segm.at(n) );
                     if (us->move_x_to(m_segm.at(s)->hl())) {
                         m_segm.replace( n, us);
                     }
@@ -842,10 +831,9 @@ void impl::snap_endpoints( const VectorXi & bicoco,  const Index nnc)
             }
 
             for (SparseMatrix<int, ColMajor>::InnerIterator it(y_touches_l, s); it; ++it) {
-                Index const n = it.row() ; // neighbor of segment s
+                const Index n = it.row() ; // neighbor of segment s
                 if ( ( bicoco(n) != cc) && ( !x_touches_l.isSet(it.index(),s) )) {
-                    auto us = std::make_shared<uStraightLineSegment>(
-                        *m_segm.at(n)); // static_cast<int>(n)));
+                    auto us = std::make_shared<uStraightLineSegment>( *m_segm.at(n) );
                     if (us->move_y_to(m_segm.at(s)->hl())) {
                         m_segm.replace( n, us);
                     }
@@ -854,6 +842,7 @@ void impl::snap_endpoints( const VectorXi & bicoco,  const Index nnc)
         }
     }
 }
+
 
 bool impl::is_vertical( const Index a)
 {
