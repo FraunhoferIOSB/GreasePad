@@ -51,6 +51,7 @@ HEADERS += \
     conncomp.h \
     constraints.h \
     geometry/aabb.h \
+    geometry/acute.h \
     geometry/conics.h \
     geometry/minrot.h \
     geometry/skew.h \

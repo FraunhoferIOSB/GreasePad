@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,8 +54,8 @@ public:
     //! Signed distance between (0,0) and this straight line
     [[nodiscard]] double signedDistanceToOrigin() const { return v()(2)/v().head(2).norm(); }
 
+    //! Project point onto straight line
     [[nodiscard]] uPoint project( const uPoint & ux) const;
-    [[nodiscard]] double acute(   const uStraightLine & um ) const;
 
     // unary relations ..................................................
     [[nodiscard]] bool isVertical(   double T) const;

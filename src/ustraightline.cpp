@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -150,28 +150,6 @@ uPoint uStraightLine::project(const uPoint &ux) const
 
     return { z, Cov_zz};
 }
-
-
-
-double uStraightLine::acute(const uStraightLine &um) const
-{
-    Eigen::Vector2d a = v().head(2);
-    Eigen::Vector2d b = um.v().head(2);
-    assert( a.norm() > FLT_EPSILON );
-    assert( b.norm() > FLT_EPSILON );
-    a.normalize();
-    b.normalize();
-
-    assert( fabs(a.dot(b)) <= 1.0 );  // a'*b in [-1,+1]
-    double alpha = acos( a.dot(b) );  // [0,pi]
-    if ( alpha > M_PI_2) {            // M_PI_2 = pi/2
-        alpha = M_PI -alpha;
-    }
-    assert( alpha >= 0.0    );
-    assert( alpha <= M_PI_2 );
-    return alpha;
-}
-
 
 
 //! Get Euclidean normalized version of this uncertain straight line

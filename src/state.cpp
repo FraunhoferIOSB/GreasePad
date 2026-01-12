@@ -35,6 +35,7 @@
 #include "adjustment.h"
 #include "conncomp.h"
 #include "constraints.h"
+#include "geometry/acute.h"
 #include "global.h"
 #include "mainscene.h"
 #include "matfun.h"
@@ -892,15 +893,16 @@ bool impl::are_orthogonal( const Index a,
 bool impl::are_identical( const Index a,
                           const Index b)
 {
-    // pre-check with acute angle
-    const double alpha = m_segm.at(a)->ul().acute( m_segm.at(b)->ul() );
-    constexpr double rho = 180./3.14159;
+    // (1) pre-check with acute angle
+    const double alpha = Geometry::acute( m_segm.at(a)->ul().v(),
+                                          m_segm.at(b)->ul().v() );
+    constexpr double rho = 180./3.141592653589793; // = 180°/pi = 57.2958°
     constexpr double T_deg_pre_check = 20.0;
-    if ( alpha*rho > T_deg_pre_check ) {  // 180°/pi = 57.2958°
+    if ( alpha*rho > T_deg_pre_check ) {
         return false;
     }
 
-    // statistical test
+    // (2) statistical test
     return  m_segm.at(a)->straightLineIsIdenticalTo( m_segm.at(b)->ul(),
                                                      State::recogn_.quantile_chi2_2dof() );
 }
