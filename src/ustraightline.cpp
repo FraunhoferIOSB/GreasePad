@@ -39,6 +39,8 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::Matrix3d;
 using Eigen::Vector3d;
+using Matrix6d    = Eigen::Matrix<double,6,6>;
+using RowVector6d = Eigen::Matrix<double,1,6>;
 
 using Matfun::sign;
 using Matfun::cof3;

@@ -69,9 +69,6 @@ public:
                                          double T) const;
 
 private:
-    using Matrix6d    = Eigen::Matrix<double,6,6>;
-    using RowVector6d = Eigen::Matrix<double,1,6>;
-
     static Matrix3d CC();
     static Matrix3d S3();
 };
