@@ -41,12 +41,12 @@ using Eigen::Matrix3d;
 using Eigen::Vector3d;
 
 using Matfun::sign;
+using Matfun::cof3;
 
 using Stats::isCovMat;
 
-namespace Uncertain {
 
-using Matfun::cof3;
+namespace Uncertain {
 
 
 //! Diag([1,1,0])
@@ -56,10 +56,11 @@ Matrix3d uStraightLine::CC()
     return tmp;
 }
 
-//! skew([1,0,0])
+
+//! skew(e3), e3 = [0,0,1]'
 Matrix3d uStraightLine::S3()
 {
-  static const Matrix3d tmp = (Matrix3d() << 0,-1,0,1,0,0,0,0,0).finished();
+  static const Matrix3d tmp = skew( Vector3d{0,0,1} );
   return tmp;
 }
 
