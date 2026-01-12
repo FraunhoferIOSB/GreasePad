@@ -51,9 +51,6 @@ public:
     //! Angle between this straight line and the x-axis in radians
     [[nodiscard]] double angle_rad()  const { return atan2( v(1),v(0) ); }
 
-    //! Signed distance between (0,0) and this straight line
-    [[nodiscard]] double signedDistanceToOrigin() const { return v()(2)/v().head(2).norm(); }
-
     //! Project point onto straight line
     [[nodiscard]] uPoint project( const uPoint & ux) const;
 
