@@ -847,51 +847,45 @@ void impl::snap_endpoints( const VectorXi & bicoco, const Index numNewConstr)
 
 bool impl::is_vertical( const Index a)
 {
-    return m_segm.at(a)->isVertical(
-                State::recogn_.quantile_chi2_1dof()
-                );
+    return m_segm.at(a)->ul().isVertical( State::recogn_.quantile_chi2_1dof() );
 }
+
 
 bool impl::is_horizontal( const Index a)
 {
-    return m_segm.at(a)->isHorizontal(
-                State::recogn_.quantile_chi2_1dof()
-                );
+    return m_segm.at(a)->ul().isHorizontal( State::recogn_.quantile_chi2_1dof() );
 }
+
 
 bool impl::is_diagonal( const Index a)
 {
-    return m_segm.at(a)->isDiagonal(
-                State::recogn_.quantile_chi2_1dof() )
-            ;
+    return m_segm.at(a)->ul().isDiagonal( State::recogn_.quantile_chi2_1dof() );
 }
 
-bool impl::are_copunctual( const Index a,
-                           const Index b,
-                           const Index c)
+
+bool impl::are_copunctual( const Index a, const Index b, const Index c)
 {
-    return  m_segm.at(c)->isCopunctualWith( m_segm.at(a)->ul(),
-                                            m_segm.at(b)->ul(),
-                                            State::recogn_.quantile_chi2_1dof() );
+    return  m_segm.at(c)->ul().isCopunctualWith( m_segm.at(a)->ul(),
+                                                 m_segm.at(b)->ul(),
+                                                 State::recogn_.quantile_chi2_1dof() );
 }
 
-bool impl::are_parallel( const Index a,
-                         const Index b)
+
+bool impl::are_parallel( const Index a, const Index b)
 {
-    return  m_segm.at(a)->isParallelTo( m_segm.at(b)->ul(),
-                                        State::recogn_.quantile_chi2_1dof() );
+    return  m_segm.at(a)->ul().isParallelTo( m_segm.at(b)->ul(),
+                                             State::recogn_.quantile_chi2_1dof() );
 }
 
-bool impl::are_orthogonal( const Index a,
-                           const Index b)
+
+bool impl::are_orthogonal( const Index a, const Index b)
 {
-    return  m_segm.at(a)->isOrthogonalTo( m_segm.at(b)->ul(),
-                                          State::recogn_.quantile_chi2_1dof() );
+    return  m_segm.at(a)->ul().isOrthogonalTo( m_segm.at(b)->ul(),
+                                               State::recogn_.quantile_chi2_1dof() );
 }
 
 
-bool impl::are_identical( const Index a,
-                          const Index b)
+bool impl::are_identical( const Index a, const Index b)
 {
     // (1) pre-check with acute angle
     const double alpha = Geometry::acute( m_segm.at(a)->ul().v(),
@@ -903,9 +897,10 @@ bool impl::are_identical( const Index a,
     }
 
     // (2) statistical test
-    return  m_segm.at(a)->straightLineIsIdenticalTo( m_segm.at(b)->ul(),
-                                                     State::recogn_.quantile_chi2_2dof() );
+    return  m_segm.at(a)->ul().isIdenticalTo( m_segm.at(b)->ul(),
+                                              State::recogn_.quantile_chi2_2dof() );
 }
+
 
 void impl::establish_parallel( const Index a,
                                const Index b)

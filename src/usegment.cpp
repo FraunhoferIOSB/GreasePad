@@ -18,6 +18,7 @@
 
 
 #include "matfun.h"
+#include "udistance.h"
 #include "uncertain.h"
 #include "upoint.h"
 #include "usegment.h"
@@ -241,46 +242,6 @@ Vector3d uStraightLineSegment::hy() const
 }
 
 
-//! Check if the uncertain straight line segment is vertical.
-bool uStraightLineSegment::isVertical( const double T) const
-{
-    return ul().isVertical( T);
-}
-
-//! Check if the uncertain straight line segment is horizontal.
-bool uStraightLineSegment::isHorizontal( const double T) const
-{
-    return ul().isHorizontal( T);
-}
-
-//! Check if the uncertain straight line segment is diagonal.
-bool uStraightLineSegment::isDiagonal( const double T) const
-{
-    return ul().isDiagonal( T);
-}
-
-
-//! Check if uncertain straight line segment is orthogonal to uncertaint straight line segment 'ut'
-bool uStraightLineSegment::isOrthogonalTo( const uStraightLine & um,
-                                           const double T_q) const
-{
-    return ul().isOrthogonalTo( um, T_q );
-}
-
-//! Check if uncertain straight line segment is parallel to uncertaint straight line segment 'ut'
-bool uStraightLineSegment::isParallelTo( const uStraightLine & um,
-                                         const double T) const
-{
-    return ul().isParallelTo( um, T );
-}
-
-//! Check if uncertain straight lines 'this' and 'ut' are identical
-bool uStraightLineSegment::straightLineIsIdenticalTo( const uStraightLine & um,
-                                                      const double T) const
-{
-    return ul().isIdenticalTo( um, T );
-}
-
 //! Move endpoint x along l to intersection point of m and l.
 bool uStraightLineSegment::move_x_to(const Vector3d &m)
 {
@@ -318,14 +279,6 @@ bool uStraightLineSegment::move_y_to( const Vector3d & n )
     return true;
 }
 
-
-//! Check if the uncertain straight line of 'this' is copunctual with the two uncertaint straight lines of 'us' and 'ut'
-bool uStraightLineSegment::isCopunctualWith( const uStraightLine & um,
-                                             const uStraightLine & un,
-                                             const double T) const
-{
-    return ul().isCopunctualWith( um, un, T);
-}
 
 //! Transform uncertain straight line segment via 9x9 transformation matrix for t = [l',m',n']'.
 void uStraightLineSegment::transform( const Matrix9d & TT)

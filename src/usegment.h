@@ -72,21 +72,6 @@ public:
                                    double T_dist,
                                    double T_in) const;
 
-    // unary
-    [[nodiscard]] bool isVertical  ( double T) const;
-    [[nodiscard]] bool isHorizontal( double T) const;
-    [[nodiscard]] bool isDiagonal  ( double T) const;
-
-    // binary
-    [[nodiscard]] bool isOrthogonalTo( const uStraightLine & um,    double T) const;
-    [[nodiscard]] bool isParallelTo(   const uStraightLine & um,    double T) const;
-    [[nodiscard]] bool straightLineIsIdenticalTo( const uStraightLine & um,  double T) const;
-
-    // ternary
-    [[nodiscard]] bool isCopunctualWith( const uStraightLine & um,
-                                         const uStraightLine & un,
-                                         double T) const;
-
     [[nodiscard]] uPoint ux() const;
     [[nodiscard]] uPoint uy() const;
     [[nodiscard]] uStraightLine ul() const;
@@ -118,7 +103,8 @@ public:
 
     //! Get angle between straight line l and x-axis in degree
     [[nodiscard]] double phi_deg() const {
-        constexpr double rho = 180./3.14159;
+        constexpr double pi  = 3.141592653589793;
+        constexpr double rho = 180./pi;
         return rho*atan2( m_t(1),m_t(0) );
     }
 
