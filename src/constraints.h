@@ -158,10 +158,10 @@ public:
 private:
     [[nodiscard]] const char* type_name() const override { return "parallel"; }
 
-    static Eigen::Matrix3d S3();
     static const int s_dof   = 1;
     static const int s_arity = 2;
 };
+
 
 //! Vertical straight line
 class Vertical : public ConstraintCRTP<Vertical>
@@ -177,8 +177,6 @@ private:
 
     static const int s_dof = 1;
     static const int s_arity = 1;
-
-    static Vector3d e2(); //!< [0,1,0]'
 };
 
 
@@ -196,8 +194,6 @@ private:
 
     static const int s_dof = 1;
     static const int s_arity = 1;
-
-    static Vector3d e1(); //!< [1,0,0]'
 };
 
 
@@ -230,7 +226,6 @@ public:
 private:
     [[nodiscard]] const char* type_name() const override { return "orthogonal"; }
 
-    static Matrix3d CC();
     static const int s_dof = 1;
     static const int s_arity = 2;
 };

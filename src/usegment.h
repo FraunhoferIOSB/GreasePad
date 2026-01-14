@@ -119,8 +119,6 @@ private:
     Vector9d m_t;              // 9-vector t=[l',m',n']'
     Matrix9d m_Cov_tt;
     Aabb     m_bounding_box;   // not constant, due to merge operation, .united(...)
-
-    static Matrix3d CC();   // Diag([1,1,0])
 };
 
 } // namespace Uncertain

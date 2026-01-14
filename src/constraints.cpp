@@ -30,15 +30,19 @@
 #include <cstdlib>
 
 #include "geometry/minrot.h"
+#include "geometry/skew.h"
 #include "matfun.h"
+
+using Geometry::skew;
+using Geometry::Rot_ab;
+
 
 namespace Constraint {
 
 using Eigen::Vector3d;
 using Eigen::Vector2cd;
+using Eigen::Vector2d;
 using Eigen::Matrix;
-
-using Geometry::Rot_ab;
 
 using Matfun::null;
 using Matfun::cof3;
@@ -77,8 +81,9 @@ MatrixXd Orthogonal::Jacobian( const VectorXidx & idxx,
     Matrix<double,1,2> JJa;
     Matrix<double,1,2> JJb;
 
-    JJa = b0.adjoint()*CC()*Rot_ab(a0,a)*null(a0);
-    JJb = a0.adjoint()*CC()*Rot_ab(b0,b)*null(b0);
+    static const Matrix3d CC = Vector3d(1,1,0).asDiagonal();
+    JJa = b0.adjoint()*CC*Rot_ab(a0,a)*null(a0);
+    JJb = a0.adjoint()*CC*Rot_ab(b0,b)*null(b0);
 
     MatrixXd Tmp(1,4);
     Tmp << JJa, JJb;
@@ -88,31 +93,16 @@ MatrixXd Orthogonal::Jacobian( const VectorXidx & idxx,
 VectorXd Orthogonal::contradict( const VectorXidx &idx,
                                  const VectorXd &l0) const
 {
-    Vector3d const a = l0.segment(3 * idx(0), 3);
-    Vector3d const b = l0.segment(3 * idx(1), 3);
+    const Vector3d a = l0.segment( 3*idx(0), 3);
+    const Vector3d b = l0.segment( 3*idx(1), 3);
 
+    static const Matrix3d CC = Vector3d(1,1,0).asDiagonal();
     VectorXd tmp(1);
-    tmp << a.dot( CC()*b );
+    tmp << a.dot( CC*b );
 
     return tmp;
 }
 
-
-//! Diag([1,1,0])
-Matrix3d Orthogonal::CC()
-{
-    const static Matrix3d tmp =  (Matrix3d() << 1,0,0,  0,1,0, 0,0,0).finished();
-    return tmp;
-}
-
-
-/*std::shared_ptr<ConstraintBase> Orthogonal::doClone() const
-{
-    auto T = std::make_shared<Orthogonal>();
-    T->setStatus( this->status() );
-    T->setEnforced( this->enforced());
-    return T;
-}*/
 
 MatrixXd Copunctual::Jacobian(const VectorXidx &idx, const VectorXd &l0, const VectorXd &l) const
 {
@@ -198,7 +188,7 @@ VectorXd Identical::contradict( const VectorXidx & idx,
     Q_ASSERT( a0(idx1)*b0(idx2) >= 0 ); // same sign
 
     const Matrix<double, 3, 2> JJ = null(a0);
-    const Eigen::Vector2d d2 = JJ.adjoint() * (a0 - b0); //  (10.141)
+    const Vector2d d2 = JJ.adjoint() * (a0 - b0); //  (10.141)
 
     return d2;
 }
@@ -213,8 +203,9 @@ MatrixXd Parallel::Jacobian(const VectorXidx &idx, const VectorXd &l0, const Vec
     Vector3d const a = l.segment(3 * idx(0), 3);
     Vector3d const b =  l.segment( 3*idx(1),3 );
 
-    const Matrix<double, 1, 2> JJa = -b0.adjoint() * S3() * Rot_ab(a0, a) * null(a0);
-    const Matrix<double, 1, 2> JJb = a0.adjoint() * S3() * Rot_ab(b0, b) * null(b0);
+    static const Matrix3d S3 = skew( Vector3d(0,0,1));
+    const Matrix<double, 1, 2> JJa = -b0.adjoint() * S3 * Rot_ab(a0, a) * null(a0);
+    const Matrix<double, 1, 2> JJb = a0.adjoint() * S3 * Rot_ab(b0, b) * null(b0);
 
     MatrixXd Tmp(1,4);
     Tmp << JJa, JJb;
@@ -226,38 +217,24 @@ VectorXd Parallel::contradict(const VectorXidx &idx, const VectorXd &l0) const
     const Vector3d a = l0.segment( 3*idx(0), 3);
     const Vector3d b = l0.segment( 3*idx(1), 3);
 
+    static const Matrix3d S3 = skew( Vector3d(0,0,1) );
     VectorXd tmp(1);
-    tmp << a.dot( S3()*b );
+    tmp << a.dot( S3*b );
     return tmp;
 }
 
-
-
-//! skew(e_3),  e_3=[0,0,1]'
-Matrix3d Parallel::S3()
-{
-    const static Matrix3d tmp = (Matrix3d() << 0,-1,0, +1,0,0, 0,0,0).finished();
-    return tmp;
-}
-
-
-
-//! e_2 = [0,1,0]'
-Vector3d Vertical::e2()
-{
-    const static Vector3d tmp = (Vector3d() << 0,1,0).finished();
-    return tmp;
-}
 
 MatrixXd Vertical::Jacobian(const VectorXidx &idx, const VectorXd &l0, const VectorXd &l) const
 {
-    Vector3d const a0 = l0.segment(3 * idx(0), 3);
-    Vector3d const a   =  l.segment( 3*idx(0), 3);
+    static const Vector3d e2(0,1,0);
 
-    // returns a scalar, not a 1-vector:
-    //    return e2().dot(  Rot_ab(a0,a)*null(a0) );
-    return e2().adjoint()* Rot_ab(a0,a)*null(a0);
+    const Vector3d a0 = l0.segment(3 * idx(0), 3);
+    const Vector3d a   =  l.segment( 3*idx(0), 3);
+
+    // .dot(...) returns a scalar, not a 1-vector
+    return e2.adjoint()* Rot_ab(a0,a)*null(a0);
 }
+
 
 VectorXd Vertical::contradict( const VectorXidx &idx,
                                const VectorXd &l0) const
@@ -298,21 +275,16 @@ VectorXd Horizontal::contradict( const VectorXidx &idx,
 }
 
 
-//! e_1 = [1,0,0]'
-Vector3d Horizontal::e1()
-{
-    const static Vector3d tmp = (Vector3d() << 1,0,0).finished();
-    return tmp;
-}
-
 MatrixXd Horizontal::Jacobian( const VectorXidx &idx,
                                const VectorXd &l0,
                                const VectorXd &l) const
 {
-    Vector3d const a0 = l0.segment(3 * idx(0), 3);
-    Vector3d const a = l.segment(3 * idx(0), 3);
+    const Vector3d a0 = l0.segment(3*idx(0), 3);
+    const Vector3d a  = l.segment( 3*idx(0), 3);
 
-    return e1().adjoint()*Rot_ab(a0,a)*null(a0);
+    static const Vector3d e1(1,0,0);
+
+    return e1.adjoint()*Rot_ab(a0,a)*null(a0);
 }
 
 

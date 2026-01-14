@@ -51,22 +51,6 @@ using Stats::isCovMat;
 namespace Uncertain {
 
 
-//! Diag([1,1,0])
-Matrix3d uStraightLine::CC()
-{
-    static const Matrix3d tmp = Vector3d(1,1,0).asDiagonal();
-    return tmp;
-}
-
-
-//! skew(e3), e3 = [0,0,1]'
-Matrix3d uStraightLine::S3()
-{
-  static const Matrix3d tmp = skew( Vector3d{0,0,1} );
-  return tmp;
-}
-
-
 //! Uncertain straight line, defined by a 3-vector and its covariance matrix
 uStraightLine::uStraightLine(const Vector3d & l,
                              const Matrix3d & Sigma_ll)
@@ -140,13 +124,15 @@ uStraightLine uStraightLine::estim( const VectorXd & xi,
 //! Project the uncertain point 'ux' onto uncertain straight line 'this'
 uPoint uStraightLine::project(const uPoint &ux) const
 {
+    static const Matrix3d CC = Vector3d(1,1,0).asDiagonal();
+
     const Vector3d l = v();
     const Vector3d x = ux.v();
-    const Vector3d z = skew(l)*skew(x)*CC()*l;
+    const Vector3d z = skew(l)*skew(x)*CC*l;
 
     // Jacobians
-    const Matrix3d AA = -skew(l)*skew<double>(CC()*l);
-    const Matrix3d BB = skew(l) * skew(x) * CC() + skew<double>(skew<double>(CC() * l) * x);
+    const Matrix3d AA = -skew(l)*skew((CC*l).eval()) ;
+    const Matrix3d BB = skew(l) * skew(x)*CC + skew(( skew((CC*l).eval()) * x).eval());
 
     const Matrix3d Cov_zz = AA * ux.Cov() *AA.transpose()
             +BB*Cov()*BB.transpose();
@@ -218,15 +204,17 @@ bool uStraightLine::isDiagonal(double T_q) const
 bool uStraightLine::isOrthogonalTo( const uStraightLine & um,
                                     const double T_q) const
 {
+    static const Matrix3d CC = Vector3d(1,1,0).asDiagonal();
+
     RowVector6d JJ;
-    JJ.leftCols(3)  = um.v().adjoint()*CC();
-    JJ.rightCols(3) =    v().adjoint()*CC();
+    JJ.leftCols(3)  = um.v().adjoint()*CC;
+    JJ.rightCols(3) =    v().adjoint()*CC;
 
     Matrix6d Cov_lm = Matrix6d::Zero();
     Cov_lm.topLeftCorner(3,3) = Cov();
     Cov_lm.bottomRightCorner(3,3) = um.Cov();
 
-    const double d = v().dot(CC() * um.v());
+    const double d = v().dot( CC*um.v() );
     const double var_d = JJ * Cov_lm * JJ.adjoint();
 
     return d*d/var_d <  T_q;
@@ -261,11 +249,13 @@ bool uStraightLine::isCopunctualWith( const uStraightLine & um,
 bool uStraightLine::isParallelTo( const uStraightLine & um,
                                   const double T_q) const
 {
-    const double d = -v().dot(S3() * um.v()); // (7.24)
+    static const Matrix3d S3 = skew( Vector3d(0,0,1) );
+
+    const double d = -v().dot( S3*um.v() ); // (7.24)
 
     RowVector6d JJ;
-    JJ.leftCols(3) = -um.v().adjoint()*S3().adjoint();  // adj(S3)=-S3 ?
-    JJ.rightCols(3) =  -v().adjoint()*S3();
+    JJ.leftCols(3) = -um.v().adjoint()*S3.adjoint();  // adj(S3)=-S3 ?
+    JJ.rightCols(3) =  -v().adjoint()*S3;
 
     Matrix6d Cov_lm = Matrix6d::Zero();
     Cov_lm.topLeftCorner(3,3)     = Cov();

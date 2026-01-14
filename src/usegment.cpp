@@ -57,12 +57,6 @@ namespace Uncertain {
 //! Output operator
 //QDataStream &operator>>(QDataStream &in, Aabb &bbox);
 
-//! Diag([1,1,0])
-Matrix3d uStraightLineSegment::CC()
-{
-    static Matrix3d const tmp = ( Matrix3d() << 1,0,0,0,1,0,0,0,0 ).finished();
-    return tmp;
-}
 
 //! Get uncertain endpoint x in homogeneous coordinates
 uPoint uStraightLineSegment::ux() const
@@ -96,11 +90,13 @@ uStraightLineSegment::uStraightLineSegment( const uPoint & ux,
                                             const uPoint & uy)
     : m_bounding_box( ux.bbox().united( uy.bbox()) )
 {
+    static const Matrix3d CC = Vector3d(1,1,0).asDiagonal();
+
     // (1) 9-parameter vector t = [l; m; n];
     const Matrix3d Sx = skew( ux.v() );
     const Matrix3d Sy = skew( uy.v() );
-    const Matrix3d UUx = Sx*CC()*Sx;
-    const Matrix3d UUy = Sy*CC()*Sy;
+    const Matrix3d UUx = Sx*CC*Sx;
+    const Matrix3d UUy = Sy*CC*Sy;
 
     const Vector3d l = Sx*uy.v();
     Q_ASSERT( fabs( l.norm() ) > FLT_EPSILON );
@@ -117,11 +113,11 @@ uStraightLineSegment::uStraightLineSegment( const uPoint & ux,
     //Matrix3d JJlx = -Sy;
     //Matrix3d JJly = Sx;
 
-    Matrix3d const JJmx = -sign(yh) * (Sx * CC() * Sy + skew<double>(CC() * l));
-    Matrix3d const JJmy = +sign(yh) * UUx;
+    const Matrix3d JJmx = -sign(yh) * (Sx*CC*Sy + skew((CC*l).eval()) );
+    const Matrix3d JJmy = +sign(yh) * UUx;
 
-    Matrix3d const JJnx = -sign(xh)*UUy;
-    Matrix3d const JJny = +sign(xh)*( Sy*CC()*Sx -skew<double>( CC()*l ));
+    const Matrix3d JJnx = -sign(xh)*UUy;
+    const Matrix3d JJny = +sign(xh)*( Sy*CC*Sx -skew( (CC*l).eval() ));
 
     /* JJ = [ ...
         JJlx, JJly; ...

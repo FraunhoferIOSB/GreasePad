@@ -67,10 +67,6 @@ public:
     [[nodiscard]] bool isCopunctualWith( const uStraightLine & um,
                                          const uStraightLine & un,
                                          double T) const;
-
-private:
-    static Matrix3d CC();
-    static Matrix3d S3();
 };
 
 } // namespace Uncertain
