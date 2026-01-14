@@ -232,7 +232,7 @@ private:
 };
 
 
-//! Orthogonallity constraint
+//! Orthogonality constraint
 class Orthogonal : public ConstraintCRTP<Orthogonal>
 {
 public:
@@ -276,25 +276,19 @@ private:
 };
 
 
+//! Factory for constraints, as singlton
 class Factory {
-private:
-    std::map<char, std::function <std::shared_ptr<ConstraintBase >() > > m_map;
 
-    ~Factory() {
-        // qDebug() << Q_FUNC_INFO;
-        m_map.clear();
-    }
-    Factory & operator= (const Factory & other) {
-        if (this == &other) {
-            return *this;
-        }
-        return *this;
-    }
+private:
+    std::map<char, std::function <std::shared_ptr<ConstraintBase>()> > m_map;
+
+    ~Factory() { m_map.clear();  }
 
 public:
     Factory(const Factory & ) = delete;  // not clonable
     Factory(const Factory && ) = delete; // not movable
     Factory & operator= ( Factory &&) = delete;
+    Factory & operator= (const Factory & other) = delete;
 
     Factory() {
         // qDebug() << Q_FUNC_INFO;
