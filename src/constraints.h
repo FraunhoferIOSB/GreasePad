@@ -83,7 +83,9 @@ public:
 
     //! Check if constraint is of a certain, specified type
     template<typename T>
-    bool is()  { return ( dynamic_cast<T*>(this) != nullptr);    }
+    [[nodiscard]] bool isInstanceOf() {
+        return ( dynamic_cast<T*>(this) != nullptr);
+    }
 
     //! Clone constraints via nonvirtual interface pattern
     [[nodiscard]] virtual std::shared_ptr<ConstraintBase> clone() const = 0;

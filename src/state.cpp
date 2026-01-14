@@ -1027,7 +1027,7 @@ void impl::remove_constraint( const Index i )
     Q_ASSERT( i>=0 );
     Q_ASSERT( i<m_constr.length() );
 
-    if ( m_constr.at(i)->is<Parallel>() )
+    if ( m_constr.at(i)->isInstanceOf<Parallel>() )
     {
         const VectorXidx idx = spfind<int>( Bi.col(i) );
         Q_ASSERT_X( idx.size() == 2, Q_FUNC_INFO,
