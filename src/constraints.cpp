@@ -36,18 +36,19 @@
 using Geometry::skew;
 using Geometry::Rot_ab;
 
-
-namespace Constraint {
-
 using Eigen::Vector3d;
 using Eigen::Vector2cd;
 using Eigen::Vector2d;
 using Eigen::Matrix;
+using Eigen::Matrix3d;
+using VectorXidx = Eigen::Vector<Eigen::Index,Eigen::Dynamic>;
 
 using Matfun::null;
 using Matfun::cof3;
 using Matfun::sign;
 
+
+namespace Constraint {
 
 ConstraintBase::ConstraintBase()
     : m_status(UNEVAL)
@@ -72,23 +73,20 @@ MatrixXd Orthogonal::Jacobian( const VectorXidx & idxx,
                                const VectorXd &l0,
                                const VectorXd &l) const
 {
-    Vector3d const a0 = l0.segment(3 * idxx(0), 3);
-    Vector3d const b0 = l0.segment(3 * idxx(1), 3);
+    const Vector3d a0 = l0.segment( 3*idxx(0), 3);
+    const Vector3d b0 = l0.segment( 3*idxx(1), 3);
 
-    Vector3d const a = l.segment(3 * idxx(0), 3);
-    Vector3d const b = l.segment(3 * idxx(1), 3);
-
-    Matrix<double,1,2> JJa;
-    Matrix<double,1,2> JJb;
+    const Vector3d a = l.segment( 3*idxx(0), 3);
+    const Vector3d b = l.segment( 3*idxx(1), 3);
 
     static const Matrix3d CC = Vector3d(1,1,0).asDiagonal();
-    JJa = b0.adjoint()*CC*Rot_ab(a0,a)*null(a0);
-    JJb = a0.adjoint()*CC*Rot_ab(b0,b)*null(b0);
 
-    MatrixXd Tmp(1,4);
-    Tmp << JJa, JJb;
-    return Tmp;
+    const Matrix<double,1,2> JJa = b0.adjoint()*CC*Rot_ab(a0,a)*null(a0);
+    const Matrix<double,1,2> JJb = a0.adjoint()*CC*Rot_ab(b0,b)*null(b0);
+
+    return (Matrix<double,1,4>() << JJa, JJb).finished();
 }
+
 
 VectorXd Orthogonal::contradict( const VectorXidx &idx,
                                  const VectorXd &l0) const
@@ -97,10 +95,8 @@ VectorXd Orthogonal::contradict( const VectorXidx &idx,
     const Vector3d b = l0.segment( 3*idx(1), 3);
 
     static const Matrix3d CC = Vector3d(1,1,0).asDiagonal();
-    VectorXd tmp(1);
-    tmp << a.dot( CC*b );
 
-    return tmp;
+    return a.adjoint()*CC*b; // .dot(...) returns scalar
 }
 
 

@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,17 +28,16 @@
 #include <map>
 #include <memory>
 
-#include "matrix.h"
 
 //! Geometric constraints (relations)
 namespace Constraint {
 
-using Eigen::Matrix3d;
 using Eigen::MatrixXd;
-using Eigen::Vector3d;
+using Eigen::Dynamic;
+using Eigen::Index;
+using Eigen::Vector;
 using Eigen::VectorXd;
-using Eigen::VectorXi;
-using Eigen::VectorXidx;
+
 
 //! Base class for constraints
 class ConstraintBase
@@ -52,11 +51,6 @@ public:
     ConstraintBase();
     virtual ~ConstraintBase() = default;
 
-protected:
-    // static MatrixXd null( const VectorXd &xs );  //!< Nullspace of row vector
-    //static MatrixXd Rot_ab( const VectorXd &a,
-    //                        const VectorXd &b);  //!< Minimal rotation between two vectors as rotation matrix
-public:
     //! Status: unevaluated, required, obsolete (redundant)
     enum Status : int { UNEVAL=0, REQUIRED, OBSOLETE };
 
@@ -77,11 +71,15 @@ public:
     void setEnforced( const bool b) { m_enforced = b; }     //!< Set status success of enforcement
 
     //! Compute Jacobian w.r.t. observations
-    [[nodiscard]] virtual MatrixXd Jacobian(   const Eigen::VectorXidx &idxx,
-                                 const VectorXd &l0,  const VectorXd &l) const = 0;
+    [[nodiscard]] virtual MatrixXd Jacobian(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0,
+        const VectorXd &l) const = 0;
+
     //! Compute contradictions with adjusted observations
-    [[nodiscard]] virtual VectorXd contradict( const VectorXidx &idxx,
-                                 const VectorXd &l0 ) const = 0;
+    [[nodiscard]] virtual VectorXd contradict(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0 ) const = 0;
 
     //! Check if constraint is of a certain, specified type
     template<typename T>
@@ -89,11 +87,6 @@ public:
 
     //! Clone constraints via nonvirtual interface pattern
     [[nodiscard]] virtual std::shared_ptr<ConstraintBase> clone() const = 0;
-
-protected:
-    /*! sign(0):=+1
-    template <typename T>
-    int sign(T val) const { return (T(0) <= val) - (val < T(0));  }*/
 
 private:
     Status m_status;    // { UNEVAL=0 | REQUIRED | OBSOLETE };
@@ -133,8 +126,13 @@ private:
 class Copunctual : public ConstraintCRTP<Copunctual>
 {
 public:
-    [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx, const VectorXd &l0, const VectorXd &l) const override;
-    [[nodiscard]] VectorXd contradict( const VectorXidx &idxx, const VectorXd &l0) const override;
+    [[nodiscard]] MatrixXd Jacobian(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0,
+        const VectorXd &l) const override;
+    [[nodiscard]] VectorXd contradict(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0) const override;
     [[nodiscard]] int dof() const override   {return s_dof;}
     [[nodiscard]] int arity() const override {return s_arity;}   //!< number of involved entities
 
@@ -150,8 +148,13 @@ private:
 class Parallel : public ConstraintCRTP<Parallel>
 {
 public:
-    [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx, const VectorXd &l0,  const VectorXd &l) const override;
-    [[nodiscard]] VectorXd contradict( const VectorXidx &idxx, const VectorXd &l0) const override;
+    [[nodiscard]] MatrixXd Jacobian(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0,
+        const VectorXd &l) const override;
+    [[nodiscard]] VectorXd contradict(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0) const override;
     [[nodiscard]] int dof() const override   { return s_dof;   }
     [[nodiscard]] int arity() const override { return s_arity; }
 
@@ -167,8 +170,13 @@ private:
 class Vertical : public ConstraintCRTP<Vertical>
 {
 public:
-    [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
-    [[nodiscard]] VectorXd contradict( const VectorXidx &idxx,  const VectorXd &l0) const override;
+    [[nodiscard]] MatrixXd Jacobian(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0,
+        const VectorXd &l) const override;
+    [[nodiscard]] VectorXd contradict(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0) const override;
     [[nodiscard]] int dof() const override   { return s_dof;   }
     [[nodiscard]] int arity() const override { return s_arity; }
 
@@ -184,8 +192,13 @@ private:
 class Horizontal : public ConstraintCRTP<Horizontal>
 {
 public:
-    [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
-    [[nodiscard]] VectorXd contradict( const VectorXidx &idxx,  const VectorXd &l0) const override;
+    [[nodiscard]] MatrixXd Jacobian(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0,
+        const VectorXd &l) const override;
+    [[nodiscard]] VectorXd contradict(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0) const override;
     [[nodiscard]] int dof() const override   { return s_dof;   }
     [[nodiscard]] int arity() const override { return s_arity; }
 
@@ -201,8 +214,13 @@ private:
 class Diagonal : public ConstraintCRTP<Diagonal>
 {
 public:
-    [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
-    [[nodiscard]] VectorXd contradict( const VectorXidx &idxx,  const VectorXd &l0) const override;
+    [[nodiscard]] MatrixXd Jacobian(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0,
+        const VectorXd &l) const override;
+    [[nodiscard]] VectorXd contradict(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0) const override;
     [[nodiscard]] int dof() const override   { return s_dof;   }
     [[nodiscard]] int arity() const override { return s_arity; }
 
@@ -218,8 +236,13 @@ private:
 class Orthogonal : public ConstraintCRTP<Orthogonal>
 {
 public:
-    [[nodiscard]] MatrixXd Jacobian(   const VectorXidx &idxx,  const VectorXd &l0,  const VectorXd &l) const override;
-    [[nodiscard]] VectorXd contradict( const VectorXidx &idxx,  const VectorXd &l0) const override;
+    [[nodiscard]] MatrixXd Jacobian(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0,
+        const VectorXd &l) const override;
+    [[nodiscard]] VectorXd contradict(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0) const override;
     [[nodiscard]] int dof() const override   { return s_dof;   }
     [[nodiscard]] int arity() const override { return s_arity; }
 
@@ -235,8 +258,13 @@ private:
 class Identical : public ConstraintCRTP<Identical>
 {
 public:
-    [[nodiscard]] MatrixXd Jacobian( const VectorXidx &idxx, const VectorXd &l0, const VectorXd &l) const override;
-    [[nodiscard]] VectorXd contradict( const VectorXidx &idxx, const VectorXd &l0) const override;
+    [[nodiscard]] MatrixXd Jacobian(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0,
+        const VectorXd &l) const override;
+    [[nodiscard]] VectorXd contradict(
+        const Vector<Index,Dynamic> &idxx,
+        const VectorXd &l0) const override;
     [[nodiscard]] int dof() const override   {return s_dof;}
     [[nodiscard]] int arity() const override {return s_arity;}
 
