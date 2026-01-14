@@ -102,37 +102,36 @@ VectorXd Orthogonal::contradict( const VectorXidx &idx,
 
 MatrixXd Copunctual::Jacobian(const VectorXidx &idx, const VectorXd &l0, const VectorXd &l) const
 {
-    Vector3d const a0 = l0.segment(3 * idx(0), 3);
-    Vector3d const b0 = l0.segment(3 * idx(1), 3);
-    Vector3d const c0 = l0.segment(3 * idx(2), 3);
+    const Vector3d a0 = l0.segment( 3*idx(0), 3);
+    const Vector3d b0 = l0.segment( 3*idx(1), 3);
+    const Vector3d c0 = l0.segment( 3*idx(2), 3);
 
-    Vector3d const a = l.segment(3 * idx(0), 3);
-    Vector3d const b = l.segment(3 * idx(1), 3);
-    Vector3d const c = l.segment(3 * idx(2), 3);
+    const Vector3d a = l.segment( 3*idx(0), 3);
+    const Vector3d b = l.segment( 3*idx(1), 3);
+    const Vector3d c = l.segment( 3*idx(2), 3);
 
-    Matrix3d const MM = (Matrix3d() << a0,b0,c0 ).finished(); // [a0,b0,c0]
-    Matrix3d Adju = cof3(MM).adjoint(); // adjugate(MM)
+    const Matrix3d MM = (Matrix3d() << a0,b0,c0 ).finished(); // [a0,b0,c0]
+    const Matrix3d AA = cof3(MM).adjoint(); // adj(MM)
 
     constexpr int SIX = 6;
-    MatrixXd Tmp(1,SIX);
-    Tmp << Adju.row(0)*Rot_ab(a0,a)*null(a0),
-           Adju.row(1)*Rot_ab(b0,b)*null(b0),
-           Adju.row(2)*Rot_ab(c0,c)*null(c0);
+    const MatrixXd JJ = ( Matrix<double,1,SIX>()
+                             << AA.row(0)*Rot_ab(a0,a)*null(a0),
+                                AA.row(1)*Rot_ab(b0,b)*null(b0),
+                                AA.row(2)*Rot_ab(c0,c)*null(c0) ).finished();
 
-    return Tmp;
+    return JJ;
 }
+
 
 VectorXd Copunctual::contradict(const VectorXidx &idx, const VectorXd &l0) const
 {
-    Vector3d const a = l0.segment(3 * idx(0), 3);
-    Vector3d const b = l0.segment(3 * idx(1), 3);
-    Vector3d const c = l0.segment(3 * idx(2), 3);
+    const Vector3d a = l0.segment( 3*idx(0), 3);
+    const Vector3d b = l0.segment( 3*idx(1), 3);
+    const Vector3d c = l0.segment( 3*idx(2), 3);
 
-    Matrix3d const MM = (Matrix3d() << a,b,c).finished();  // [a0,b0,c0]
+    const Matrix3d MM = (Matrix3d() << a,b,c).finished();  // [a0,b0,c0]
 
-    VectorXd tmp(1);
-    tmp << MM.determinant();
-    return tmp;
+    return Vector<double,1>( MM.determinant() );
 }
 
 
