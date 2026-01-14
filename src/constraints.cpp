@@ -193,20 +193,20 @@ VectorXd Identical::contradict( const VectorXidx & idx,
 
 MatrixXd Parallel::Jacobian(const VectorXidx &idx, const VectorXd &l0, const VectorXd &l) const
 {
-    Vector3d const a0 = l0.segment(3 * idx(0), 3);
-    Vector3d const b0 = l0.segment(3 * idx(1), 3);
+    const Vector3d a0 = l0.segment( 3*idx(0), 3);
+    const Vector3d b0 = l0.segment( 3*idx(1), 3);
 
-    Vector3d const a = l.segment(3 * idx(0), 3);
-    Vector3d const b =  l.segment( 3*idx(1),3 );
+    const Vector3d a = l.segment( 3*idx(0), 3);
+    const Vector3d b = l.segment( 3*idx(1), 3);
 
-    static const Matrix3d S3 = skew( Vector3d(0,0,1));
-    const Matrix<double, 1, 2> JJa = -b0.adjoint() * S3 * Rot_ab(a0, a) * null(a0);
-    const Matrix<double, 1, 2> JJb = a0.adjoint() * S3 * Rot_ab(b0, b) * null(b0);
+    static const Matrix3d S3 = skew( Vector3d(0,0,1) );
 
-    MatrixXd Tmp(1,4);
-    Tmp << JJa, JJb;
-    return Tmp;
+    const Matrix<double,1,2> JJa = -b0.adjoint() * S3 * Rot_ab(a0, a) * null(a0);
+    const Matrix<double,1,2> JJb =  a0.adjoint() * S3 * Rot_ab(b0, b) * null(b0);
+
+    return (Matrix<double,1,4>() << JJa, JJb).finished();
 }
+
 
 VectorXd Parallel::contradict(const VectorXidx &idx, const VectorXd &l0) const
 {
@@ -214,9 +214,8 @@ VectorXd Parallel::contradict(const VectorXidx &idx, const VectorXd &l0) const
     const Vector3d b = l0.segment( 3*idx(1), 3);
 
     static const Matrix3d S3 = skew( Vector3d(0,0,1) );
-    VectorXd tmp(1);
-    tmp << a.dot( S3*b );
-    return tmp;
+
+    return a.adjoint()*S3*b;
 }
 
 
@@ -224,7 +223,7 @@ MatrixXd Vertical::Jacobian(const VectorXidx &idx, const VectorXd &l0, const Vec
 {
     static const Vector3d e2(0,1,0);
 
-    const Vector3d a0 = l0.segment(3 * idx(0), 3);
+    const Vector3d a0 = l0.segment(  3*idx(0), 3);
     const Vector3d a   =  l.segment( 3*idx(0), 3);
 
     // .dot(...) returns a scalar, not a 1-vector
