@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -106,41 +106,39 @@ MainWindow::MainWindow(QWidget *parent)
     establishConnections();
     createToolBars();
     createStatusBar();
+    setPens();
 
     setCurrentFileName( QString());
+}
+
+void MainWindow::setPens() {
 
     QConstraint::QConstraintBase::setDefaultPenReq(
-                QPen( Qt::blue, 2, Qt::SolidLine, Qt::RoundCap, Qt::MiterJoin)
-                );
+        QPen( Qt::blue, 2, Qt::SolidLine, Qt::RoundCap, Qt::MiterJoin)   );
 
     QConstraint::QConstraintBase::setDefaultPenRed(
-                QPen( Qt::blue, 2, Qt::DotLine,  Qt::RoundCap, Qt::RoundJoin)
-                );
+        QPen( Qt::blue, 2, Qt::DotLine,  Qt::RoundCap, Qt::RoundJoin)    );
 
     QConstraint::QConstraintBase::setPenSelected(
-                QPen(  Qt::darkGreen,2, Qt::DashLine,  Qt::RoundCap, Qt::RoundJoin)
-                );
+        QPen(  Qt::darkGreen,2, Qt::DashLine,  Qt::RoundCap, Qt::RoundJoin)  );
 
     QEntity::QConstrained::setPenDefault(
-                QPen( Qt::black,  2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin )
-                );
+        QPen( Qt::black,  2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin )  );
 
     QEntity::QUnconstrained::setPenDefault(
-                QPen( Qt::lightGray, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin )
-                );
+        QPen( Qt::lightGray, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin ) );
 
     QEntity::QStroke::setPenDefault(
-                QPen( Qt::darkRed, 2, Qt::SolidLine, Qt::RoundCap)
-                );
+        QPen( Qt::darkRed, 2, Qt::SolidLine, Qt::RoundCap)
+        );
 
     QEntity::QSegment::setPenSelected(
-                QPen( Qt::darkGreen, 2, Qt::DashLine, Qt::RoundCap)
-                );
+        QPen( Qt::darkGreen, 2, Qt::DashLine, Qt::RoundCap) );
 
     QEntity::QStroke::setPenSelected(
-                QPen( Qt::darkGreen, 2, Qt::DashLine, Qt::RoundCap)
-                );
+        QPen( Qt::darkGreen, 2, Qt::DashLine, Qt::RoundCap) );
 }
+
 
 MainWindow::~MainWindow()
 {
