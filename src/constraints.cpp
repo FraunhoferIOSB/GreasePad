@@ -23,8 +23,6 @@
 #include <QDebug>
 #include <QStringLiteral>
 
-#include "qassert.h"
-
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
@@ -41,6 +39,7 @@ using Eigen::Vector2cd;
 using Eigen::Vector2d;
 using Eigen::Matrix;
 using Eigen::Matrix3d;
+using Eigen::RowVector3d;
 using VectorXidx = Eigen::Vector<Eigen::Index,Eigen::Dynamic>;
 
 using Matfun::null;
@@ -213,7 +212,9 @@ VectorXd Parallel::contradict(const VectorXidx &idx, const VectorXd &l0) const
 }
 
 
-MatrixXd Vertical::Jacobian(const VectorXidx &idx, const VectorXd &l0, const VectorXd &l) const
+MatrixXd Vertical::Jacobian(const VectorXidx &idx,
+                            const VectorXd &l0,
+                            const VectorXd &l) const
 {
     static const Vector3d e2(0,1,0);
 
@@ -221,25 +222,23 @@ MatrixXd Vertical::Jacobian(const VectorXidx &idx, const VectorXd &l0, const Vec
     const Vector3d a   =  l.segment( 3*idx(0), 3);
 
     // .dot(...) returns a scalar, not a 1-vector
-    return e2.adjoint()* Rot_ab(a0,a)*null(a0);
+    return e2.adjoint()*Rot_ab(a0,a)*null(a0);
 }
 
 
 VectorXd Vertical::contradict( const VectorXidx &idx,
                                const VectorXd &l0) const
 {
-    VectorXd tmp(1);
-    tmp << l0.segment( (3*idx(0))+1, 1);  // 2nd element
-    return tmp;
+    // 2nd element of 3-vector as 1-vector:
+    return l0.segment( (3*idx(0))+1, 1);
 }
+
 
 VectorXd Diagonal::contradict( const VectorXidx &idx,
                                const VectorXd &l0) const
 {
     Vector3d l = l0.segment( 3*idx(0), 3);
-    VectorXd tmp(1);  // scalar as vector
-    tmp << abs(l(0)) - abs( l(1));   // abs(a)-abs(b)
-    return tmp;
+    return Vector<double,1>( std::fabs(l(0)) - std::fabs( l(1)));   // abs(a)-abs(b)
 }
 
 
@@ -248,19 +247,19 @@ MatrixXd Diagonal::Jacobian( const VectorXidx &idx,
                              const VectorXd &l) const
 {
     // abs(a)-abs(b) = 0,  l=[a,b,c]',  J = [ sign(a), -sign(b), 0]
-    Vector3d a0 = l0.segment( 3*idx(0), 3);
-    Vector3d const a = l.segment(3 * idx(0), 3);
-    Eigen::RowVector3d const JJ = (Eigen::RowVector3d() << sign(a0(0)), -sign(a0(1)), 0).finished();
-    return JJ * Rot_ab(a0,a) * null(a0);
+    const Vector3d a0 = l0.segment( 3*idx(0), 3);
+    const Vector3d  a = l.segment(  3*idx(0), 3);
+    const RowVector3d JJ( sign(a0(0)), -sign(a0(1)), 0.0 );
+
+    return JJ*Rot_ab(a0,a)*null(a0);
 }
 
 
 VectorXd Horizontal::contradict( const VectorXidx &idx,
                                  const VectorXd &l0) const
 {
-    VectorXd tmp(1);  // scalar as vector
-    tmp << l0.segment( 3*idx(0), 1); // 1st element of 3-vector
-    return tmp;
+    // 1st element of 3-vector as 1-vector:
+    return l0.segment( 3*idx(0), 1);
 }
 
 
