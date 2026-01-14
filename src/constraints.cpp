@@ -139,34 +139,33 @@ MatrixXd Identical::Jacobian( const VectorXidx & idx,
                               const VectorXd & l0,
                               const VectorXd & l) const
 {
-    Vector3d a0 = l0.segment( 3*idx(0),3 );
-    Vector3d b0 = l0.segment(3 * idx(1), 3);
+    const Vector3d a0 = l0.segment( 3*idx(0), 3);
+    const Vector3d b0 = l0.segment( 3*idx(1), 3);
 
-    Vector3d const a = l.segment(3 * idx(0), 3);
-    Vector3d const b = l.segment( 3*idx(1),3 );
-
-    Eigen::FullPivLU<MatrixXd> LU;  // identical
-    Matrix<double,3,2> JJ;   // identical
+    const Vector3d a = l.segment( 3*idx(0), 3);
+    const Vector3d b = l.segment( 3*idx(1), 3);
 
     int idx1 = 0;
     int idx2 = 0;
     a0.cwiseAbs().maxCoeff( &idx1 );
     b0.cwiseAbs().maxCoeff( &idx2 );
 
-    Q_ASSERT( a0(idx1)*b0(idx2) >= 0 );  // same sign
+    assert( a0(idx1)*b0(idx2) >= 0 );  // same sign
 
+    Eigen::FullPivLU<MatrixXd> LU;  // identical
     LU.compute(a0.adjoint());
-    JJ = LU.kernel();               //  JJ = null( a');
+    const Matrix<double,3,2> JJ = LU.kernel();               //  JJ = null( a');
     // d2 = JJ.adjoint()*(a -b);       //  (10.141)
 
-    Matrix<double, 2, 3> const JJa = null(a0).adjoint() * Rot_ab(a, a0);
-    Matrix<double, 2, 3> const JJb = null(b0).adjoint() * Rot_ab(b, b0);
+    const Matrix<double,2,3> JJa = null(a0).adjoint() * Rot_ab(a, a0);
+    const Matrix<double,2,3> JJb = null(b0).adjoint() * Rot_ab(b, b0);
 
-    MatrixXd Tmp(2,4);
-    Tmp << JJ.adjoint()*JJa.adjoint(), -JJ.adjoint()*JJb.adjoint();
+    const MatrixXd Jac = ( Matrix<double,2,4>()
+                             << JJ.adjoint()*JJa.adjoint(), -JJ.adjoint()*JJb.adjoint() ).finished();
 
-    return Tmp;
+    return Jac;
 }
+
 
 VectorXd Identical::contradict( const VectorXidx & idx,
                                 const VectorXd & l0) const
@@ -179,13 +178,9 @@ VectorXd Identical::contradict( const VectorXidx & idx,
     int idx2 = 0;
     a0.head(2).cwiseAbs().maxCoeff( &idx1 );
     b0.head(2).cwiseAbs().maxCoeff( &idx2 );
+    assert( a0(idx1)*b0(idx2) >= 0 ); // same sign
 
-    Q_ASSERT( a0(idx1)*b0(idx2) >= 0 ); // same sign
-
-    const Matrix<double, 3, 2> JJ = null(a0);
-    const Vector2d d2 = JJ.adjoint() * (a0 - b0); //  (10.141)
-
-    return d2;
+    return null(a0).adjoint()*(a0-b0); //  (10.141)
 }
 
 
