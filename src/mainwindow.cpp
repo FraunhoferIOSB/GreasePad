@@ -1197,7 +1197,7 @@ void MainWindow::slotAbout()
     msgBox.setTextFormat( Qt::RichText );
     msgBox.setText( QStringLiteral(
                         "<b>%1 %2: Freehand Drawing guided by Geometric Reasoning</b><br><br>"
-                        "<b>Copyright.</b> \xa9 2022-2025 <a href=\"mailto:jochen.meidow@iosb.fraunhofer.de\">Jochen Meidow</a>, <a href=\"https://www.iosb.fraunhofer.de/en.html\">%3</a>, Germany.<br><br>"
+                        "<b>Copyright.</b> \xa9 2022-2026 <a href=\"mailto:jochen.meidow@iosb.fraunhofer.de\">Jochen Meidow</a>, <a href=\"https://www.iosb.fraunhofer.de/en.html\">%3</a>, Germany.<br><br>"
                         "<b>Licensing.</b> Distributed under the <a href=\"https://www.gnu.org/licenses/gpl-3.0.en.html\">GNU General Public Licence</a>, Version 3.<br /><br />"
                         "<b>Dependencies.</b> This software uses the C++ template library <a href=\"https://eigen.tuxfamily.org\">Eigen</a>, version %4.%5.%6, "
                         "and the <a href=\"https://www.qt.io\">Qt</a> widget toolkit, version %7.<br /><br />"
@@ -1212,17 +1212,15 @@ void MainWindow::slotAbout()
                     .arg( QApplication::applicationName() )
                     .arg( QApplication::applicationVersion())
                     .arg( QApplication::organizationName())
-                    .arg( EIGEN_WORLD_VERSION )
                     .arg( EIGEN_MAJOR_VERSION )
                     .arg( EIGEN_MINOR_VERSION )
+                    .arg( EIGEN_PATCH_VERSION)
                     .arg( QT_VERSION_STR )
                     );
     msgBox.setStandardButtons( QMessageBox::Ok );
-    // msgBox.setIcon(); TODO(meijoc)
-    // ?? msgBox.setIcon( windowIcon() );
+
     msgBox.exec();
 }
-
 
 
 void MainWindow::setCurrentFileName( const QString &fileName )
