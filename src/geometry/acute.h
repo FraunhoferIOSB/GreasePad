@@ -34,7 +34,8 @@ using Eigen::Vector3d;
 
 
 //! acute angle between two straight lines in radians
-[[nodiscard,maybe_unused]] static inline double acute( const Vector3d l, const Vector3d m)
+[[nodiscard,maybe_unused]] static inline double acute( const Vector3d & l,
+                                                       const Vector3d & m)
 {
     constexpr double pi   = 3.141592653589793;
 
