@@ -23,37 +23,30 @@
 #include <Eigen/Core>
 
 #include <cassert>
-#include <cfloat>
 #include <cmath>
-#include <cstdlib>
 
+#include "skew.h"
 
 namespace Geometry {
 
-using Eigen::Vector2d;
+using Eigen::Matrix3d;
 using Eigen::Vector3d;
 
 
 //! acute angle between two straight lines in radians
-static inline double acute( const Vector3d l, const Vector3d m)
+[[nodiscard,maybe_unused]] static inline double acute( const Vector3d l, const Vector3d m)
 {
     constexpr double pi   = 3.141592653589793;
-    constexpr double pi_2 = 3.141592653589793/2;
 
-    Vector2d lh = l.head(2);
-    Vector2d mh = m.head(2);
-    assert( lh.norm() > FLT_EPSILON );
-    assert( mh.norm() > FLT_EPSILON );
-    lh.normalize();
-    mh.normalize();
+    static const Matrix3d S3 = skew( Vector3d(0,0,1) );
+    static const Matrix3d G3 = Vector3d(1,1,0).asDiagonal();
 
-    assert( std::fabs(lh.dot(mh)) <= 1.0 );  // a'*b in [-1,+1]
-    double alpha = std::acos( lh.dot(mh) );  // [0,pi]
-    if ( alpha > pi_2) {
-        alpha = pi -alpha;
-    }
-    assert( alpha >= 0.0    );
-    assert( alpha <= pi_2 );
+    // PCV (7.34); std::atan2(0,0) := 0
+    const double gamma = std::atan2( l.dot(S3*m), l.dot(G3*m) );
+    const double beta  = std::fmod(  gamma+2*pi, pi );
+    const double alpha = std::fmin(  beta, pi-beta  );
+
+    assert( alpha >= 0.0 && alpha <= pi/2 );
 
     return alpha;
 }
