@@ -20,5 +20,7 @@
         <file>icons/consider_diag.svg</file>
         <file>icons/consider_horiz.svg</file>
         <file>icons/consider_vert.svg</file>
+        <file>icons/Tango/Edit-redo.svg</file>
+        <file>icons/Tango/Edit-undo.svg</file>
     </qresource>
 </RCC>

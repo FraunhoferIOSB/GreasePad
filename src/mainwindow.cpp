@@ -199,11 +199,13 @@ void MainWindow::createActions()
 {
     actionUndo = std::unique_ptr<QAction>( m_undoStack->createUndoAction( this, QStringLiteral("Undo")) );
     actionUndo->setShortcuts( QKeySequence::Undo );
-    actionUndo->setIcon( style()->standardIcon( QStyle::SP_ArrowBack) );
+    // actionUndo->setIcon( style()->standardIcon( QStyle::SP_ArrowBack) );
+    actionUndo->setIcon( QPixmap(":/icons/Tango/Edit-undo.svg" ) );
 
     actionRedo = std::unique_ptr<QAction>( m_undoStack->createRedoAction( this, QStringLiteral("Redo")) );
     actionRedo->setShortcuts( QKeySequence::Redo );
-    actionRedo->setIcon( style()->standardIcon( QStyle::SP_ArrowForward) );
+    // actionRedo->setIcon( style()->standardIcon( QStyle::SP_ArrowForward) );
+    actionRedo->setIcon( QPixmap(":/icons/Tango/Edit-redo.svg" ) );
 
     actionExit = std::make_unique<QAction>( "Exit" );
     actionExit->setShortcut( QKeySequence( QStringLiteral("Ctrl+Q") ) );
@@ -211,8 +213,8 @@ void MainWindow::createActions()
 
     actionTabulaRasa = std::make_unique<QAction>( "Delete all" );
     actionTabulaRasa->setToolTip(  QStringLiteral("Make a clean sweep (blank state)") );
-    // actionTabulaRasa->setIcon( QPixmap(":/icons/Tango/Edit-clear.svg" ) );
-    actionTabulaRasa->setIcon( style()->standardIcon( QStyle::SP_DialogResetButton ) );
+    actionTabulaRasa->setIcon( QPixmap(":/icons/Tango/Edit-clear.svg" ) );
+    // actionTabulaRasa->setIcon( style()->standardIcon( QStyle::SP_DialogResetButton ) );
 
     actionDeleteSelection = std::make_unique<QAction>( "Delete selected items" );
     actionDeleteSelection->setShortcut( QKeySequence::Delete );
