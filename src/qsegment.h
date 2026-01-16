@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,8 +79,6 @@ public:
 
     static void setPenSelected( const QPen & p) { s_penSelected = p;}
 
-    // static Eigen::Matrix3d cof3(const Eigen::Matrix3d &MM);     //!< 3x3 cofactor matrix, i.e., transposed adjunct
-
 protected:
     //! Standard constructor
     explicit QSegment( QGraphicsItem *parent = nullptr );
@@ -101,7 +99,8 @@ private:
     void setShape( const uPoint &ux,
                    const uPoint &uy ); // with new or adjusted endpoints.
 
-    static double getSelectionOffset(const uPoint &, const uPoint &);
+    [[nodiscard]] static double getSelectionOffset(const uPoint &, const uPoint &);
+
     [[nodiscard]] QLineF line() const { return line_; }
     static QPolygonF toPoly(std::pair<Eigen::VectorXd, Eigen::VectorXd> p);
 

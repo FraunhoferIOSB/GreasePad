@@ -44,16 +44,20 @@
 #include <utility>
 
 
-namespace QEntity {
-
+using Eigen::EigenSolver;
+using Eigen::Index;
 using Eigen::Matrix3d;
 using Eigen::Vector3d;
+using Eigen::Vector4d;
+using Eigen::VectorXd;
 
 using Uncertain::uStraightLine;
 using Uncertain::uPoint;
 
 using Matfun::cof3;
 
+
+namespace QEntity {
 
 bool QConstrained::s_show   = true;
 bool QConstrained::s_showColor = false;
@@ -75,10 +79,9 @@ QPen & myQPen()
 
 } // namespace
 
+
 QPen QUnconstrained::s_defaultPen = myQPen();
 QPen   QConstrained::s_defaultPen = QPen();
-
-// static const double T_ZERO = 1e-7;
 
 QSegment::QSegment( QGraphicsItem * parent )
     : QGraphicsItem(parent)
@@ -94,33 +97,22 @@ QSegment::QSegment( QGraphicsItem * parent )
 QSegment::QSegment(const uPoint &ux, const uPoint &uy)
 {
     // qDebug() << Q_FUNC_INFO;
-    Vector3d const xh = ux.v().normalized();
-    Vector3d const yh = uy.v().normalized();
+    const Vector3d xh = ux.v().normalized();
+    const Vector3d yh = uy.v().normalized();
     Q_ASSERT_X( xh.cross(yh).norm() > FLT_EPSILON,
                 Q_FUNC_INFO,
-                "identical end-points");   // TODO(meijoc)
-
+                "identical end-points");
 
     setFlag( ItemIsSelectable,         true);
     setFlag( ItemIsMovable,            false);
     setFlag( ItemSendsGeometryChanges, false);
-    setFlag(ItemClipsChildrenToShape, true);
+    setFlag( ItemClipsChildrenToShape, true);
     setShape( ux, uy );
 
-    qreal const halfWidth = getSelectionOffset( ux, uy);
+    const qreal halfWidth = getSelectionOffset( ux, uy);
     createSelectionPolygon( halfWidth);
 }
 
-/*QSegment & QSegment::operator= ( const QSegment &other )
-{
-    // qDebug() << Q_FUNC_INFO;
-    if ( &other != this ) {
-        ellipse_      = other.ellipse_;
-        branch_  = other.branch_;
-        line_   = other.line_;
-    }
-    return *this;
-}*/
 
 void QSegment::paint( QPainter *painter,
                       const QStyleOptionGraphicsItem *option,
@@ -144,7 +136,6 @@ void QSegment::paint( QPainter *painter,
         painter->setPen( s_penSelected );
         painter->drawPolygon( selectionPolygon_ );
     }
-
 }
 
 
@@ -165,53 +156,58 @@ QRectF QSegment::boundingRect() const
     return result;
 }
 
+
 QPainterPath QSegment::shape() const
 {
     QPainterPath ret;
     ret.addPolygon( selectionPolygon_ );
+
     return ret;
 }
 
+
 QPolygonF QSegment::toPoly(std::pair<Eigen::VectorXd, Eigen::VectorXd> p)
 {
-    // int const N = static_cast<int>( p.first.size() );
-    const Eigen::Index N = p.first.size();
+    const Index N = p.first.size();
     QPolygonF poly( N );
     for ( int i=0; i<N; i++) {
         poly[i] = QPointF( p.first(i), p.second(i));
     }
+
     return poly;
 }
+
 
 double QSegment::getSelectionOffset(const uPoint &ux, const uPoint &uy)
 {
     double m = 0;
 
-    uPoint const u1 = ux.euclidean();
-    Eigen::EigenSolver<Eigen::Matrix2d> const eig1(u1.Cov().topLeftCorner(2, 2));
-    m = std::max(m, eig1.eigenvalues().real().cwiseAbs().maxCoeff());
+    const uPoint u1 = ux.euclidean();
+    const EigenSolver<Eigen::Matrix2d> eig1(u1.Cov().topLeftCorner(2, 2));
+    m = std::max( m, eig1.eigenvalues().real().cwiseAbs().maxCoeff());
 
-    uPoint const u2 = uy.euclidean();
-    Eigen::EigenSolver<Eigen::Matrix2d> const eig2(u2.Cov().topLeftCorner(2, 2));
+    const uPoint u2 = uy.euclidean();
+    const EigenSolver<Eigen::Matrix2d> eig2(u2.Cov().topLeftCorner(2, 2));
     m = std::max( m, eig2.eigenvalues().real().cwiseAbs().maxCoeff() );
 
     return 1000*sqrt(4.6052*m);  // chi2inv(0.9, 2)
 }
 
+
 void QSegment::setShape( const uPoint &ux,
                          const uPoint &uy)
 {
     // qDebug() << Q_FUNC_INFO;
-    const double k2 = 4.6; // ch2inv(0.9,2)   TODO(meijoc)
+    const double k2 = 4.6; // ch2inv(0.9,2)
     const int nSupport = 64;
 
-    Vector3d xh = ux.v().normalized();
-    Vector3d yh = uy.v().normalized();
+    const Vector3d xh = ux.v().normalized();
+    const Vector3d yh = uy.v().normalized();
 
     // check .........................................
     Q_ASSERT_X( xh.cross(yh).norm() >  FLT_EPSILON,
                 Q_FUNC_INFO,
-                "identical end-points");   // TODO(meijoc)
+                "identical end-points");
     if ( std::fabs( xh(2) )>0.  &&  std::fabs( yh(2) )>0. ) {
         line_.setLine( 1000*xh(0)/xh(2), 1000*xh(1)/xh(2),
                        1000*yh(0)/yh(2), 1000*yh(1)/yh(2) );
@@ -226,9 +222,9 @@ void QSegment::setShape( const uPoint &ux,
     }
 
     // unconditioning .........................................
-    const Matrix3d TT = (Matrix3d() << 1000, 0, 0, 0, 1000, 0, 0, 0, 1).finished();
-    uPoint const x2 = ux.transformed(TT);
-    uPoint const y2 = uy.transformed(TT);
+    const Matrix3d TT = Vector3d(1000, 1000, 1).asDiagonal();
+    const uPoint x2 = ux.transformed(TT);
+    const uPoint y2 = uy.transformed(TT);
 
     Q_ASSERT( x2.v().norm() > FLT_EPSILON );
     Q_ASSERT( y2.v().norm() > FLT_EPSILON );
@@ -237,26 +233,24 @@ void QSegment::setShape( const uPoint &ux,
     // two ellipses ...............................................
     uPoint ux2 = x2.euclidean();
     Matrix3d CC = cof3( k2*ux2.Cov() -ux2.v()*ux2.v().adjoint() );
-    Geometry::Ellipse const ell_x(CC);
+    const Geometry::Ellipse ell_x(CC);
 
     ux2 = y2.euclidean();
     CC = cof3( k2*ux2.Cov() -ux2.v()*ux2.v().adjoint() );
-    Geometry::Ellipse const ell_y(CC);
+    const Geometry::Ellipse ell_y(CC);
 
     ellipse_.first  = toPoly( ell_x.poly( nSupport ) );
     ellipse_.second = toPoly( ell_y.poly( nSupport ) );
 
     // hyperbola ..................................................
-    // uStraightLine ul = x2.cross(y2);
     uStraightLine ul(x2.cross(y2));
-    // uStraightLine ul = uStraightLine::cross(x2,y2);
     ul = ul.euclidean();
     CC = k2*ul.Cov() -ul.v()*ul.v().adjoint();
-    Geometry::Hyperbola const hyp( CC );
+    const Geometry::Hyperbola hyp( CC );
 
     // Two polar lines ............................................
-    Vector3d const lx = ell_y.polar(x2.v()).normalized();
-    Vector3d const ly = ell_x.polar( y2.v() ).normalized();
+    const Vector3d lx = ell_y.polar( x2.v() ).normalized();
+    const Vector3d ly = ell_x.polar( y2.v() ).normalized();
 
     // Four tangent points ........................................
     std::pair<Vector3d,Vector3d> pair1 = hyp.intersect( lx );
@@ -265,10 +259,10 @@ void QSegment::setShape( const uPoint &ux,
     // Hyperbola: Axis and point of symmetry ......................
     Vector3d symaxis = hyp.centerline();
     const Vector3d x0 = hyp.center();
+    assert( std::fabs(x0(2))>0. );
     Vector3d m;              // perpendicular m, passing the center
     m(0) = -symaxis(1);
     m(1) = +symaxis(0);
-    assert( std::fabs(x0(2))>0. );
     m(2) = -x0.head(2).dot( m.head(2) )/ x0(2);
 
     // checks before Euclidean normalization
@@ -288,21 +282,21 @@ void QSegment::setShape( const uPoint &ux,
     pair2.second /= pair2.second(2);
 
     // Euclidean distances of tangent points to axis a.
-    Eigen::Vector4d lr;
+    Vector4d lr;
     lr(0) = symaxis.dot( pair1.first );
     lr(1) = symaxis.dot( pair1.second);
     lr(2) = symaxis.dot( pair2.first );
     lr(3) = symaxis.dot( pair2.second);
 
     // orthogonal distances of the 4 tangent points to m.
-    Eigen::Vector4d ud;
+    Vector4d ud;
     ud(0) = m.dot( pair1.first);
     ud(1) = m.dot( pair1.second);
     ud(2) = m.dot( pair2.first);
     ud(3) = m.dot( pair2.second);
 
-    Eigen::Vector4d d = Eigen::Vector4d::Zero();
-    for (int i=0; i<4; i++) {
+    Vector4d d = Vector4d::Zero();
+    for (int i=0; i<ud.size(); i++) {
         if ( lr(i) < 0 && ud(i) < 0) {
             d(2) = -ud(i);
         }
@@ -323,9 +317,9 @@ void QSegment::setShape( const uPoint &ux,
     }
 
     // hyperbola: branches to plot
-    auto ab = hyp.lengthsSemiAxes();
-    double const aa = ab.first * ab.first;
-    double const bb = ab.second * ab.second;
+    const auto ab = hyp.lengthsSemiAxes();
+    const double aa = ab.first * ab.first;
+    const double bb = ab.second * ab.second;
 
     // transformation branches (motion) ..........................
     QTransform t;
@@ -333,8 +327,8 @@ void QSegment::setShape( const uPoint &ux,
     t.rotate( hyp.angle_deg(), Qt::ZAxis );
 
     // first branch of hyperbola .................................
-    Eigen::VectorXd xi = Eigen::VectorXd::LinSpaced( nSupport, d(0),d(1) );
-    Eigen::VectorXd yi = xi;
+    VectorXd xi = VectorXd::LinSpaced( nSupport, d(0),d(1) );
+    VectorXd yi = xi;
     branch_.first.clear();
     for ( Eigen::Index i=0; i<xi.size(); i++ )
     {
@@ -344,10 +338,10 @@ void QSegment::setShape( const uPoint &ux,
     branch_.first = t.map( branch_.first );
 
     // second branch of hyperbola .................................
-    xi = Eigen::VectorXd::LinSpaced( nSupport, d(3), d(2) );
+    xi = VectorXd::LinSpaced( nSupport, d(3), d(2) );
     branch_.second.clear();
     yi =  -((xi.array().square() *aa/(bb)).array() +aa ).sqrt();
-    for ( Eigen::Index i=0; i<xi.size(); i++ ) {
+    for ( Index i=0; i<xi.size(); i++ ) {
         branch_.second << QPointF( xi(i), yi(i) );
     }
     branch_.second = t.map( branch_.second );
@@ -378,14 +372,15 @@ QUnconstrained::QUnconstrained( QGraphicsItem * /* parent */ )
     setPen( s_defaultPen );
 }
 
+
 QConstrained::QConstrained()
     : altColor(Qt::black)
 {
     // qDebug() << Q_FUNC_INFO;
     setVisible( QConstrained::show() );
-
     setPen(s_defaultPen);
 }
+
 
 QConstrained::QConstrained(const uPoint &ux, const uPoint &uy)
     : QSegment(ux, uy)
@@ -394,6 +389,7 @@ QConstrained::QConstrained(const uPoint &ux, const uPoint &uy)
     setVisible( QConstrained::show() );
     setPen( s_defaultPen );
 }
+
 
 void QUnconstrained::paint(QPainter *painter,
                            const QStyleOptionGraphicsItem *option,
@@ -458,11 +454,11 @@ void QSegment::createSelectionPolygon( const qreal halfWidth)
 {
     // qDebug() << Q_FUNC_INFO;
 
-    QRectF const rect(-line().length() / 2 - halfWidth,
+    const QRectF rect(-line().length() / 2 - halfWidth,
                       -halfWidth,
                       line().length() + 2 * halfWidth,
                       2 * halfWidth);
-    QPolygonF const poly(rect);
+    const QPolygonF poly(rect);
 
     QTransform t;
     t.translate( line().center().x(),
@@ -472,6 +468,7 @@ void QSegment::createSelectionPolygon( const qreal halfWidth)
     selectionPolygon_.clear();
     selectionPolygon_ = t.map( poly);
 }
+
 
 QUnconstrained::QUnconstrained( const uPoint & ux,
                                 const uPoint & uy)
