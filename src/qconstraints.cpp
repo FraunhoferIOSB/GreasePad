@@ -17,7 +17,6 @@
  */
 
 
-#include "matrix.h"
 #include "qconstraints.h"
 #include "usegment.h"
 

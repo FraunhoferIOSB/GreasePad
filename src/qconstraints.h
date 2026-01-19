@@ -28,9 +28,8 @@
 #include "qsharedpointer.h"
 #include "qtypes.h"
 
+#include <Eigen/Core>
 #include <Eigen/Dense>
-
-#include "matrix.h"
 
 #include <functional>
 #include <map>

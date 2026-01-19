@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,13 +27,15 @@
 
 #include <vector>
 
-using Eigen::Triplet;
+
 using Eigen::Index;
 using VectorXidx = Eigen::Vector<Index,Eigen::Dynamic>;
 
 
 namespace Graph {
 
+
+//! check if coeff(r,c)==1
 bool IncidenceMatrix::isSet( const Index r, const Index c) const
 {
     Q_ASSERT_X( r>=0 && r<rows(), Q_FUNC_INFO, "row index out of range" );
@@ -42,82 +44,86 @@ bool IncidenceMatrix::isSet( const Index r, const Index c) const
     return coeff(r,c)==1;
 }
 
-SparseMatrix<int> IncidenceMatrix::biadjacency() const {
 
-    // compile A = [O, B;  B',O]
-    Index const C_ = cols();
-    Index const R_ = rows();
+//! Biadjacency matrix A = [O, B;  B',O]
+SparseMatrix<int> IncidenceMatrix::biadjacency() const
+{
+    const Index C = cols();
+    const Index R = rows();
 
-    SparseMatrix<int> AA;
-    AA.resize(C_+R_,C_+R_);
-    std::vector<Triplet<int, Index> > tripletList;
-    for ( Index k = 0; k < outerSize(); ++k) {
+    // vector of triplets (i,j,value)
+    std::vector<Eigen::Triplet<int, Index> > tripletList;
+    for ( Index k=0; k<outerSize(); ++k) {
         for (SparseMatrix<int>::InnerIterator it(*this,k); it; ++it)
         {
-            // tripletList.emplace_back( Triplet<int, Index>( it.row(),   it.col() +R_,  it.value() ));
-            // tripletList.emplace_back( Triplet<int, Index>( it.col() +R_,   it.row(),  it.value() ));
-            tripletList.emplace_back( it.row(),   it.col() +R_,  it.value() );
-            tripletList.emplace_back( it.col() +R_,   it.row(),  it.value() );
+            tripletList.emplace_back( it.row(),    it.col()+R, it.value() );
+            tripletList.emplace_back( it.col()+R, it.row(),    it.value() );
         }
     }
+
+    // create sparse matrix
+    SparseMatrix<int> AA;
+    AA.resize( C+R, C+R );
     AA.setFromTriplets( tripletList.begin(), tripletList.end() );
 
     return AA;
 }
 
 
+//! remove column c
 void IncidenceMatrix::remove_column( const Index c) {
 
     // qDebug() << Q_FUNC_INFO;
 
-    Q_ASSERT( c>=0);
-    Q_ASSERT( c<cols() );
-    Index const C = cols() - 1;
+    Q_ASSERT( c>=0 &&  c<cols() );
+
+    const Index C = cols()-1;
 
     SparseMatrix<int> TT(C+1,C);
-    Index c2 = 0;
-    for (c2=0; c2<c; c2++) {
-        TT.insert(c2,c2) = 1;
+    for (Index i=0; i<c; i++) {
+        TT.insert(i,i) = 1;
     }
-    for (c2=c; c2<C; c2++) {
-        TT.insert(c2+1,c2) = 1;
+    for (Index i=c; i<C; i++) {
+        TT.insert(i+1,i) = 1;
     }
     *this = (*this)*TT;
 }
 
+
+//! remove row r
 void IncidenceMatrix::remove_row( const Index r)
 {
     // qDebug() << QString("remove row #%1").arg(r);
 
-    Q_ASSERT( r>=0 );
-    Q_ASSERT( r<rows() );
+    Q_ASSERT( r>=0 && r<rows() );
 
-    Index const R = rows() - 1;
+    const Index R = rows()-1;
+
     SparseMatrix<int> SS(R,R+1);
-    Index r2 = 0;
-    for (r2=0; r2<r; r2++) {
-        SS.insert(r2,r2) = 1;  // i.e., true
+    for (Index i=0; i<r; i++) {
+        SS.insert(i,i) = 1;  // i.e., true
     }
-    for (r2=r; r2<R; r2++) {
-        SS.insert(r2,r2+1) = 1;
+    for (Index i=r; i<R; i++) {
+        SS.insert(i,i+1) = 1;
     }
 
     *this = SS*(*this);
 }
 
 
-// remove i-th column and i-th row.....................................
+//! remove i-th column and i-th row
 void IncidenceMatrix::reduce( const Index i)
 {
+    Q_ASSERT( i>=0 && i<rows() && i<cols() );
     // qDebug() << QString("reduce %1").arg(i);
 
     // selection matrix S
     SparseMatrix<int> SS( rows()-1,rows());
-    for ( int c=0; c<i; c++) {
-        SS.insert(c,c) = 1;
+    for ( Index j=0; j<i; j++) {
+        SS.insert(j,j) = 1;
     }
-    for ( Index c=i; c<SS.rows(); c++) {
-        SS.insert(c,c+1) = 1;
+    for ( Index j=i; j<SS.rows(); j++) {
+        SS.insert(j,j+1) = 1;
     }
 
     *this = SS*(*this)*SS.transpose();
