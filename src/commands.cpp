@@ -32,7 +32,8 @@ namespace Cmd {
 
 GUI::MainScene * Cmd::Undo::s_scene = nullptr;
 
-Undo::Undo( QUndoCommand *parent) : QUndoCommand(parent)
+Undo::Undo( QUndoCommand *parent, State *st)
+    : QUndoCommand(parent), current_state_(st)
 {
     // qDebug() << Q_FUNC_INFO;
 }
@@ -61,12 +62,11 @@ void Undo::redo()
 AddStroke::AddStroke( State *curr,
                       std::unique_ptr<State> &p,
                       std::unique_ptr<State> &n,
-                      QUndoCommand *parent) : Undo(parent)
+                      QUndoCommand *parent) : Undo(parent, curr)
 {
     // qDebug() << Q_FUNC_INFO;
     setText( QStringLiteral("add stroke") );
 
-    current_state_ = curr;      // set pointer
     prev_state_ = std::move(p);
     next_state_ = std::move(n);
 }
@@ -75,23 +75,22 @@ AddStroke::AddStroke( State *curr,
 DeleteSelection::DeleteSelection( State *st,
                                   std::unique_ptr<State> & p,
                                   std::unique_ptr<State> & n,
-                                  QUndoCommand *parent) : Undo(parent)
+                                  QUndoCommand *parent) : Undo(parent, st)
 {
     // qDebug() << Q_FUNC_INFO ;
     setText( QStringLiteral("delete selected item%1")
              .arg( scene()->selectedItems().size()==1 ? "" : "s") );
 
-    current_state_ = st;   // pointer
     prev_state_ = std::move(p);
     next_state_ = std::move(n);
 }
 
 
-TabulaRasa::TabulaRasa( State *st, QUndoCommand *parent ) : Undo(parent)
+TabulaRasa::TabulaRasa( State *st, QUndoCommand *parent ) : Undo(parent, st)
 {
     // qDebug() << Q_FUNC_INFO ;
     setText( QStringLiteral("clear all") );
-    current_state_ = st;   // pointer
+
     prev_state_ = std::make_unique<State>(*st);   // copy
     next_state_ = std::make_unique<State>();
 }
@@ -102,12 +101,11 @@ ReplaceStateWithFileContent::ReplaceStateWithFileContent( const QString & fileNa
                                                           std::unique_ptr<State> & p,
                                                           std::unique_ptr<State> & n,
                                                           QUndoCommand *parent)
-    : Undo(parent)
+    : Undo(parent, curr)
 {
     // qDebug() << Q_FUNC_INFO;
     setText( fileName );
 
-    current_state_ = curr;   // pointer
     prev_state_ = std::move(p);  // copy
     next_state_ = std::move(n);
 }

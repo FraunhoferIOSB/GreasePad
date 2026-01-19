@@ -49,14 +49,15 @@ public:
     static GUI::MainScene * scene() { return s_scene;  }
 
 protected:
-    explicit Undo( QUndoCommand *parent); //!< Standard constructor
+    explicit Undo(QUndoCommand *parent, State *st); //!< Standard constructor
     ~Undo() override = default;
 
-    State *current_state_{};             //!< Pointer to current state
     std::unique_ptr<State> next_state_;  //!< Pointer to next state (redo)
     std::unique_ptr<State> prev_state_;  //!< Pointer to previous state (undo)
 
 private:
+    State *current_state_{};             //!< Pointer to current state
+
     static GUI::MainScene *s_scene;
 
     void redo() override;
@@ -86,10 +87,10 @@ class DeleteSelection : public Undo
 {
 public:
     //! Value constructor
-    DeleteSelection( State *st,
-                     std::unique_ptr<State> &p,
-                     std::unique_ptr<State> &n,
-                     QUndoCommand *parent);
+    DeleteSelection(State *st,
+                    std::unique_ptr<State> &p,
+                    std::unique_ptr<State> &n,
+                    QUndoCommand *parent);
 };
 
 
