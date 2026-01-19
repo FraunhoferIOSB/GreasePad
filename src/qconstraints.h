@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,8 @@ class uStraightLineSegment;
 namespace QConstraint {
 
 using Uncertain::uStraightLineSegment;
-using Eigen::VectorXidx;
+using VectorXidx = Eigen::Vector<Eigen::Index,Eigen::Dynamic>;
+
 
 //! Graphics: Base class for markers depicting constraints
 class QConstraintBase : public QGraphicsItem
@@ -77,7 +78,7 @@ public:
 
     virtual void setMarkerSize ( qreal s) = 0;  //!< Set marker size
     virtual void setGeometry( QVector<std::shared_ptr< const uStraightLineSegment>> &,
-                              const Eigen::VectorXidx &idx) = 0; //!< Set geometry
+                              const VectorXidx &idx) = 0; //!< Set geometry
 
     static QPen defaultPenReq() { return s_defaultPenReq; }  //!< Get default pen for required constraints
     static QPen defaultPenRed() { return s_defaultPenRed; }  //!< Get default pen for redundant constraints
@@ -138,7 +139,7 @@ public:
     static std::shared_ptr<QConstraintBase> create();  //!< Create copunctual constraint
 
     void setGeometry( QVector<std::shared_ptr<const uStraightLineSegment>> &s,
-                      const Eigen::VectorXidx &idx) override;
+                      const VectorXidx &idx) override;
     void setMarkerSize ( qreal s) override;
    [[nodiscard]] qreal markerSize() const override;
 
@@ -163,7 +164,7 @@ public:
     static std::shared_ptr<QConstraintBase> create();
 
     void setGeometry( QVector<std::shared_ptr<const uStraightLineSegment>> &s,
-                      const Eigen::VectorXidx & idx) override;
+                      const VectorXidx & idx) override;
     void setMarkerSize ( qreal s) override;
     [[nodiscard]] qreal markerSize() const override;
 
@@ -190,7 +191,7 @@ public:
     static std::shared_ptr<QConstraintBase> create();  //!< Create orthogonallity constraint
 
     void setGeometry( QVector<std::shared_ptr<const uStraightLineSegment>> &s,
-                      const Eigen::VectorXidx & idx) override;
+                      const VectorXidx & idx) override;
     void setMarkerSize ( qreal s) override;
     [[nodiscard]] qreal markerSize() const override;
 
@@ -217,7 +218,7 @@ public:
     void setMarkerSize ( qreal s) override;
     [[nodiscard]] qreal markerSize() const override;
     void setGeometry( QVector<std::shared_ptr<const uStraightLineSegment>> &s,
-                      const Eigen::VectorXidx &idx) override;
+                      const VectorXidx &idx) override;
 
 protected:
     QIdentical();
@@ -240,7 +241,7 @@ public:
     static std::shared_ptr<QConstraintBase> create();  //!< Create parallelism constraint
 
     void setGeometry( QVector<std::shared_ptr<const uStraightLineSegment >> &s,
-                      const Eigen::VectorXidx &idx) override;
+                      const VectorXidx &idx) override;
     void setMarkerSize ( qreal s) override;
     [[nodiscard]] qreal markerSize() const override;
 

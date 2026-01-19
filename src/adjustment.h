@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,8 @@
 #include "qcontainerfwd.h"
 
 
+using VectorXidx = Eigen::Vector<Eigen::Index,Eigen::Dynamic>;
+
 
 //! Adjustment framework: observations, Jacobians, optimization...
 class AdjustmentFramework
@@ -58,8 +60,8 @@ public:
     //! Enforce the constraints of a subtask (adjustment)
     bool enforce_constraints(const QVector<std::shared_ptr<Constraint::ConstraintBase> > &constr,
                              const Graph::IncidenceMatrix &Bi,
-                             const Eigen::VectorXidx &maps,
-                             const Eigen::VectorXidx &mapc);
+                             const VectorXidx &maps,
+                             const VectorXidx &mapc);
 
     //! Get s-th entity, i.e., segment, represented by vector of length len
     [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::MatrixXd> getEntity( Eigen::Index s) const;
@@ -85,15 +87,15 @@ private:
                   const Graph::IncidenceMatrix &Bi,
                   Eigen::SparseMatrix<double, Eigen::ColMajor> & BBr,
                   Eigen::VectorXd & g0,
-                  const Eigen::VectorXidx & maps,
-                  const Eigen::VectorXidx & mapc) const;
+                  const VectorXidx & maps,
+                  const VectorXidx & mapc) const;
     //! compute reduced coordinates
     void reduce ( Eigen::VectorXd &, Eigen::SparseMatrix<double,Eigen::ColMajor> &) const;
 
     void check_constraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
                             const Graph::IncidenceMatrix & bi,
-                            const Eigen::VectorXidx & maps,
-                            const Eigen::VectorXidx & mapc ) const;
+                            const VectorXidx & maps,
+                            const VectorXidx & mapc ) const;
 
     bool verbose = true;
 

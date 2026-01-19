@@ -68,8 +68,6 @@ using Eigen::Index;
 using Eigen::SparseMatrix;
 using Eigen::RowVectorXi;
 using Eigen::ColMajor;
-using Eigen::VectorXidx;
-
 
 using Constraint::ConstraintBase;
 using Constraint::Parallel;
@@ -165,8 +163,8 @@ private:
     void remove_segment(    Index i );
 
     // augment & reduce
-    void search_subtask( const Eigen::VectorXidx & mapc_,
-                         const Eigen::VectorXidx & maps_);
+    void search_subtask( const VectorXidx & mapc_,
+                         const VectorXidx & maps_);
 
     //! Estimation of two points delimiting an uncertain straight line segment
     static std::pair<uPoint,uPoint> uEndPoints( const Eigen::VectorXd & xi,
@@ -546,8 +544,8 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
 
             // const Eigen::VectorXidx maps_ = Matfun::find( CoCoBi.head( m_segm.length()  ).array()==cc); //   CoCoBi.mapHead( cc, m_segm.length());
             // const Eigen::VectorXidx mapc_ = Matfun::find( CoCoBi.tail( m_constr.length()).array()==cc); //   CoCoBi.mapTail( cc, m_constr.length());
-            const Eigen::VectorXidx maps_ = find( arr_segm  ==cc);
-            const Eigen::VectorXidx mapc_ = find( arr_constr==cc);
+            const VectorXidx maps_ = find( arr_segm  ==cc);
+            const VectorXidx mapc_ = find( arr_constr==cc);
 
             assert( mapc_.size()> 0);
             qDebug().noquote() << blue << QStringLiteral("Reasoning for connected component #%1/%2...")
@@ -692,8 +690,8 @@ Index impl::find_new_constraints()
     return m_constr.length() -previously;
 }
 
-void impl::search_subtask( const Eigen::VectorXidx & mapc_,
-                           const Eigen::VectorXidx & maps_ )
+void impl::search_subtask( const VectorXidx & mapc_,
+                           const VectorXidx & maps_ )
 {
     qDebug() << Q_FUNC_INFO;
     assert( mapc_.size()>0 );
@@ -987,7 +985,7 @@ void impl::establish_identical( const Index a,  const Index b)
 }
 
 std::pair<Eigen::VectorXd, SparseMatrix<double> >
-impl::a_Maker( const Eigen::VectorXidx & maps_) const
+impl::a_Maker( const VectorXidx & maps_) const
 {
     // qDebug() << Q_FUNC_INFO;
 

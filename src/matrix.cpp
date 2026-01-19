@@ -27,13 +27,12 @@
 
 #include <vector>
 
-namespace Graph {
-
 using Eigen::Triplet;
 using Eigen::Index;
-using Eigen::VectorXidx;
+using VectorXidx = Eigen::Vector<Index,Eigen::Dynamic>;
 
 
+namespace Graph {
 
 bool IncidenceMatrix::isSet( const Index r, const Index c) const
 {

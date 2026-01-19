@@ -48,7 +48,7 @@ using Eigen::Index;
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
 using Eigen::SparseMatrix;
-using Eigen::VectorXidx;
+using VectorXidx = Eigen::Vector<Index,Eigen::Dynamic>;
 
 using Geometry::Rot_ab;
 
@@ -318,8 +318,8 @@ void AdjustmentFramework::Jacobian(
 void AdjustmentFramework::check_constraints(
     const QVector<std::shared_ptr<ConstraintBase> > &constr,
     const IncidenceMatrix &bi,
-    const Eigen::VectorXidx & maps,
-    const Eigen::VectorXidx & mapc) const
+    const VectorXidx & maps,
+    const VectorXidx & mapc) const
 {
     // double d = NAN;       // distance to be checked, d = 0?
     const Index C = mapc.size();

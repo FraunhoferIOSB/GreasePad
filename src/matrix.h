@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,9 +23,7 @@
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 
-namespace Eigen {
-using VectorXidx = Matrix<Index,Dynamic,1>;
-} // namespace Eigen
+
 
 namespace Graph {
 
@@ -40,17 +38,17 @@ class IncidenceMatrix : public SparseMatrix<int, ColMajor, int>
 public:
     //! Copy assignment operator
     template<typename OtherDerived>
-    IncidenceMatrix& operator=( const Eigen::SparseMatrixBase <OtherDerived>& other)
+    IncidenceMatrix& operator=( const SparseMatrixBase <OtherDerived>& other)
     {
-        this->Eigen::SparseMatrix<int, ColMajor,int>::operator=(other);
+        this->SparseMatrix<int, ColMajor,int>::operator=(other);
         return *this;
     }
 
     [[nodiscard]] bool isSet( Index r, Index c) const;     //!< Check if r and c are related
     [[nodiscard]] SparseMatrix<int> biadjacency() const;   //!< Create biadjacency matrix [O, A; A', O]
 
-    void   set( Index r, Index c)  { coeffRef(r,c) = 1; }  //!< Set relation (row r, column c)
-    void unset( Index r, Index c)  { coeffRef(r,c) = 0; }  //!< Delete relation (row r, column c)
+    void   set( const Index r, const Index c)  { coeffRef(r,c) = 1; }  //!< Set relation (row r, column c)
+    void unset( const Index r, const Index c)  { coeffRef(r,c) = 0; }  //!< Delete relation (row r, column c)
 
     void remove_row(    Index r );  //!< Remove r-th row
     void remove_column( Index c );  //!< Remove c-th column
