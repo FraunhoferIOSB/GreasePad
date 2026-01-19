@@ -26,12 +26,12 @@
 #include <QUndoCommand>
 
 class State;
-namespace  GUI {
+namespace GUI {
 class MainScene;
 } // namespace GUI
 
 
-//! Namespace for commands (und/redo)
+//! Namespace for commands (undo/redo)
 namespace Cmd {
 
 //! Base class for undo/redo commands
@@ -75,11 +75,9 @@ public:
                QUndoCommand *parent);
     AddStroke( const AddStroke &) = delete;
     AddStroke( AddStroke &&) = delete;
-    AddStroke operator= (const AddStroke &) = delete;
-    AddStroke operator= ( AddStroke &&) = delete;
+    AddStroke & operator= (const AddStroke &) = delete;
+    AddStroke & operator= ( AddStroke &&) = delete;
     ~AddStroke() override = default;
-
-private:
 };
 
 
