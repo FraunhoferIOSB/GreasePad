@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  */
 
 #include "commands.h"
-#include "global.h"
 #include "mainscene.h"
 #include "state.h"
 
@@ -39,6 +38,26 @@ Undo::Undo( QUndoCommand *parent) : QUndoCommand(parent)
 }
 
 
+void Undo::undo()
+{
+    //qDebug() << Q_FUNC_INFO;
+
+    *current_state_ = *prev_state_;  // set
+    scene()->removeAllItems();
+    scene()->addGraphicItems( prev_state_.get() );
+}
+
+
+void Undo::redo()
+{
+    //qDebug() << Q_FUNC_INFO;
+
+    *current_state_ = *next_state_;    // copy content
+    scene()->removeAllItems();
+    scene()->addGraphicItems( next_state_.get() );
+}
+
+
 AddStroke::AddStroke( State *curr,
                       std::unique_ptr<State> &p,
                       std::unique_ptr<State> &n,
@@ -46,25 +65,10 @@ AddStroke::AddStroke( State *curr,
 {
     // qDebug() << Q_FUNC_INFO;
     setText( QStringLiteral("add stroke") );
+
     current_state_ = curr;      // set pointer
     prev_state_ = std::move(p);
     next_state_ = std::move(n);
-}
-
-void AddStroke::redo()
-{
-    // qDebug() << Q_FUNC_INFO;
-    *current_state_ = *next_state_;    // copy content
-    scene()->removeAllItems();
-    scene()->addGraphicItems( next_state_.get() );
-}
-
-void AddStroke::undo()
-{
-    // qDebug() << Q_FUNC_INFO;
-    *current_state_ = *prev_state_;  // set
-    scene()->removeAllItems();
-    scene()->addGraphicItems( prev_state_.get() );
 }
 
 
@@ -73,26 +77,13 @@ DeleteSelection::DeleteSelection( State *st,
                                   std::unique_ptr<State> & n,
                                   QUndoCommand *parent) : Undo(parent)
 {
+    // qDebug() << Q_FUNC_INFO ;
     setText( QStringLiteral("delete selected item%1")
              .arg( scene()->selectedItems().size()==1 ? "" : "s") );
 
     current_state_ = st;   // pointer
     prev_state_ = std::move(p);
     next_state_ = std::move(n);
-}
-
-void DeleteSelection::redo()
-{
-    *current_state_ = *next_state_;
-    scene()->removeAllItems();
-    scene()->addGraphicItems( next_state_.get() );
-}
-
-void DeleteSelection::undo()
-{
-    *current_state_ = *prev_state_;
-    scene()->removeAllItems();
-    scene()->addGraphicItems( prev_state_.get() );
 }
 
 
@@ -103,24 +94,8 @@ TabulaRasa::TabulaRasa( State *st, QUndoCommand *parent ) : Undo(parent)
     current_state_ = st;   // pointer
     prev_state_ = std::make_unique<State>(*st);   // copy
     next_state_ = std::make_unique<State>();
-    //next_state_ = std::make_unique<State>(*st);
-    //next_state_->clearAll();
 }
 
-
-void TabulaRasa::redo()
-{
-    // qDebug() << Q_FUNC_INFO;
-    *current_state_ = *next_state_;
-    scene()->removeAllItems();
-}
-
-void TabulaRasa::undo()
-{
-    // qDebug() << Q_FUNC_INFO;
-    *current_state_ = *prev_state_;
-    scene()->addGraphicItems( prev_state_.get() );
-}
 
 ReplaceStateWithFileContent::ReplaceStateWithFileContent( const QString & fileName,
                                                           State *curr,
@@ -133,25 +108,8 @@ ReplaceStateWithFileContent::ReplaceStateWithFileContent( const QString & fileNa
     setText( fileName );
 
     current_state_ = curr;   // pointer
-    //prev_state_ = std::make_unique<State>(*Old);  // copy
     prev_state_ = std::move(p);  // copy
     next_state_ = std::move(n);
-}
-
-void ReplaceStateWithFileContent::redo()
-{
-    // qDebug() << Q_FUNC_INFO;
-    *current_state_ = *next_state_;
-    scene()->removeAllItems();
-    scene()->addGraphicItems( next_state_.get() );
-}
-
-void ReplaceStateWithFileContent::undo()
-{
-    // qDebug() << Q_FUNC_INFO;
-    *current_state_ = *prev_state_;
-    scene()->removeAllItems();
-    scene()->addGraphicItems( prev_state_.get() );
 }
 
 } // namespace Cmd

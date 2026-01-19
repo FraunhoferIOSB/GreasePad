@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ public:
 
 protected:
     explicit Undo( QUndoCommand *parent); //!< Standard constructor
-    ~Undo() = default;
+    ~Undo() override = default;
 
     State *current_state_{};             //!< Pointer to current state
     std::unique_ptr<State> next_state_;  //!< Pointer to next state (redo)
@@ -58,6 +58,9 @@ protected:
 
 private:
     static GUI::MainScene *s_scene;
+
+    void redo() override;
+    void undo() override;
 };
 
 
@@ -77,8 +80,6 @@ public:
     ~AddStroke() override = default;
 
 private:
-    void redo() override;
-    void undo() override;
 };
 
 
@@ -91,9 +92,6 @@ public:
                      std::unique_ptr<State> &p,
                      std::unique_ptr<State> &n,
                      QUndoCommand *parent);
-private:
-    void redo() override;
-    void undo() override;
 };
 
 
@@ -103,10 +101,8 @@ class TabulaRasa : public Undo
 public:
     //! Value constructor
     TabulaRasa( State *st, QUndoCommand *parent);
-private:
-    void redo() override;
-    void undo() override;
 };
+
 
 //! Command 'replace view with file content'
 class ReplaceStateWithFileContent : public Undo
@@ -118,9 +114,6 @@ public:
                                  std::unique_ptr<State> &p,
                                  std::unique_ptr<State> &n,
                                  QUndoCommand *parent);
-private:
-    void redo() override;
-    void undo() override;
 };
 
 } // namespace Cmd
