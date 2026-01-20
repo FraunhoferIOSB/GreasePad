@@ -16,9 +16,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+
 #include <cassert>
 #include <cfloat>
-//#define  USE_MATH_DEFINES // for C++
 #include <cmath>
 
 #include "matfun.h"
@@ -37,10 +37,15 @@
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
+using Eigen::Matrix2d;
+using Eigen::Vector2d;
 using Eigen::Matrix3d;
 using Eigen::Vector3d;
+using Eigen::RowVector3d;
 using Matrix6d    = Eigen::Matrix<double,6,6>;
 using RowVector6d = Eigen::Matrix<double,1,6>;
+using Matrix9d    = Eigen::Matrix<double,9,9>;
+using RowVector9d = Eigen::Matrix<double,1,9>;
 
 using Matfun::sign;
 using Matfun::cof3;
@@ -56,9 +61,13 @@ uStraightLine::uStraightLine(const Vector3d & l,
                              const Matrix3d & Sigma_ll)
     : BasicEntity2D( l, Sigma_ll )
 {
-    // TODO(meijoc)  check: null(Cov) = l ?
-    assert( l.size()==Sigma_ll.cols() );
-    // assert( isCovMat( Cov_ll) );
+    /* check: null(Sigma_ll)
+    Eigen::FullPivLU<MatrixXd> lu(Sigma_ll);
+    MatrixXd null_space = lu.kernel();
+
+    std::cout << "null = " << null_space.format(row) << '\n' << std::flush;
+    std::cout << "   l = " << l.format(row) << '\n' << std::flush;
+    std::cout << l(0)*l(0) +l(1)*l(1) << '\n' << std::flush;*/
 }
 
 
@@ -66,58 +75,55 @@ uStraightLine::uStraightLine(const Vector3d & l,
 uStraightLine uStraightLine::estim( const VectorXd & xi,
                                     const VectorXd & yi)
 {
-    // centroid ............................................
-    double const x0 = xi.mean();
-    double const y0 = yi.mean();    // qDebug() << "mean = (" << x0 << "," << y0 << ")";
+    // centroid
+    const double x0 = xi.mean();
+    const double y0 = yi.mean();
 
-    // 2nd moments .........................................
-    const auto I = static_cast<double>(xi.rows());  //qDebug() << "I = " << I;
+    // 2nd moments
+    const auto numPtsF = static_cast<double>(xi.rows());
 
-    Eigen::Matrix2d MM;
-    MM(0,0) = xi.dot(xi)  -I*x0*x0;
-    MM(0,1) = xi.dot(yi)  -I*x0*y0;
-    MM(1,1) = yi.dot(yi)  -I*y0*y0;
+    Matrix2d MM;
+    MM(0,0) = xi.dot(xi)  -numPtsF*x0*x0;
+    MM(0,1) = xi.dot(yi)  -numPtsF*x0*y0;
+    MM(1,1) = yi.dot(yi)  -numPtsF*y0*y0;
     MM(1,0) = MM(0,1);
 
     // SVD .....................................................
-    const Eigen::JacobiSVD<Eigen::Matrix2d> svd( MM, Eigen::ComputeFullU );//| ComputeThinV);
-    Eigen::Vector2d sv = svd.singularValues();
-    Eigen::Matrix2d UU = svd.matrixU();
-    Eigen::Vector2d n  = UU.col(1);
+    const Eigen::JacobiSVD<Matrix2d> svd( MM, Eigen::ComputeFullU );//| ComputeThinV);
+    const Vector2d sv = svd.singularValues();
+    const Matrix2d UU = svd.matrixU();
+    const Vector2d n  = UU.col(1);
 
     // straight line  l = [n; -n'*x0];  .........................
-    const Vector3d v = (Vector3d() << n(0), n(1), -(n(0)*x0) -(n(1)*y0)).finished();
+    const Vector3d l( n(0), n(1), -(n(0)*x0) -(n(1)*y0) );
 
     // check: point-line incidence, x'l = 0
-    Q_ASSERT( std::fabs( (x0*v(0)) +(y0*v(1)) +v(2) ) < FLT_EPSILON);
+    Q_ASSERT( std::fabs( (x0*l(0)) +(y0*l(1)) +l(2) ) < FLT_EPSILON);
 
     // estimated variance factor (10.167) .........................
     Q_ASSERT(sv(0) > sv(1));
-    const double evar0 = sv(1) / (I - 2);
-    // qDebug() << "estd_0 = " << sqrt(evar0);
-
-    // cov. mat. for l = [0 1 0], (10.166) ........................
-    // Cov_ll = diag( [1/lambda(2), 0, 1/(I*wq)]);
+    const double evar0 = sv(1) / (numPtsF - 2.);
 
     Q_ASSERT_X( std::fabs(sv(0)) > FLT_EPSILON, Q_FUNC_INFO,
                "Division by zero or near-zero singular value sv(0)");
-    Q_ASSERT_X( I>0, Q_FUNC_INFO,
+    Q_ASSERT_X( numPtsF>0, Q_FUNC_INFO,
                "Division by zero: I (number of points) must be nonzero");
 
-    const Vector3d t = (Vector3d() << 1. / sv(0), 0, 1. / I).finished();
-    const Matrix3d Sigma_ll  = I*t.asDiagonal(); // TODO(meijoc)
+    // cov. mat. for m = [0 1 0], (10.166)
+    // Sigma_mm = diag( [1/lambda(2), 0, 1/(I*wq)]);
+    const Matrix3d Sigma_mm  = numPtsF*Vector3d(1./sv(0), 0.0, 1./numPtsF).asDiagonal();
 
-    // variance propagation .......................................
+    // variance propagation
     Matrix3d HH = Matrix3d::Identity(3,3);
     HH.topLeftCorner(2,2) = UU;
     HH(0,2) = x0;
     HH(1,2) = y0;      //  HH = [UU, x0; 0 0 1]
-    const Matrix3d Cov = evar0*(HH.inverse()).transpose()*Sigma_ll* HH.inverse();
+    const Matrix3d Sigma_ll = evar0*(HH.inverse()).transpose()*Sigma_mm* HH.inverse();
 
-    // TODO(meijoc): warning
-    Q_ASSERT_X( isCovMat(Cov ), Q_FUNC_INFO, "invalid covariance matrix");
-    assert( isCovMat(Cov ) );
-    return{ v, Cov};
+    Q_ASSERT_X( isCovMat(Sigma_ll ), Q_FUNC_INFO, "invalid covariance matrix");
+    assert( isCovMat(Sigma_ll) );
+
+    return {l, Sigma_ll};
 }
 
 
@@ -144,18 +150,17 @@ uPoint uStraightLine::project(const uPoint &ux) const
 //! Get Euclidean normalized version of this uncertain straight line
 uStraightLine uStraightLine::euclidean() const
 {
-    const Eigen::Vector2d lh = v().head(2);
-    double const l0 = v(2);
-    Matrix3d JJ = Matrix3d::Identity();
-    double const n = lh.norm();
-
+    const Vector2d lh = v().head(2);
+    const double l0 = v(2);
+    const double n = lh.norm();
     Q_ASSERT_X( n>0, Q_FUNC_INFO, "normal is 0-vector");
+
+    Matrix3d JJ = Matrix3d::Identity();
     JJ.topLeftCorner(2,2)   -=  lh*lh.adjoint()/(n*n);
     JJ.bottomLeftCorner(1,2) = -l0*lh.adjoint()/(n*n);
     JJ /= n;
 
-    const Matrix3d Sigma = JJ * Cov() * JJ.adjoint();
-    return { v()/n,  Sigma };
+    return {v()/n, JJ*Cov()*JJ.adjoint()};
 }
 
 
@@ -167,35 +172,39 @@ uStraightLine uStraightLine::sphericalNormalized() const
     return {p};
 }
 
+
 //! Check if the uncertain straight line is vertical.
-bool uStraightLine::isVertical( double T_q) const
+bool uStraightLine::isVertical( const double T_q) const
 {
     // l=[a,b,c], b=0 ?
     const double d = v(1);
-    const Eigen::RowVector3d JJ = (Eigen::RowVector3d() << 0, 1, 0).finished();
-    const double var_d = JJ * Cov() * JJ.adjoint();
+    const RowVector3d JJ( 0, 1, 0);
+    const double var_d = JJ.dot( Cov()*JJ.adjoint() );
+
     return d*d/var_d < T_q;
 }
 
+
 //! Check if the uncertain straight line is horizontal.
-bool uStraightLine::isHorizontal(double T_q) const
+bool uStraightLine::isHorizontal( const double T_q) const
 {
     // l=[a,b,c], a=0 ?
     const double d = v(0);
-    const Eigen::RowVector3d JJ = (Eigen::RowVector3d() << 1, 0, 0).finished();
-    const double var_d = JJ * Cov() * JJ.adjoint();
+    const RowVector3d JJ( 1, 0, 0);
+    const double var_d = JJ.dot( Cov()*JJ.adjoint() );
+
     return d*d/var_d < T_q;
 }
 
+
 //! Check if the uncertain straight line is diagonal.
-bool uStraightLine::isDiagonal(double T_q) const
+bool uStraightLine::isDiagonal( const double T_q) const
 {
     // l=[a,b,c],   abs(a)-abs(b)=0  ?
+    const double d = std::fabs(v(0)) -std::fabs(v(1));
+    const RowVector3d JJ( sign(v(0)), -sign(v(1)), 0);
+    const double var_d = JJ.dot( Cov()*JJ.adjoint() );
 
-    const double d = std::fabs(v(0)) - std::fabs(v(1));
-    const Eigen::RowVector3d JJ = (Eigen::RowVector3d() << sign(v(0)), -sign(v(1)), 0)
-                                      .finished();
-    const double var_d = JJ * Cov() * JJ.adjoint();
     return d*d/var_d < T_q;
 }
 
@@ -207,41 +216,38 @@ bool uStraightLine::isOrthogonalTo( const uStraightLine & um,
     static const Matrix3d CC = Vector3d(1,1,0).asDiagonal();
 
     RowVector6d JJ;
-    JJ.leftCols(3)  = um.v().adjoint()*CC;
-    JJ.rightCols(3) =    v().adjoint()*CC;
+    JJ << um.v().adjoint()*CC, v().adjoint()*CC;
 
-    Matrix6d Cov_lm = Matrix6d::Zero();
-    Cov_lm.topLeftCorner(3,3) = Cov();
-    Cov_lm.bottomRightCorner(3,3) = um.Cov();
+    Matrix6d Sigma_lm = Matrix6d::Zero();
+    Sigma_lm.topLeftCorner(3,3) = Cov();
+    Sigma_lm.bottomRightCorner(3,3) = um.Cov();
 
     const double d = v().dot( CC*um.v() );
-    const double var_d = JJ * Cov_lm * JJ.adjoint();
+    const double var_d = JJ.dot( Sigma_lm*JJ.adjoint() );
 
-    return d*d/var_d <  T_q;
+    return d*d/var_d < T_q;
 }
+
 
 //! Check if the three uncertain straight lines 'um', 'un', and 'this' are copunctual.
 bool uStraightLine::isCopunctualWith( const uStraightLine & um,
                                       const uStraightLine & un,
                                       const double T_d) const
 {
+    // M = [l,m,n]
     const Matrix3d MM = (Matrix3d() << v(), um.v(), un.v()).finished();
 
     const double d = MM.determinant(); // distance, dof = 1
-    Eigen::Matrix<double,9,9> Sigma_lmn;
-    Sigma_lmn.fill(0);
-    Sigma_lmn.block(0,0,3,3) = Cov();
-    Sigma_lmn.block(3,3,3,3) = um.Cov();
+
+    Matrix9d Sigma_lmn = Matrix9d::Zero();
+    Sigma_lmn.topLeftCorner(3,3)     = Cov();
+    Sigma_lmn.block(3,3,3,3)         = um.Cov();
     Sigma_lmn.bottomRightCorner(3,3) = un.Cov();
 
-    Matrix3d cofMM = cof3( MM);
-    Eigen::Matrix<double,1,9> JJ;
-    JJ.segment( 0, 3) = cofMM.col(0);
-    JJ.segment( 3, 3) = cofMM.col(1);
-    JJ.segment( 6, 3) = cofMM.col(2);
-    const double var_d = JJ * Sigma_lmn * JJ.adjoint(); // error propagation
+    const RowVector9d JJ = cof3(MM).reshaped();
+    const double var_d = JJ.dot( Sigma_lmn*JJ.adjoint() ); // error propagation
 
-    return d*d/var_d < T_d;                  // test statistic T
+    return d*d/var_d < T_d;
 }
 
 
@@ -254,14 +260,13 @@ bool uStraightLine::isParallelTo( const uStraightLine & um,
     const double d = -v().dot( S3*um.v() ); // (7.24)
 
     RowVector6d JJ;
-    JJ.leftCols(3) = -um.v().adjoint()*S3.adjoint();  // adj(S3)=-S3 ?
-    JJ.rightCols(3) =  -v().adjoint()*S3;
+    JJ <<  -um.v().adjoint()*S3.adjoint(), -v().adjoint()*S3;
 
-    Matrix6d Cov_lm = Matrix6d::Zero();
-    Cov_lm.topLeftCorner(3,3)     = Cov();
-    Cov_lm.bottomRightCorner(3,3) = um.Cov();
+    Matrix6d Sigma_lm = Matrix6d::Zero();
+    Sigma_lm.topLeftCorner(3,3)     = Cov();
+    Sigma_lm.bottomRightCorner(3,3) = um.Cov();
 
-    const double var_d = JJ * Cov_lm * JJ.adjoint();
+    const double var_d = JJ.dot( Sigma_lm*JJ.adjoint() );
 
     return d*d/var_d < T_q;
 }

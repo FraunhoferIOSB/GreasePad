@@ -40,16 +40,12 @@ public:
     uStraightLine( const Vector3d & l, const Matrix3d & Sigma_ll);
 
     [[nodiscard]] static uStraightLine estim( const VectorXd & xi, const VectorXd & yi);
-    [[nodiscard]] static uStraightLine cross( const uPoint & ux, const uPoint & uy)
-    {
-        return ux.cross(uy);
-    }
 
     [[nodiscard]] uStraightLine euclidean() const;
     [[nodiscard]] uStraightLine sphericalNormalized() const;
 
     //! Angle between this straight line and the x-axis in radians
-    [[nodiscard]] double angle_rad()  const { return atan2( v(1),v(0) ); }
+    [[nodiscard]] double angle_rad()  const { return std::atan2( v(1),v(0) ); }
 
     //! Project point onto straight line
     [[nodiscard]] uPoint project( const uPoint & ux) const;

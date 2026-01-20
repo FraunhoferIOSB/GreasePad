@@ -26,6 +26,7 @@
 #include <utility>
 
 #include "geometry/skew.h"
+#include "statistics/iscov.h"
 
 
 //! Uncertain geometric entities
@@ -36,6 +37,8 @@ using Eigen::Vector3d;
 
 using Geometry::skew;
 
+using Stats::isCovMat;
+
 
 //! Base class for uncertain geometric entities, represented by 3-vectors
 class BasicEntity2D
@@ -43,7 +46,12 @@ class BasicEntity2D
 
 public:
     //! Construct entity with homogeneous 3-vector and its covariance matrix
-    BasicEntity2D( Eigen::Vector3d z, Eigen::Matrix3d Cov_zz) : m_val(std::move(z)), m_cov(std::move(Cov_zz)) {}
+    BasicEntity2D( Vector3d z, Matrix3d Sigma_zz)
+        : m_val(std::move(z)), m_cov(std::move(Sigma_zz))
+    {
+        assert( m_val.size()==m_cov.cols() );
+        assert( isCovMat( m_cov) );
+    }
     BasicEntity2D ( const BasicEntity2D &) = default;              //!< Copy constructor
     BasicEntity2D( BasicEntity2D &&) = default; //delete;                     //!< Move constructor
     BasicEntity2D & operator= ( const BasicEntity2D &&) = delete;  //!< Move assignment
