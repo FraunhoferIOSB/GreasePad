@@ -19,6 +19,7 @@
 
 #include "matfun.h"
 #include "statistics/iscov.h"
+#include "udistance.h"
 #include "uncertain.h"
 #include "upoint.h"
 #include "ustraightline.h"
@@ -35,22 +36,22 @@
 #include <cstdlib>
 
 
-namespace Uncertain {
+using Eigen::Matrix;
+using Eigen::Matrix2d;
 
 using Matfun::sign;
 
 using Stats::isCovMat;
 
 
+namespace Uncertain {
+
+
 //! Construction of uncertain point via 3-vector x and its covariance matrix
-uPoint::uPoint(const Vector3d &x,
-               const Matrix3d &Sigma_xx)
+uPoint::uPoint( const Vector3d & x, const Matrix3d & Sigma_xx)
     : BasicEntity2D (x, Sigma_xx)
 {
     // qDebug() << Q_FUNC_INFO;
-    Q_ASSERT_X( isCovMat( Cov() ),
-                Q_FUNC_INFO,
-                "invalid covariance matrix");
 }
 
 
@@ -60,11 +61,11 @@ Aabb uPoint::bbox() const
     const double uu = v(0);
     const double vv = v(1);
     const double ww = v(2);
-    Eigen::Matrix<double,2,3> JJ;
-    JJ.col(0) << 1/ww, 0;
-    JJ.col(1) << 0, 1/ww;
-    JJ.col(2) << -uu/(ww*ww), -vv/(ww*ww);
-    const Eigen::Matrix2d Cov_xx = JJ * Cov() * JJ.transpose();
+
+    const Matrix<double,2,3> JJ {
+        { 1/ww,      0,   -uu/(ww*ww)},
+        {    0,   1/ww,   -vv/(ww*ww)}  };
+    const Matrix2d Cov_xx = JJ * Cov() * JJ.transpose();
 
     const double x = v(0) / v(2);
     const double y = v(1) / v(2);
@@ -110,19 +111,21 @@ uDistance uPoint::distanceEuclideanTo( const uStraightLine & ul) const
     return {d_val,d_var};
 }
 
+
 //! Get uncertain point in homogeneous coordinates, Euclidean normalized
 uPoint uPoint::euclidean() const
 {
     const double uu = v(0); // w'=u/w
     const double vv = v(1); // v'=v/w
     const double ww = v(2); // w'=w/w=1
-    Matrix3d JJ;
-    JJ.row(0) << 1/ww,   0, -uu/(ww*ww);
-    JJ.row(1) <<   0, 1/ww, -vv/(ww*ww);
-    JJ.row(2) <<   0,   0,        0;
+    const Matrix3d JJ {
+        { 1/ww,   0, -uu/(ww*ww) },
+        { 0,   1/ww, -vv/(ww*ww) },
+        { 0,      0,        0    } };
 
     return { v()/v(2), JJ*Cov()*JJ.adjoint() };
 }
+
 
 //! Get uncertain point, transformed via 3x3 transformation matrix
 uPoint uPoint::transformed( const Matrix3d & TT) const
@@ -135,25 +138,27 @@ uPoint uPoint::transformed( const Matrix3d & TT) const
 bool uPoint::isIncidentWith( const uStraightLine & ul,
                              const double T) const
 {
-    const double d_val = v().dot(ul.v());                                       //  d = x'*l
-    const double d_var = ul.v().dot(Cov() * ul.v()) + v().dot( ul.Cov() * v()); // uncorrelated
-    Q_ASSERT( d_var>0. );
-    double const T_in = (d_val * d_val) / d_var;
-    return (T_in < T);
+    const double d = v().dot(ul.v());                                       //  d = x'*l
+    const double var_d = ul.v().dot(Cov() * ul.v()) + v().dot( ul.Cov() * v()); // uncorrelated
+    Q_ASSERT( var_d>0. );
+
+    return (d*d) / var_d < T;
 }
+
 
 //! Get algebraic distance of 'this' and straight line of 'ul'
 uDistance uPoint::distanceAlgebraicTo( const uStraightLine & ul ) const
 {
-    const double d_val = sign( v(2) ) * v().dot(ul.v());
+    const double d = sign( v(2) ) * v().dot(ul.v());
     const Vector3d JJx = ul.v().adjoint();
     const Vector3d JJl = sign( v(2) ) * v().adjoint();
     // JJ = [l', sign(x(3))*x'];
 
-    const double d_var = JJx.dot( Cov() * JJx) + JJl.dot(ul.Cov() * JJl); // uncorrelated
+    const double var_d = JJx.dot( Cov() * JJx) + JJl.dot(ul.Cov() * JJl); // uncorrelated
 
-    return {d_val, d_var};
+    return {d, var_d};
 }
+
 
 //! Get uncertain point in homogeneous coordinates, spherically normalized
 uPoint uPoint::sphericalNormalized() const
@@ -162,6 +167,7 @@ uPoint uPoint::sphericalNormalized() const
     ux.normalizeSpherical();
     return ux;  // Compiler invokes the copy constructor.
 }
+
 
 //! cross product of two vectors representing points, l=cross(x,y)
 uStraightLine uPoint::cross( const uPoint & other) const
