@@ -42,10 +42,6 @@ using Eigen::Vector2d;
 using Eigen::Matrix3d;
 using Eigen::Vector3d;
 using Eigen::RowVector3d;
-using Matrix6d    = Eigen::Matrix<double,6,6>;
-using RowVector6d = Eigen::Matrix<double,1,6>;
-using Matrix9d    = Eigen::Matrix<double,9,9>;
-using RowVector9d = Eigen::Matrix<double,1,9>;
 
 using Matfun::sign;
 using Matfun::cof3;

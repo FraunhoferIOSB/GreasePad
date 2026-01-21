@@ -63,6 +63,12 @@ public:
     [[nodiscard]] bool isCopunctualWith( const uStraightLine & um,
                                          const uStraightLine & un,
                                          double T) const;
+
+private:
+    using Matrix6d    = Eigen::Matrix<double,6,6>;
+    using RowVector6d = Eigen::RowVector<double,6>;
+    using Matrix9d    = Eigen::Matrix<double,9,9>;
+    using RowVector9d = Eigen::RowVector<double,9>;
 };
 
 } // namespace Uncertain
