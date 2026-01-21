@@ -86,8 +86,7 @@ uStraightLineSegment::uStraightLineSegment( const uPoint & ux,
     const Matrix3d UUy = Sy*CC*Sy;
 
     const Vector3d l = Sx*uy.v();
-    Q_ASSERT( fabs( l.norm() ) > FLT_EPSILON );
-    assert(fabs(l.norm()) > FLT_EPSILON && "identical points.");
+    assert( l.norm() > FLT_EPSILON && "identical points.");
 
     const double xh = ux.v()(2);
     const double yh = uy.v()(2);
@@ -310,8 +309,8 @@ QDataStream & operator>> (QDataStream & in, Aabb & bbox)
 //! Overloaded >>operator for 9-vectors
 QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,1> & v)
 {
-    for ( int i=0; i<v.size(); i++) {
-        in >> v[i];
+    for (int idx=0; idx<v.size(); idx++) {
+        in >> v[idx];
     }
 
     return in;
