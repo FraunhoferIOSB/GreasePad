@@ -30,7 +30,7 @@
 
 namespace Cmd {
 
-GUI::MainScene * Cmd::Undo::s_scene = nullptr;
+GUI::MainScene * Undo::s_scene = nullptr;
 
 Undo::Undo( QUndoCommand *parent, State *st)
     : QUndoCommand(parent), current_state_(st)
@@ -44,8 +44,12 @@ void Undo::undo()
     //qDebug() << Q_FUNC_INFO;
 
     *current_state_ = *prev_state_;  // set
-    scene()->removeAllItems();
-    scene()->addGraphicItems( prev_state_.get() );
+    auto *scn = scene();
+    if (scn==nullptr) {
+        return;
+    }
+    scn->removeAllItems();
+    scn->addGraphicItems( prev_state_.get() );
 }
 
 
@@ -54,8 +58,12 @@ void Undo::redo()
     //qDebug() << Q_FUNC_INFO;
 
     *current_state_ = *next_state_;    // copy content
-    scene()->removeAllItems();
-    scene()->addGraphicItems( next_state_.get() );
+    auto *scn = scene();
+    if (scn==nullptr) {
+        return;
+    }
+    scn->removeAllItems();
+    scn->addGraphicItems( next_state_.get() );
 }
 
 
@@ -78,8 +86,13 @@ DeleteSelection::DeleteSelection( State *st,
                                   QUndoCommand *parent) : Undo(parent, st)
 {
     // qDebug() << Q_FUNC_INFO ;
-    setText( QStringLiteral("delete selected item%1")
-             .arg( scene()->selectedItems().size()==1 ? "" : "s") );
+    auto *scn = scene();
+    if (scn==nullptr) {
+        return;
+    }
+
+    const QString suffix = scn->selectedItems().size()==1 ? QStringLiteral("") : QStringLiteral("s");
+    setText( QStringLiteral("delete selected item%1").arg(suffix) );
 
     prev_state_ = std::move(p);
     next_state_ = std::move(n);
