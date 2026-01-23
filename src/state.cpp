@@ -22,12 +22,12 @@
 #include "qcontainerfwd.h"
 #include "qlogging.h"
 #include "qsharedpointer.h"
+#include "qstringliteral.h"
 #include "qtypes.h"
 
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <cstring>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -163,8 +163,8 @@ private:
     void remove_segment(    Index i );
 
     // augment & reduce
-    void search_subtask( const VectorXidx & mapc_,
-                         const VectorXidx & maps_);
+    void solve_subtask_greedy( const VectorXidx & mapc_,
+                               const VectorXidx & maps_);
 
     //! Estimation of two points delimiting an uncertain straight line segment
     static std::pair<uPoint,uPoint> uEndPoints( const Eigen::VectorXd & xi,
@@ -552,7 +552,7 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
                         .arg(cc).arg(LabelsNewConstrUnique.size())
                      << black;
 
-            search_subtask( mapc_, maps_ ); // in [augment state]
+            solve_subtask_greedy( mapc_, maps_ ); // in [augment state]
         }
 
     } // if ( num_new_constraints_ > 0 )
@@ -690,10 +690,10 @@ Index impl::find_new_constraints()
     return m_constr.length() -previously;
 }
 
-void impl::search_subtask( const VectorXidx & mapc_,
-                           const VectorXidx & maps_ )
+void impl::solve_subtask_greedy( const VectorXidx & mapc_,
+                                 const VectorXidx & maps_ )
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     assert( mapc_.size()>0 );
 
     AdjustmentFramework a{ a_Maker( maps_)};
@@ -1209,7 +1209,7 @@ void impl::reasoning_reduce_and_adjust()
 
         if ( greedySearchRequired ) {
             qDebug().nospace() <<  QString("Update of connected component #%1").arg(cc+1);
-            search_subtask( mapc_, maps_ );  // reduce
+            solve_subtask_greedy( mapc_, maps_ );  // reduce
         }
     }
     qDebug() <<  Q_FUNC_INFO;
