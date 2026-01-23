@@ -37,6 +37,7 @@ No installation procedure is provided. Instead, please perform the following ste
 <a name="gallery"></a>
 ## Gallery (Screenshots)
 
+### Pappus's hexagon theorem
 
 <figure>
 <img src="./gallery/pappus_affine.png" width = "100%">
@@ -45,6 +46,8 @@ Pappus's hexagon theorem, affine form
 </figcaption>
 </figure>
 
+### Confidence regions
+
 <figure>
 <img src="./gallery/confidence.png" width = "100%">
 <figcaption align="left">
@@ -52,12 +55,16 @@ Confidence regions
 </figcaption>
 </figure>
 
+### Tracing and Outlining
+
 <figure>
 <img src="./gallery/outlining.png" width = "100%">
 <figcaption align="left">
-Tracing & outlining
+Tracing and outlining
 </figcaption>
 </figure>
+
+### Orthocenter of a Triangle
 
 <figure>
 <img src="./gallery/orthocenter.png" width = "100%">
@@ -66,6 +73,9 @@ Orthocenter of a triangle
 </figcaption>
 </figure>
 
+
+### Identification of Subtasks
+
 <figure>
 <img src="./gallery/subtasks.png" width = "100%">
 <figcaption align="left">
@@ -73,12 +83,16 @@ Identification of subtasks (connected components)
 </figcaption>
 </figure>
 
+### Thomsen's Figure
+
 <figure>
 <img src="./gallery/thomsen.png" width = "100%">
 <figcaption align="left">
 Thomsen's figure
 </figcaption>
 </figure>
+
+### Mid Point of a Triangle's Side
 
 <figure>
 <img src="./gallery/mid_point.png" width = "100%">
