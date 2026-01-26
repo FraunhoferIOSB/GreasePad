@@ -20,48 +20,60 @@
 #define AABB_H
 
 #include <cassert>
-#include <cmath>
 
+#include <Eigen/core>
 
 namespace Geometry {
 
+using Eigen::Dynamic;
+using Eigen::Vector;
+
+
 //! Axis-aligned bounding box
+template <typename T>
 class Aabb {
 
 public:
-    explicit Aabb( double x_min, double x_max,
-                   double y_min, double y_max )  //!< Value constructor
-        : m_x_min(x_min), m_x_max(x_max), m_y_min(y_min), m_y_max(y_max)
+    //! Value constructor
+    explicit Aabb( Vector<T,Dynamic> min, Vector<T,Dynamic> max)
+        : m_min(min), m_max(max)
     {
-        assert( m_x_min <= m_x_max );  // option: swap
-        assert( m_y_min <= m_y_max );
+        assert( m_min.size() == m_max.size() );
+        assert( ( m_min.array() <= m_max.array() ).all() );
     }
     Aabb() = default;
 
-    [[nodiscard]] double x_min() const { return m_x_min; } //!< Get minimum x-value
-    [[nodiscard]] double x_max() const { return m_x_max; } //!< Get maximum x-value
-    [[nodiscard]] double y_min() const { return m_y_min; } //!< Get minimum y-value
-    [[nodiscard]] double y_max() const { return m_y_max; } //!< Get maximum y-value
-
-    [[nodiscard]] bool overlaps( const Aabb & other) const   //!< Check if the other box overlaps
-    {
-        return (   ( std::fmin( m_x_max, other.m_x_max) > std::fmax( m_x_min, other.m_x_min) )
-                && ( std::fmin( m_y_max, other.m_y_max) > std::fmax( m_y_min, other.m_y_min) )
-                );
+    //! Get i-th minimum value
+    [[nodiscard]] T min(const int i) const {
+        assert( i>=0 && i<m_min.size() );
+        return m_min(i);
     }
-    [[nodiscard]] Aabb united( const Aabb & other) const     //!< Get united box of this and the other box
+
+    //! Get i-th maximum value
+    [[nodiscard]] T max(const int i) const {
+        assert( i>=0 && i<m_max.size() );
+        return m_max(i);
+    }
+
+    //! Check if the other box overlaps
+    [[nodiscard]] bool overlaps( const Aabb & other) const
     {
-        return Aabb( std::fmin( m_x_min, other.m_x_min),
-                     std::fmax( m_x_max, other.m_x_max),
-                     std::fmin( m_y_min, other.m_y_min),
-                     std::fmax( m_y_max, other.m_y_max) );
+        return ( m_max.cwiseMin(other.m_max).array()
+               > m_min.cwiseMax(other.m_min).array() ).all();
+    }
+
+    //! Get united/merged box of this and the other box
+    [[nodiscard]] Aabb united( const Aabb & other) const
+    {
+        return Aabb {
+            m_min.cwiseMin(other.m_min),
+            m_max.cwiseMax(other.m_max)
+        };
     }
 
 private:
-    double m_x_min = 0;
-    double m_x_max = 0;
-    double m_y_min = 0;
-    double m_y_max = 0;
+    Vector<T,Dynamic> m_min;
+    Vector<T,Dynamic> m_max;
 };
 
 } // namespace Geometry

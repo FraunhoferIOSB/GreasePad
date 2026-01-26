@@ -28,7 +28,6 @@
 
 #include <QDebug>
 
-#include "qassert.h"
 #include "qsharedpointer.h"
 
 #include <cassert>
@@ -293,14 +292,16 @@ VectorXi uStraightLineSegment::indices_of_sorting( const VectorXd &v)
 
 namespace {
 
-QDataStream & operator>> (QDataStream & in, Aabb & bbox)
+QDataStream & operator>> (QDataStream & in, Aabb<double> & bbox)
 {
     double x_min = NAN;
     double x_max = NAN;
     double y_min = NAN;
     double y_max = NAN;
     in >> x_min >> x_max >> y_min >> y_max;
-    bbox = Aabb( x_min, x_max, y_min, y_max);
+    bbox = Aabb<double>(
+        Vector2d(x_min, y_min),
+        Vector2d(x_max, y_max)   );
 
     return in;
 }
@@ -317,11 +318,11 @@ QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,1> & v)
 }
 
 
-QDataStream & operator<< (QDataStream & out, const Aabb & bbox)
+QDataStream & operator<< (QDataStream & out, const Aabb<double> & bbox)
 {
     out
-        << bbox.x_min() << bbox.x_max()
-        << bbox.y_min() << bbox.y_max();
+        << bbox.min(0) << bbox.max(0)
+        << bbox.min(1) << bbox.max(1);
 
     return out;
 }

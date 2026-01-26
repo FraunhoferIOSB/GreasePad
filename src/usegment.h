@@ -109,7 +109,7 @@ public:
     }
 
     //! Get axis-aligned bounding box
-    [[nodiscard]] Aabb bounding_box() const { return m_bounding_box; }
+    [[nodiscard]] Aabb<double> bounding_box() const { return m_bounding_box; }
 
     [[nodiscard]] bool move_x_to( const Vector3d & m );
     [[nodiscard]] bool move_y_to( const Vector3d & n );
@@ -118,7 +118,7 @@ public:
 private:
     Vector9d m_t;              // 9-vector t=[l',m',n']'
     Matrix9d m_Cov_tt;
-    Aabb     m_bounding_box;   // not constant, due to merge operation, .united(...)
+    Aabb<double> m_bounding_box;   // not constant, due to merge operation, .united(...)
 };
 
 } // namespace Uncertain

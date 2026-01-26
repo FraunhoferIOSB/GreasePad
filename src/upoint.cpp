@@ -38,6 +38,7 @@
 
 using Eigen::Matrix;
 using Eigen::Matrix2d;
+using Eigen::Vector2d;
 
 using Matfun::sign;
 
@@ -56,7 +57,7 @@ uPoint::uPoint( const Vector3d & x, const Matrix3d & Sigma_xx)
 
 
 //! Get axis-aligned bounding box
-Aabb uPoint::bbox() const
+Aabb<double> uPoint::bbox() const
 {
     const double uu = v(0);
     const double vv = v(1);
@@ -75,7 +76,10 @@ Aabb uPoint::bbox() const
     const double y_min = y - sqrt(Cov_xx(1, 1));
     const double y_max = y + sqrt(Cov_xx(1, 1));
 
-    return Aabb{ x_min, x_max, y_min, y_max} ;
+    return Aabb<double>{
+        Vector2d(x_min, y_min),
+        Vector2d(x_max, y_max)
+    };
 }
 
 
