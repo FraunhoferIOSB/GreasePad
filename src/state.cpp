@@ -60,13 +60,11 @@
 #include <Eigen/SparseCore>
 
 using Eigen::VectorXd;
-using Eigen::MatrixXd;
 using Eigen::VectorXi;
 using Eigen::Vector3d;
 using Eigen::Matrix3d;
 using Eigen::Index;
 using Eigen::SparseMatrix;
-using Eigen::RowVectorXi;
 using Eigen::ColMajor;
 
 using Constraint::ConstraintBase;
@@ -150,12 +148,14 @@ public:
     void graphicItemsAdd(QGraphicsScene *sc) const; //!< Graphics: add items
 
 private:
+    void identify_subtasks();
+
     // augment
     Index find_new_constraints();
     void find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap);
     void merge_segment ( Index a );
     bool identities_removed();
-    void snap_endpoints( const VectorXi & bicoco, Index numNewConstr);
+    void snap_endpoints( Index numNewConstr );
     void update_segments( const VectorXidx & maps, const AdjustmentFramework & a);
 
     // reduce
@@ -163,8 +163,7 @@ private:
     void remove_segment(    Index i );
 
     // augment & reduce
-    void solve_subtask_greedy( const VectorXidx & mapc_,
-                               const VectorXidx & maps_);
+    void solve_subtask_greedy(int cc);
 
     //! Estimation of two points delimiting an uncertain straight line segment
     static std::pair<uPoint,uPoint> uEndPoints( const Eigen::VectorXd & xi,
@@ -342,10 +341,8 @@ bool impl::deserialize( QDataStream & in )
         m_qConstrained.append( q);
     }
 
-    // connected components
-    VectorXi bicoco = conncomp( Bi.biadjacency() );
-    arr_segm   = bicoco.head( m_segm.size() ).array();
-    arr_constr = bicoco.tail( m_constr.size() ).array();
+    // determine subtasks, i.e., connected components
+    identify_subtasks();
 
     return true;
 }
@@ -380,13 +377,13 @@ void impl::graphicItemsAdd( QGraphicsScene *sc) const
         Q_ASSERT( !item->scene() );
         sc->addItem( item.get() );
     }
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
 }
 
 
 bool State::reduce()
 {
-    qDebug() <<  Q_FUNC_INFO;
+    // qDebug() <<  Q_FUNC_INFO;
     pImpl()->remove_elements();   // ... but do not delete
     pImpl()->reasoning_reduce_and_adjust();
     pImpl()->replaceGraphics();
@@ -529,37 +526,23 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
                 .arg(num_new_constraints_==1 ? "" : "s");
 
     // (2) check for independence and consistency ...............
-    // Graph::ConnComp const CoCoBi(Bi.biadjacency());
-    const VectorXi bicoco = conncomp( Bi.biadjacency());
-    arr_segm   = bicoco.head( m_segm.length()  ).array();
-    arr_constr = bicoco.tail( m_constr.length()).array();
+    identify_subtasks();  // connected components
 
     if (num_new_constraints_ > 0) {
-        // VectorXi const LabelsNewConstrIndividual = CoCoBi.tail( num_new_constraints_);
-        const VectorXi LabelsNewConstrIndividual = bicoco.tail( num_new_constraints_);
+        const VectorXi LabelsNewConstrIndividual = arr_constr.tail( num_new_constraints_);
         const VectorXi LabelsNewConstrUnique = unique( LabelsNewConstrIndividual);
-
-        for (Index k = 0; k < LabelsNewConstrUnique.size(); k++) {
-            int const cc = LabelsNewConstrUnique(k);
-
-            // const Eigen::VectorXidx maps_ = Matfun::find( CoCoBi.head( m_segm.length()  ).array()==cc); //   CoCoBi.mapHead( cc, m_segm.length());
-            // const Eigen::VectorXidx mapc_ = Matfun::find( CoCoBi.tail( m_constr.length()).array()==cc); //   CoCoBi.mapTail( cc, m_constr.length());
-            const VectorXidx maps_ = find( arr_segm  ==cc);
-            const VectorXidx mapc_ = find( arr_constr==cc);
-
-            assert( mapc_.size()> 0);
+        for ( const auto cc : LabelsNewConstrUnique) {
             qDebug().noquote() << blue << QStringLiteral("Reasoning for connected component #%1/%2...")
                         .arg(cc).arg(LabelsNewConstrUnique.size())
                      << black;
-
-            solve_subtask_greedy( mapc_, maps_ ); // in [augment state]
+            solve_subtask_greedy(cc); // in [augment state]
         }
-
     } // if ( num_new_constraints_ > 0 )
 
     // (3) snap all segments adjacent to new segment .............
-    snap_endpoints( bicoco, num_new_constraints_ );
+    snap_endpoints( num_new_constraints_ );
 }
+
 
 Index impl::find_new_constraints()
 {
@@ -670,16 +653,18 @@ Index impl::find_new_constraints()
 
     // Check all pairs of neighbors.
     for ( Index i=0; i<idx.rows(); i++) {
+        const Index a = idx(i);
         for ( Index j=i+1; j<idx.rows(); j++) {
-            if ( WW.coeffRef( idx(i), idx(j) )==1 ) {
+            const Index b = idx(j);
+            if ( WW.coeffRef(a,b) == 1 ) {
                 // qDebug().noquote() << QString("There is just one walk of length 2 between [%1} and [%2].").arg(idx(i)).arg(idx(j));
-                if ( are_identical( idx(i), idx(j) ) ) {
-                    establish_identical(idx(i), idx(j));
+                if ( are_identical(a,b) ) {
+                    establish_identical(a,b);
                 }
                 else {
                     if ( State::considerParallel() ) {
-                        if ( are_parallel( idx(i), idx(j) ) ) {
-                            establish_parallel( idx(i), idx(j));
+                        if ( are_parallel(a,b) ) {
+                            establish_parallel(a,b);
                         }
                     }
                 }
@@ -690,10 +675,12 @@ Index impl::find_new_constraints()
     return m_constr.length() -previously;
 }
 
-void impl::solve_subtask_greedy( const VectorXidx & mapc_,
-                                 const VectorXidx & maps_ )
+void impl::solve_subtask_greedy( const int cc )
 {
     // qDebug() << Q_FUNC_INFO;
+
+    const VectorXidx maps_ = find(   arr_segm==cc );
+    const VectorXidx mapc_ = find( arr_constr==cc );
     assert( mapc_.size()>0 );
 
     AdjustmentFramework a{ a_Maker( maps_)};
@@ -773,14 +760,14 @@ void impl::update_segments( const VectorXidx & maps_,
 }
 
 
-void impl::snap_endpoints( const VectorXi & bicoco, const Index numNewConstr)
+void impl::snap_endpoints( const Index numNewConstr)
 {
+
     // qDebug() << Q_FUNC_INFO;
 
-    VectorXi LabelsNew = bicoco.tail( numNewConstr);  // possibly empty
-    LabelsNew.conservativeResize(LabelsNew.rows()+1, LabelsNew.cols());
-    LabelsNew.coeffRef(LabelsNew.rows()-1) = bicoco( m_segm.size()-1 );
-
+    VectorXi LabelsNew = arr_constr.tail(numNewConstr);
+    LabelsNew.conservativeResize( LabelsNew.rows()+1 );
+    LabelsNew.coeffRef(LabelsNew.rows()-1) = arr_segm.tail(1)(0);
     const VectorXi LabelsNewUnique = unique(LabelsNew);
 
     for ( const int cc : LabelsNewUnique ) {
@@ -821,7 +808,7 @@ void impl::snap_endpoints( const VectorXi & bicoco, const Index numNewConstr)
             // (2) "touched by" ................................
             for ( SparseMatrix<int,ColMajor>::InnerIterator it( x_touches_l, s) ; it; ++it) {
                 const Index n = it.row(); // neighbor of segment s
-                if ( ( bicoco(n) != cc) && ( !y_touches_l.isSet(it.index(),s) ) ) {
+                if ( ( arr_segm(n) != cc) && ( !y_touches_l.isSet(it.index(),s) ) ) {
                     auto us = std::make_shared<uStraightLineSegment>(  *m_segm.at(n) );
                     if (us->move_x_to(m_segm.at(s)->hl())) {
                         m_segm.replace( n, us);
@@ -831,7 +818,7 @@ void impl::snap_endpoints( const VectorXi & bicoco, const Index numNewConstr)
 
             for (SparseMatrix<int, ColMajor>::InnerIterator it(y_touches_l, s); it; ++it) {
                 const Index n = it.row() ; // neighbor of segment s
-                if ( ( bicoco(n) != cc) && ( !x_touches_l.isSet(it.index(),s) )) {
+                if ( ( arr_segm(n) != cc) && ( !x_touches_l.isSet(it.index(),s) )) {
                     auto us = std::make_shared<uStraightLineSegment>( *m_segm.at(n) );
                     if (us->move_y_to(m_segm.at(s)->hl())) {
                         m_segm.replace( n, us);
@@ -1163,11 +1150,6 @@ QString impl::StatusMsg() const
     const Index S = m_segm.length();
     const Index C = m_constr.length();
     const Index R = number_of_required_constraints();
-
-    // Graph::ConnComp const CoCoBi(Bi.biadjacency()); // TODO(meijoc)
-    // int const CC = CoCoBi.number();
-    // const VectorXi bicoco = conncomp( Bi.biadjacency() );
-    // const int CC = bicoco.size() > 0 ? bicoco.maxCoeff()+1 : 0;
     const int CC = arr_segm.size()>0 ? arr_segm.maxCoeff()+1 : 0;
 
     const QString s0 = QApplication::tr("%1 connected component%2, ").arg(CC).arg(CC == 1 ? "" : "s");
@@ -1178,30 +1160,31 @@ QString impl::StatusMsg() const
 }
 
 
+void impl::identify_subtasks()
+{
+    const VectorXi bicoco = conncomp( Bi.biadjacency());
+    arr_segm   = bicoco.head( m_segm.length()  ).array();
+    arr_constr = bicoco.tail( m_constr.length()).array();
+}
+
+
 void impl::reasoning_reduce_and_adjust()
 {
     // connected components / subtasks
-    // Graph::ConnComp const CoCoBi(Bi.biadjacency());
-    // int const number_of_subtasks_ = CoCoBi.number();
-    const VectorXi bicoco = conncomp( Bi.biadjacency() );
-    arr_segm   = bicoco.head( m_segm.length()  ).array();
-    arr_constr = bicoco.tail( m_constr.length()).array();
-    const int number_of_subtasks_ = bicoco.size()>0 ? bicoco.maxCoeff()+1 : 0;
+    identify_subtasks();
+
+    const int number_of_subtasks_ = arr_segm.size()>0 ? arr_segm.maxCoeff()+1 : 0;
 
     // greedy search
     for ( int cc=0; cc<number_of_subtasks_; cc++ )
     {
-        // const VectorXidx maps_ = Matfun::find( CoCoBi.head(m_segm.length()).array()==cc  ); // CoCoBi.mapHead( cc, m_segm.length());
-        // const VectorXidx mapc_ = Matfun::find( CoCoBi.tail(m_constr.length()).array()==cc ); // CoCoBi.mapTail( cc, m_constr.length() );
-        const VectorXidx maps_ = find(   arr_segm==cc );
-        const VectorXidx mapc_ = find( arr_constr==cc );
-
         bool greedySearchRequired = false;
 
+        const VectorXidx mapc_ = find( arr_constr==cc );
         for ( auto c : mapc_ ) {
             if ( m_constr.at( c )->obsolete())  {
                 greedySearchRequired = true;
-                // replace constraint
+                // replace constraint by unevaluated clone
                 m_constr.replace( c, m_constr.at( c )->clone() );
                 m_constr.at( c )->setStatus( ConstraintBase::UNEVAL );
             }
@@ -1209,11 +1192,12 @@ void impl::reasoning_reduce_and_adjust()
 
         if ( greedySearchRequired ) {
             qDebug().nospace() <<  QString("Update of connected component #%1").arg(cc+1);
-            solve_subtask_greedy( mapc_, maps_ );  // reduce
+            solve_subtask_greedy(cc);  // reduce
         }
     }
-    qDebug() <<  Q_FUNC_INFO;
+    // qDebug() <<  Q_FUNC_INFO;
 }
+
 
 void impl::remove_elements()
 {
