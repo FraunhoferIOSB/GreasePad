@@ -20,9 +20,9 @@
 #include "qassert.h"
 #include "qcolor.h"
 #include "qcontainerfwd.h"
+#include "qhashfunctions.h"
 #include "qlogging.h"
 #include "qsharedpointer.h"
-#include "qstringliteral.h"
 #include "qtypes.h"
 
 #include <algorithm>
@@ -166,8 +166,8 @@ private:
     void solve_subtask_greedy(int cc);
 
     //! Estimation of two points delimiting an uncertain straight line segment
-    static std::pair<uPoint,uPoint> uEndPoints( const Eigen::VectorXd & xi,
-                                                const Eigen::VectorXd & yi);
+    static std::pair<uPoint,uPoint> uEndPoints( const VectorXd & xi,
+                                                const VectorXd & yi);
     static std::pair<VectorXd, VectorXd> trackCoords(const QPolygonF &poly);
 
     void setAltColors() const;
@@ -659,6 +659,8 @@ Index impl::find_new_constraints()
             if ( WW.coeffRef(a,b) == 1 ) {
                 // qDebug().noquote() << QString("There is just one walk of length 2 between [%1} and [%2].").arg(idx(i)).arg(idx(j));
                 if ( are_identical(a,b) ) {
+                    qDebug() << "bug\n";
+                    assert( 0 && "bug!");
                     establish_identical(a,b);
                 }
                 else {
@@ -1060,47 +1062,36 @@ bool impl::identities_removed()
     return found;
 }
 
+
+// uncertaint segment via merged tracks
 void impl::merge_segment( const Index a)
 {
     // qDebug() << Q_FUNC_INFO << a;
 
-    const Index idx = m_segm.size()-1;  // zero-based
+    const Index last = m_segm.size()-1;  // zero-based
 
     const QPolygonF merged_track
             = m_qStroke.at(a)->polygon()
             + m_qStroke.last()->polygon();
 
 
-    m_qStroke.replace( idx, std::make_shared<QEntity::QStroke>( merged_track ) );
+    m_qStroke.replace( last, std::make_shared<QEntity::QStroke>( merged_track ) );
 
-    // uncertaint segment via merged tracks
-    /* QPolygonF poly = qStroke.at(idx)->polygon();
-    const int N = poly.length();
-    Eigen::VectorXd xi(N);
-    Eigen::VectorXd yi(N);
-    for (int i=0; i<N; i++) {
-        xi(i) = poly.at(i).x();
-        yi(i) = poly.at(i).y();
-    }
-    xi /= 1000;
-    yi /= 1000; */
-    std::pair<VectorXd, VectorXd> const xiyi = trackCoords(merged_track); // {x_i, y_i}
-    std::pair<uPoint, uPoint> const uxuy = uEndPoints(xiyi.first, xiyi.second); // ux, uy
+    const std::pair<VectorXd, VectorXd> xiyi = trackCoords(merged_track); // {x_i, y_i}
+    const std::pair<uPoint, uPoint> uxuy = uEndPoints(xiyi.first, xiyi.second); // ux, uy
 
     auto um = std::make_shared<uStraightLineSegment>( uxuy.first, uxuy.second);
-    m_segm.replace( idx, um );
+    m_segm.replace( last, um );
 
-    m_qUnconstrained.replace( idx,
-                            std::make_shared<QEntity::QUnconstrained>(
-                                m_segm.last()->ux(),
-                                m_segm.last()->uy()
-                                ) );
+    m_qUnconstrained.replace( last,
+        std::make_shared<QEntity::QUnconstrained>(
+            m_segm.last()->ux(),
+            m_segm.last()->uy()   ));
 
-    m_qConstrained.replace( idx,
-                          std::make_shared<QEntity::QConstrained>(
-                              m_segm.last()->ux(),
-                              m_segm.last()->uy()
-                              ));
+    m_qConstrained.replace( last,
+        std::make_shared<QEntity::QConstrained>(
+            m_segm.last()->ux(),
+            m_segm.last()->uy()   ));
 
     // inherit adjacencies of [a]
     for ( Index i=0; i<Adj.cols()-1; i++) {
@@ -1211,8 +1202,7 @@ void impl::remove_elements()
         if ( m_qConstrained.at(i)->isSelected()
              || m_qStroke.at(i)->isSelected()
              || m_qUnconstrained.at(i)->isSelected() ) {
-            for (int c = 0; c < /*static_cast<int>(*/Bi.cols();
-                 c++) { // Bi is sparse, but ColMajor, loop is inefficient...
+            for (int c=0; c<Bi.cols(); c++) { // Bi is sparse, but ColMajor, loop is inefficient...
                 if ( Bi.isSet(i,c) ) {
                     remove_constraint(c);
                     m_qConstraint.removeAt(c);
@@ -1281,22 +1271,13 @@ void impl::replaceGraphics() {
 
 void impl::append( const QPolygonF & track)
 {
-    /* int N = track.length();
-    VectorXd xi(N);
-    VectorXd yi(N);
-    for (int i=0; i<N; i++) {
-        xi(i) = track.at(i).x();
-        yi(i) = track.at(i).y();
-    }
-    xi /= 1000;
-    yi /= 1000; */
+    m_qStroke.append( std::make_shared<QEntity::QStroke>( track) );
 
     // end-points of straight line segment approximating the stroke
-    std::pair<VectorXd, VectorXd> const xiyi = trackCoords(track);
-    std::pair<uPoint, uPoint> const uxuy = uEndPoints(xiyi.first, xiyi.second);
+    const std::pair<VectorXd, VectorXd> xiyi = trackCoords(track);
+    const std::pair<uPoint, uPoint> uxuy = uEndPoints(xiyi.first, xiyi.second);
 
-    // initially constrained==constrained
-    m_qStroke.append( std::make_shared<QEntity::QStroke>( track) );
+    // initially constrained==unconstrained
 
     m_qUnconstrained.append( std::make_shared<QEntity::QUnconstrained>(
                                uxuy.first, uxuy.second
@@ -1427,8 +1408,8 @@ std::pair<VectorXd, VectorXd> impl::trackCoords(const QPolygonF &poly)
 
 
 
-std::pair<uPoint,uPoint> impl::uEndPoints( const Eigen::VectorXd & xi,
-                                           const Eigen::VectorXd & yi)
+std::pair<uPoint,uPoint> impl::uEndPoints(const VectorXd &xi,
+                                          const VectorXd &yi)
 {
     Q_ASSERT( xi.size()>0 );
     Q_ASSERT( yi.size()==xi.size() );
@@ -1440,6 +1421,8 @@ std::pair<uPoint,uPoint> impl::uEndPoints( const Eigen::VectorXd & xi,
     int idx = 0;
     zi.minCoeff( &idx);
     const Vector3d x1 (xi(idx), yi(idx), 1);
+
+    idx = 0;
     zi.maxCoeff( &idx);
     const Vector3d x2 (xi(idx), yi(idx), 1);
 
@@ -1463,7 +1446,7 @@ namespace {
 
 QDataStream & operator<< (QDataStream & out, const IncidenceMatrix & AA)
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
 
     out << static_cast<uint>(AA.rows());
     out << static_cast<uint>(AA.cols());
@@ -1481,23 +1464,24 @@ QDataStream & operator<< (QDataStream & out, const IncidenceMatrix & AA)
 
 QDataStream & operator>> (QDataStream & in,  IncidenceMatrix & AA)
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
 
     uint nrows = 0;
     uint ncols = 0;
     uint nnz = 0;
     in >> nrows >> ncols >> nnz;
 
+    // fill vector with triplets (i,j,value)
     std::vector< Eigen::Triplet<int> > tripletList;
     tripletList.reserve( nnz );
     int r = 0;
     int c = 0;
     for ( uint i=0; i<nnz; i++ ) {
         in >> r >> c;
-        // tripletList.emplace_back( Eigen::Triplet<int>(r, c, 1) );
         tripletList.emplace_back( r, c, 1 );
     }
 
+    // fill sparse matrix
     AA.resize(static_cast<int>(nrows), static_cast<int>(ncols));
     AA.setFromTriplets( tripletList.begin(),
                         tripletList.end() );
@@ -1512,10 +1496,12 @@ QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c)
     out << c.type_name()[0]; // first character, {'v','h','d','o','p','c'}
     out << c.status();    // { UNEVAL=0 | REQUIRED | OBSOLETE };
     out << c.enforced();
+
     return out;
 }
 
-static QDataStream & operator>> ( QDataStream &in, ConstraintBase &c )
+
+QDataStream & operator>> ( QDataStream &in, ConstraintBase &c )
 {
     // qDebug() << Q_FUNC_INFO;
     int status = 0;  // underlying type of enum
@@ -1528,5 +1514,6 @@ static QDataStream & operator>> ( QDataStream &in, ConstraintBase &c )
 
     return in;
 }
+
 } // namespace
 
