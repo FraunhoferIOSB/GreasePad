@@ -45,7 +45,7 @@ class ConstraintBase
 public:
     ConstraintBase & operator= ( ConstraintBase &&) = delete;
     ConstraintBase( ConstraintBase &&) = delete;
-    ConstraintBase (const ConstraintBase & other) = delete;
+    ConstraintBase (const ConstraintBase & other) = default;
     ConstraintBase & operator= ( const ConstraintBase & other) = delete;
 
     ConstraintBase();
@@ -106,19 +106,15 @@ class ConstraintCRTP : public ConstraintBase
 {
 public:
     [[nodiscard]] std::shared_ptr<ConstraintBase> clone() const override {
-        auto T = std::make_shared<Derived>();
-        T->setStatus( this->status() );
-        T->setEnforced( this->enforced());
-        return T;
-        // return std::make_shared<Derived>(static_cast<Derived const&> (*this));
+        return std::make_shared<Derived>(static_cast<Derived const&> (*this));
     };
 
-    ConstraintCRTP( const ConstraintCRTP &) = delete;
     ConstraintCRTP & operator= (const ConstraintCRTP &) = delete;
     ConstraintCRTP & operator= (ConstraintCRTP &&) = delete;
     ~ConstraintCRTP() override = default;
 
 private:
+    ConstraintCRTP( const ConstraintCRTP &) = default;
     ConstraintCRTP() = default;
     ConstraintCRTP(ConstraintCRTP&&) noexcept = default;
     friend Derived;
