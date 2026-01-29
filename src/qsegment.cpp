@@ -33,6 +33,7 @@
 
 #include "qassert.h"
 #include "qnamespace.h"
+#include "qsharedpointer.h"
 #include "qtdeprecationdefinitions.h"
 #include "qtpreprocessorsupport.h"
 #include "qtypes.h"
@@ -190,7 +191,7 @@ double QSegment::getSelectionOffset(const uPoint &ux, const uPoint &uy)
     const EigenSolver<Eigen::Matrix2d> eig2(u2.Cov().topLeftCorner(2, 2));
     m = std::max( m, eig2.eigenvalues().real().cwiseAbs().maxCoeff() );
 
-    return 1000*sqrt(4.6052*m);  // chi2inv(0.9, 2)
+    return m_scale*sqrt(m_quantile*m);  // chi2inv(0.9, 2)
 }
 
 
@@ -198,8 +199,8 @@ void QSegment::setShape( const uPoint &ux,
                          const uPoint &uy)
 {
     // qDebug() << Q_FUNC_INFO;
-    const double k2 = 4.6; // ch2inv(0.9,2)
-    const int nSupport = 64;
+    // const double k2 = 4.6; // ch2inv(0.9,2)
+    constexpr int nSupport = 64;
 
     const Vector3d xh = ux.v().normalized();
     const Vector3d yh = uy.v().normalized();
@@ -209,20 +210,20 @@ void QSegment::setShape( const uPoint &ux,
                 Q_FUNC_INFO,
                 "identical end-points");
     if ( std::fabs( xh(2) )>0.  &&  std::fabs( yh(2) )>0. ) {
-        line_.setLine( 1000*xh(0)/xh(2), 1000*xh(1)/xh(2),
-                       1000*yh(0)/yh(2), 1000*yh(1)/yh(2) );
+        line_.setLine( m_scale*xh(0)/xh(2), m_scale*xh(1)/xh(2),
+                       m_scale*yh(0)/yh(2), m_scale*yh(1)/yh(2) );
     }
 
-    if ( k2<=0.) {
+    /*if ( k2<=0.) {
         ellipse_.first.clear();
         ellipse_.second.clear();
         branch_.first.clear();
         branch_.second.clear();   //update();
         return;
-    }
+    }*/
 
     // unconditioning .........................................
-    const Matrix3d TT = Vector3d(1000, 1000, 1).asDiagonal();
+    const Matrix3d TT = Vector3d(m_scale, m_scale, 1).asDiagonal();
     const uPoint x2 = ux.transformed(TT);
     const uPoint y2 = uy.transformed(TT);
 
@@ -232,11 +233,11 @@ void QSegment::setShape( const uPoint &ux,
 
     // two ellipses ...............................................
     uPoint ux2 = x2.euclidean();
-    Matrix3d CC = cof3( k2*ux2.Cov() -ux2.v()*ux2.v().adjoint() );
+    Matrix3d CC = cof3( m_quantile*ux2.Cov() -ux2.v()*ux2.v().adjoint() );
     const Geometry::Ellipse ell_x(CC);
 
     ux2 = y2.euclidean();
-    CC = cof3( k2*ux2.Cov() -ux2.v()*ux2.v().adjoint() );
+    CC = cof3( m_quantile*ux2.Cov() -ux2.v()*ux2.v().adjoint() );
     const Geometry::Ellipse ell_y(CC);
 
     ellipse_.first  = toPoly( ell_x.poly( nSupport ) );
@@ -245,7 +246,7 @@ void QSegment::setShape( const uPoint &ux,
     // hyperbola ..................................................
     uStraightLine ul(x2.cross(y2));
     ul = ul.euclidean();
-    CC = k2*ul.Cov() -ul.v()*ul.v().adjoint();
+    CC = m_quantile*ul.Cov() -ul.v()*ul.v().adjoint();
     const Geometry::Hyperbola hyp( CC );
 
     // Two polar lines ............................................

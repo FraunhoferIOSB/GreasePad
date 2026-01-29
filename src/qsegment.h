@@ -112,6 +112,9 @@ private:
 
     static bool s_showUncertainty;
     static QPen s_penSelected;
+
+    static constexpr double m_scale = 1000;
+    static constexpr double m_quantile = 4.6052;  // chi2inv(0.9, 2)
 };
 
 
