@@ -71,7 +71,7 @@ using Constraint::ConstraintBase;
 using Constraint::Parallel;
 using Constraint::Orthogonal;
 using Constraint::Copunctual;
-using Constraint::Identical;
+// using Constraint::Identical;
 using Constraint::Vertical;
 using Constraint::Horizontal;
 using Constraint::Diagonal;
@@ -188,7 +188,7 @@ private:
 
     void establish_parallel(   Index a, Index b );
     void establish_orthogonal( Index a, Index b );
-    void establish_identical(  Index a, Index b );
+    // void establish_identical(  Index a, Index b );
 
     void establish_copunctual( Index a, Index b, Index c );
 
@@ -661,7 +661,7 @@ Index impl::find_new_constraints()
                 if ( are_identical(a,b) ) {
                     qDebug() << "bug\n";
                     assert( 0 && "bug!");
-                    establish_identical(a,b);
+                    // establish_identical(a,b);
                 }
                 else {
                     if ( State::considerParallel() ) {
@@ -963,6 +963,7 @@ void impl::establish_copunctual( const Index a,
 }
 
 
+/*
 void impl::establish_identical( const Index a,  const Index b)
 {
     m_qConstraint.append( QConstraint::QIdentical::create() );
@@ -972,6 +973,8 @@ void impl::establish_identical( const Index a,  const Index b)
     Bi.set( a, Bi.cols()-1 );   // B(a,end) = 1;
     Bi.set( b, Bi.cols()-1 );   // B(b,end) = 1;
 }
+*/
+
 
 std::pair<Eigen::VectorXd, SparseMatrix<double> >
 impl::a_Maker( const VectorXidx & maps_) const

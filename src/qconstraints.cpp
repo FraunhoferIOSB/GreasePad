@@ -555,8 +555,7 @@ void QParallel::paint( QPainter *painter,
 }
 
 
-
-
+/*
 QIdentical::QIdentical()
 {
     const double s = s_defaultMarkerSize;
@@ -653,5 +652,6 @@ std::shared_ptr<QConstraintBase> QIdentical::doClone() const
     T->setMarkerSize( this->markerSize() );
     return T;
 }
+*/
 
 } // namespace QConstraint

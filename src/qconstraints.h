@@ -208,6 +208,7 @@ private:
 
 
 //! Graphics: Marker for identity
+/*
 class QIdentical : public QConstraintBase,
         public QGraphicsPolygonItem
 {
@@ -231,7 +232,7 @@ protected:
 private:
     [[nodiscard]] std::shared_ptr<QConstraintBase> doClone() const override;
 };
-
+*/
 
 //! Graphics: Marker for parallelism
 class QParallel : public QConstraintBase
