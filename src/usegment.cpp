@@ -235,7 +235,10 @@ bool uStraightLineSegment::move_x_to(const Vector3d &m)
     }
 
     const Vector2d dx = x() - z.head(2) / z(2);
-    const Matrix3d HH = ( Matrix3d() << 1,0,dx(0), 0,1,dx(1), 0,0,1).finished();
+    const Matrix3d HH {
+        { 1, 0, dx(0)},
+        { 0, 1, dx(1)},
+        { 0, 0,    1 } };
     Matrix9d TT = Matrix9d::Identity();
     TT.block(3,3,3,3) = HH.adjoint();  // m
     transform( TT);
@@ -255,7 +258,10 @@ bool uStraightLineSegment::move_y_to( const Vector3d & n )
     }
 
     const Vector2d dx = y() - z.head(2) / z(2);
-    const Matrix3d HH = (Matrix3d() << 1,0,dx(0), 0,1,dx(1), 0,0,1).finished();
+    const Matrix3d HH {
+        { 1,  0, dx(0)},
+        { 0,  1, dx(1)},
+        { 0,  0,    1 } };
     Matrix9d TT = Matrix9d::Identity();
     TT.block(6,6,3,3) = HH.adjoint();  // n
     transform( TT);
@@ -310,8 +316,8 @@ QDataStream & operator>> (QDataStream & in, Aabb<double> & bbox)
 //! Overloaded >>operator for 9-vectors
 QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,1> & v)
 {
-    for (int idx=0; idx<v.size(); idx++) {
-        in >> v[idx];
+    for ( double & val : v ) {
+        in >> val;
     }
 
     return in;
@@ -387,7 +393,7 @@ bool uStraightLineSegment::deserialize( QDataStream & in )
     in >> m_Cov_tt;
     in >> m_bounding_box;
 
-    return in.status()==0;
+    return in.status() == QDataStream::Ok;
 }
 
 
