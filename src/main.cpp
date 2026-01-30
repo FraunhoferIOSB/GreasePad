@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,12 @@
 #include <QApplication>
 
 #include "qcontainerfwd.h"
+#include "qwindowdefs.h"   // main
+
 
 int main(int argc, char *argv[])
 {
-    QApplication const a(argc, argv);
+    const QApplication a(argc, argv);
 
     QApplication::setApplicationName(    "GreasePad" );
     QApplication::setApplicationVersion( "1.2.1" );
@@ -35,13 +37,10 @@ int main(int argc, char *argv[])
     win.show();
 
     // binary file as optional program argument
-    QStringList const args = QApplication::arguments();
+    const QStringList args = QApplication::arguments();
     if ( args.length()>1 ) {
         win.readBinaryFile( args.at(1));
     }
 
     return QApplication::exec();
 }
-
-
-
