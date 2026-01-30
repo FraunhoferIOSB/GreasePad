@@ -213,6 +213,8 @@ private:
 
     Eigen::ArrayXi arr_segm;
     Eigen::ArrayXi arr_constr;
+
+    static constexpr double m_scale = 1000;
 };
 
 
@@ -1398,15 +1400,14 @@ void impl::clearAll()
 std::pair<VectorXd, VectorXd> impl::trackCoords(const QPolygonF &poly)
 {
     const Index N = poly.length();
-    Eigen::VectorXd xi(N);
-    Eigen::VectorXd yi(N);
+    VectorXd xi(N);
+    VectorXd yi(N);
     for ( int i=0; i<N; i++ ) {
         xi(i) = poly.at(i).x();
         yi(i) = poly.at(i).y();
     }
-    xi /= 1000;
-    yi /= 1000;
-    return {xi, yi};
+
+    return { xi/m_scale, yi/m_scale };
 }
 
 
@@ -1421,13 +1422,13 @@ std::pair<uPoint,uPoint> impl::uEndPoints(const VectorXd &xi,
     const double phi  = l.angle_rad();
     const VectorXd zi = sin(phi)*xi -cos(phi)*yi;
 
-    int idx = 0;
-    zi.minCoeff( &idx);
-    const Vector3d x1 (xi(idx), yi(idx), 1);
+    int argmin = 0;
+    zi.minCoeff( &argmin);
+    const Vector3d x1 (xi(argmin), yi(argmin), 1);
 
-    idx = 0;
-    zi.maxCoeff( &idx);
-    const Vector3d x2 (xi(idx), yi(idx), 1);
+    int argmax = 0;
+    zi.maxCoeff( &argmax);
+    const Vector3d x2 (xi(argmax), yi(argmax), 1);
 
     const Matrix3d Zeros = Matrix3d::Zero(3,3);
 
