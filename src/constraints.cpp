@@ -134,6 +134,7 @@ VectorXd Copunctual::contradict(const VectorXidx &idx, const VectorXd &l0) const
 }
 
 
+/*
 MatrixXd Identical::Jacobian( const VectorXidx & idx,
                               const VectorXd & l0,
                               const VectorXd & l) const
@@ -181,7 +182,7 @@ VectorXd Identical::contradict( const VectorXidx & idx,
 
     return null(a0).adjoint()*(a0-b0); //  (10.141)
 }
-
+*/
 
 
 MatrixXd Parallel::Jacobian(const VectorXidx &idx, const VectorXd &l0, const VectorXd &l) const

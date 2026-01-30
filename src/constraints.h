@@ -252,6 +252,7 @@ private:
 };
 
 
+/*
 //! Identity constraint
 class Identical : public ConstraintCRTP<Identical>
 {
@@ -272,9 +273,10 @@ private:
     static const int s_dof   = 2;
     static const int s_arity = 2;
 };
+*/
 
 
-//! Factory for constraints, as singlton
+//! Factory for constraints, as singleton
 class Factory {
 
 private:
@@ -299,13 +301,15 @@ public:
         m_map['c'] = [] {return std::make_shared<Copunctual>(); };
         m_map['p'] = [] {return std::make_shared<Parallel>();   };
     }
+
     static Factory *getInstance(){
         static Factory instance;
         return & instance;
     }
+
     std::shared_ptr<ConstraintBase> create(const char c) {
         // assert( m_map.find(c) != m_map.end() && "unknown key");  // C++20: contains(c)
-        if ( m_map.find(c)== m_map.end() ) {
+        if ( m_map.find(c) == m_map.end() ) {
             return nullptr;
         }
         return m_map[c]();
