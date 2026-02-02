@@ -135,9 +135,8 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
 
     l0_ = l_; // set adjusted observations  l0 := l
 
-
-    VectorXd redl;
-    double rcn = 0.;
+    double reciprocalConditionNumber = 0.;
+    double normUpdateReducedObserv   = 0.;
 
     // allocation ......................................................
     SparseMatrix<double,ColMajor> BBr( numOfRequiredEquations, 2*numOfSegments    );
@@ -168,12 +167,12 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
 
         // rank-revealing decomposition
         const Eigen::FullPivLU<MatrixXd> lu_decomp(BBr * rCov_ll * BBr.adjoint());
-        rcn = lu_decomp.rcond();
-        if ( rcn < threshold_ReciprocalConditionNumber() ) {
+        reciprocalConditionNumber = lu_decomp.rcond();
+        if ( reciprocalConditionNumber < threshold_ReciprocalConditionNumber() ) {
             // redundant or contradictory constraint
             if ( verbose ) {
                 qDebug().noquote() << red
-                                   << QStringLiteral("-> ill-conditioned. Reciprocal condition number = %1").arg(rcn)
+                                   << QStringLiteral("-> ill-conditioned. Reciprocal condition number = %1").arg(reciprocalConditionNumber)
                                    << black;
             }
             return false;
@@ -183,32 +182,33 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
         const VectorXd cg = -g0  -BBr*lr;
 
         // estimated update of reduced coordinates observations
-        redl = rCov_ll*BBr.adjoint()*lu_decomp.solve(cg) +lr;
+        const VectorXd redl = rCov_ll*BBr.adjoint()*lu_decomp.solve(cg) +lr;
 
         // updates adjusted observations, via retraction
         update( redl );
 
-        if ( redl.norm() < threshold_convergence() ) {
+        normUpdateReducedObserv = redl.norm();
+        if ( normUpdateReducedObserv < threshold_convergence() ) {
             break;
         }
 
     } // loop iterations
 
     // check convergence ........................................
-    if ( redl.norm() >= threshold_convergence() )  {
+    if ( normUpdateReducedObserv >= threshold_convergence() )  {
         // redundant or contradictory
         if ( verbose ) {
             suffix = nIterMax()==1 ? "" : "s";
             qDebug().noquote() << red << QStringLiteral("-> Not converged after %1 iteration%2. Reciprocal condition number = %3")
                                   .arg(nIterMax()).arg(suffix)
-                                  .arg(rcn) << black;
+                                  .arg(reciprocalConditionNumber) << black;
         }
         return false;
     }
     if ( verbose ) {
         suffix = it+1==1 ? "" : "s";
         qDebug().noquote() << green << QStringLiteral("-> Converged after %1 iteration%2. Reciprocal condition number = %3")
-                              .arg(it).arg(suffix).arg( rcn ) << black;
+                              .arg(it).arg(suffix).arg( reciprocalConditionNumber ) << black;
     }
 
     // check constraints .........................................
