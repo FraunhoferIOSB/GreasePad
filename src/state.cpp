@@ -121,6 +121,8 @@ static QDataStream & operator>> ( QDataStream & in,  ConstraintBase & c);
 
 //! Implementation details of class 'state' (pImpl idiom)
 class impl {
+private:
+    using VectorXidx = Eigen::Vector<Index,Eigen::Dynamic>;
 
 public:
     bool deserialize( QDataStream & in  );        //!< Serialization

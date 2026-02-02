@@ -34,12 +34,12 @@
 #include "qcontainerfwd.h"
 
 
-using VectorXidx = Eigen::Vector<Eigen::Index,Eigen::Dynamic>;
-
-
 //! Adjustment framework: observations, Jacobians, optimization...
 class AdjustmentFramework
 {
+private:
+    using VectorXidx = Eigen::Vector<Eigen::Index,Eigen::Dynamic>;
+
 public:
     AdjustmentFramework() = delete;
     AdjustmentFramework( const AdjustmentFramework &) = delete;
@@ -67,24 +67,16 @@ public:
     [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::MatrixXd> getEntity( Eigen::Index s) const;
 
 private:
-    // [[nodiscard]] Eigen::VectorXd l0_segment(   Eigen::Index offset, int len) const { return l0_.segment(offset,len);}
-    // [[nodiscard]] Eigen::VectorXd l_segment(    Eigen::Index offset, int len) const { return l_.segment(offset,len);}
-    // [[nodiscard]] Eigen::MatrixXd Cov_ll_block( Eigen::Index offset, int n) const   { return Cov_ll_.block( offset,offset,n,n); }
-
-    //  Eigen::VectorXd l0() const { return l0_ ;}
-    // [[nodiscard]] Eigen::VectorXd l() const  { return l_; }
-
     [[nodiscard]] static int nIterMax() { return nIterMax_; }
     [[nodiscard]] static double threshold_convergence() { return convergence; }
     [[nodiscard]] static double threshold_ReciprocalConditionNumber() { return ReciprocalConditionNumber; }
     [[nodiscard]] static double threshold_rankEstimate() { return rankEstimate;   }
     [[nodiscard]] static double threshold_numericalCheck() { return numericalCheck; }
 
-    // void reset() { l0_ = l_;}
-    void update( const Eigen::VectorXd &x );  // update of adjusted observatons in l0_
+    void update( const Eigen::VectorXd & x );  // update of adjusted observatons in l0_
 
-    void Jacobian(const QVector<std::shared_ptr<Constraint::ConstraintBase> > &constr,
-                  const Graph::IncidenceMatrix &Bi,
+    void Jacobian(const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
+                  const Graph::IncidenceMatrix & Bi,
                   Eigen::SparseMatrix<double, Eigen::ColMajor> & BBr,
                   Eigen::VectorXd & g0,
                   const VectorXidx & maps,
@@ -107,7 +99,7 @@ private:
     static constexpr double convergence     = 1e-7;  // Threshold convergence
     static constexpr double ReciprocalConditionNumber = 1e-4;  // condition number
     static constexpr double rankEstimate    = 1e-6;  // rank estimation
-    static constexpr double numericalCheck  = 1e-5;  // numerical check constraints
+    static constexpr double numericalCheck  = 1e-5;  // numerical check constraints    
 };
 
 #endif // ADJUSTMENT_H
