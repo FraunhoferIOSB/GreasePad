@@ -27,14 +27,14 @@
 #include <Eigen/Core>
 
 #include <QDebug>
-
-#include "qsharedpointer.h"
+#include <QSharedPointer>
 
 #include <cassert>
 #include <cfloat>
 #include <cmath>
 #include <memory>
 
+using Eigen::Index;
 using Eigen::Matrix3d;
 using Eigen::VectorXi;
 using Eigen::Vector3d;
@@ -326,9 +326,9 @@ QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,1> & v)
 
 QDataStream & operator<< (QDataStream & out, const Aabb<double> & bbox)
 {
-    out
-        << bbox.min(0) << bbox.max(0)
-        << bbox.min(1) << bbox.max(1);
+    for (int i=0; i<bbox.dim(); i++) {
+        out << bbox.min(i) << bbox.max(i);
+    }
 
     return out;
 }
@@ -351,7 +351,7 @@ QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,9> & MM)
 QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,1> &v)
 {
     //qDebug() << Q_FUNC_INFO;
-    for ( double val : v) {
+    for (const double val : v) {
         out << val;
     }
 

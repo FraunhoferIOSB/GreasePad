@@ -26,6 +26,7 @@
 namespace Geometry {
 
 using Eigen::Dynamic;
+using Eigen::Index;
 using Eigen::Vector;
 
 
@@ -70,6 +71,9 @@ public:
             m_max.cwiseMax(other.m_max)
         };
     }
+
+    //! Get dimension of bounding box
+    [[nodiscard]] Index dim() const {return m_min.size();}
 
 private:
     Vector<T,Dynamic> m_min;
