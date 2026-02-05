@@ -31,7 +31,6 @@
 
 #include <cassert>
 #include <cfloat>
-#include <cmath>
 #include <memory>
 
 using Eigen::Dynamic;
@@ -280,24 +279,6 @@ void uStraightLineSegment::transform( const Matrix9d & TT)
     m_Cov_tt = TT*m_Cov_tt*TT.adjoint();
 }
 
-/* Matlab:  [~,idx] = sort(x);
-VectorXi uStraightLineSegment::indices_of_sorting( const VectorXd &v)
-{
-    //    size_t N = v.size();
-    //    std::vector<int> idx( N );
-    //    std::generate( idx.begin(), idx.end(),
-    //                   [n=N-1] () mutable { return n--; } );
-    //    auto comparator = [&v](unsigned int a, unsigned int b){ return v[a] < v[b]; };
-    //    std::sort( idx.begin(), idx.end(), comparator);
-
-    //    return idx;
-
-    Eigen::Index N = v.size();
-    VectorXi idx = VectorXi::LinSpaced( N,0,static_cast<int>(N-1) );  // [0,1,...,N-1]
-    auto comparator = [&v](unsigned int a, unsigned int b){ return v[a] < v[b]; };
-    std::sort( idx.begin(), idx.end(), comparator);
-    return idx;
-}*/
 
 namespace {
 
@@ -311,8 +292,8 @@ QDataStream & operator>> (QDataStream & in, Aabb<T> & bbox)
     in >> x_min >> x_max >> y_min >> y_max;
     // bad design: just 2D boxes:
     bbox = Aabb<T>(
-        Vector2d(x_min, y_min),
-        Vector2d(x_max, y_max)   );
+        Vector<T,2>(x_min, y_min),
+        Vector<T,2>(x_max, y_max)   );
 
     return in;
 }
@@ -322,7 +303,7 @@ QDataStream & operator>> (QDataStream & in, Aabb<T> & bbox)
 template <typename T, int N>
 QDataStream & operator>> ( QDataStream & in, Eigen::Vector<T,N> & v)
 {
-    for ( double & val : v ) {
+    for (T & val : v ) {
         in >> val;
     }
 
@@ -360,7 +341,7 @@ template <typename T>
 QDataStream & operator<< ( QDataStream & out, const Vector<T,Dynamic> &v)
 {
     //qDebug() << Q_FUNC_INFO;
-    for (const double val : v) {
+    for (const T val : v) {
         out << val;
     }
 
