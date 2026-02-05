@@ -34,11 +34,14 @@
 #include <cmath>
 #include <memory>
 
+using Eigen::Dynamic;
 using Eigen::Index;
 using Eigen::Matrix3d;
 using Eigen::VectorXi;
 using Eigen::Vector3d;
 using Eigen::VectorXd;
+using Eigen::Vector;
+using Eigen::MatrixBase;
 
 using Matfun::sign;
 
@@ -298,14 +301,16 @@ VectorXi uStraightLineSegment::indices_of_sorting( const VectorXd &v)
 
 namespace {
 
-QDataStream & operator>> (QDataStream & in, Aabb<double> & bbox)
+template <typename T>
+QDataStream & operator>> (QDataStream & in, Aabb<T> & bbox)
 {
-    double x_min = NAN;
-    double x_max = NAN;
-    double y_min = NAN;
-    double y_max = NAN;
+    T x_min = 0;
+    T x_max = 0;
+    T y_min = 0;
+    T y_max = 0;
     in >> x_min >> x_max >> y_min >> y_max;
-    bbox = Aabb<double>(
+    // bad design: just 2D boxes:
+    bbox = Aabb<T>(
         Vector2d(x_min, y_min),
         Vector2d(x_max, y_max)   );
 
@@ -313,8 +318,9 @@ QDataStream & operator>> (QDataStream & in, Aabb<double> & bbox)
 }
 
 
-//! Overloaded >>operator for 9-vectors
-QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,1> & v)
+//! Overloaded operator>> for vectors
+template <typename T, int N>
+QDataStream & operator>> ( QDataStream & in, Eigen::Vector<T,N> & v)
 {
     for ( double & val : v ) {
         in >> val;
@@ -324,7 +330,8 @@ QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,1> & v)
 }
 
 
-QDataStream & operator<< (QDataStream & out, const Aabb<double> & bbox)
+template <typename T>
+QDataStream & operator<< (QDataStream & out, const Aabb<T> & bbox)
 {
     for (int i=0; i<bbox.dim(); i++) {
         out << bbox.min(i) << bbox.max(i);
@@ -334,8 +341,9 @@ QDataStream & operator<< (QDataStream & out, const Aabb<double> & bbox)
 }
 
 
-//! Overloaded >>operator for 9x9 matrices
-QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,9> & MM)
+//! Overloaded operator>> for matrices
+template <typename T>
+QDataStream & operator>> ( QDataStream & in, MatrixBase<T> & MM)
 {
     for ( int r=0; r<MM.rows(); r++) {
         for ( int c=0; c<MM.cols(); c++) {
@@ -347,8 +355,9 @@ QDataStream & operator>> ( QDataStream & in, Eigen::Matrix<double,9,9> & MM)
 }
 
 
-//! Overloaded <<operator for 9-vectors
-QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,1> &v)
+//! Overloaded operator<< for vectors
+template <typename T>
+QDataStream & operator<< ( QDataStream & out, const Vector<T,Dynamic> &v)
 {
     //qDebug() << Q_FUNC_INFO;
     for (const double val : v) {
@@ -359,8 +368,9 @@ QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,1> &v
 }
 
 
-//! Overloaded <<operator for 9x9 matrices
-QDataStream & operator<< ( QDataStream & out, const Eigen::Matrix<double,9,9> &MM)
+//! Overloaded operator<< for matrices
+template <typename T>
+QDataStream & operator<< ( QDataStream & out, const MatrixBase<T> &MM)
 {
     //qDebug() << Q_FUNC_INFO;
     for ( int r=0; r<MM.rows(); r++) {
