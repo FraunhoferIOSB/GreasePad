@@ -208,7 +208,7 @@ private:
     QVector< std::shared_ptr< QConstraint::QConstraintBase> > m_qConstraint;
 
     Graph::IncidenceMatrix Adj;          // Adjacency of straight line segments
-    Graph::IncidenceMatrix Bi;           // Present relation of segment (row) and constraint (column)
+    Graph::IncidenceMatrix Rel;           // Present relation of segment (row) and constraint (column)
     Graph::IncidenceMatrix x_touches_l;  // "End-point x touches straight line l."  TODO transpose!?
     Graph::IncidenceMatrix y_touches_l;  // "End-point y touches straight line l."
     Graph::IncidenceMatrix PP;           // parallelism
@@ -272,14 +272,14 @@ bool impl::deserialize( QDataStream & in )
 
     qDebug().noquote() << "(1) reading topology...";
     in >> Adj;
-    in >> Bi;
+    in >> Rel;
     in >> x_touches_l;
     in >> y_touches_l;
     in >> PP;
 
     qDebug().noquote() << "(2) reading geometry...";
     qDebug().noquote() << "(2.1) reading uncertain straight line segments...";
-    for ( Index s=0; s<Bi.rows(); s++ ) {
+    for ( Index s=0; s<Rel.rows(); s++ ) {
         auto seg = uStraightLineSegment::create();
         if ( !seg->deserialize( in ) ) {
             return false;
@@ -288,7 +288,7 @@ bool impl::deserialize( QDataStream & in )
     }
 
     qDebug().noquote() << "(2.2) reading geometric constraints...";
-    for ( Index i=0; i<Bi.cols(); i++ ) {
+    for ( Index i=0; i<Rel.cols(); i++ ) {
         // auto c = ConstraintBase::deserialize(in);  // calls 'create'
 
         char type_code = 'x';
@@ -319,7 +319,7 @@ bool impl::deserialize( QDataStream & in )
     }
 
     qDebug().noquote() << "(3.2) strokes ...";
-    for ( Index i=0; i<Bi.rows(); i++) {
+    for ( Index i=0; i<Rel.rows(); i++) {
         auto q = std::make_shared<QEntity::QStroke>();
         if( !q->deserialize(in) ) {
             return false;
@@ -328,7 +328,7 @@ bool impl::deserialize( QDataStream & in )
     }
 
     qDebug().noquote() << "(3.3) unconstrained segments...";
-    for ( Index i=0; i<Bi.rows(); i++) {
+    for ( Index i=0; i<Rel.rows(); i++) {
         auto q = std::make_shared<QEntity::QUnconstrained>();
         if( !q->deserialize(in) ) {
             return false;
@@ -337,7 +337,7 @@ bool impl::deserialize( QDataStream & in )
     }
 
     qDebug().noquote() << "(3.4) constrained segments...";
-    for ( Index i=0; i<Bi.rows(); i++) {
+    for ( Index i=0; i<Rel.rows(); i++) {
         auto q = std::make_shared<QEntity::QConstrained>();
         if( !q->deserialize(in) ) {
             return false;
@@ -407,7 +407,7 @@ void impl::serialize( QDataStream &out ) const
 
     // (1) topology
     out << Adj;
-    out << Bi;
+    out << Rel;
     out << x_touches_l;
     out << y_touches_l;
     out << PP;
@@ -505,7 +505,7 @@ void impl::remove_segment(const Index i)
     m_segm.removeAt(i);
     Adj.reduce(i);     // A(i,:)= []; A(:,i)=[]
     PP.reduce(i);
-    Bi.remove_row(i);   // B(i,:) = [];
+    Rel.remove_row(i);   // B(i,:) = [];
 
     x_touches_l.reduce(i);
     y_touches_l.reduce(i);
@@ -705,7 +705,7 @@ void impl::solve_subtask_greedy( const int cc )
             m_constr.at( mapc_(c) )->setStatus( ConstraintBase::REQUIRED );
 
             // enforce constraints (adjustment)
-            last_constraint_required =  a.enforce_constraints( m_constr, Bi,
+            last_constraint_required =  a.enforce_constraints( m_constr, Rel,
                                                                maps_, mapc_ );
 
             if ( !last_constraint_required ) {
@@ -722,7 +722,7 @@ void impl::solve_subtask_greedy( const int cc )
                               .arg( C==1 ? "constraint" : "consistent constraints" ) << black;
         // number of equations (not constraints!):
         // const int E = number_of_required_equations( mapc_ );  TODO
-        last_constraint_required = a.enforce_constraints( m_constr, Bi,
+        last_constraint_required = a.enforce_constraints( m_constr, Rel,
                                                           maps_, mapc_);
     }
     // Q_ASSERT_X( last_constraint_required, "greedy search", "final adjustment with inconsistent set");
@@ -907,10 +907,10 @@ void impl::establish_parallel( const Index a,
     m_qConstraint.append( QConstraint::QParallel::create() );
     m_constr.append( std::make_shared<Parallel>() );
 
-    Bi.conservativeResize( Bi.rows(),
-                           Bi.cols()+1); //   append a column
-    Bi.set( a, Bi.cols()-1 ); // B(a,end) = 1;
-    Bi.set( b, Bi.cols()-1 ); // B(b,end) = 1;
+    Rel.conservativeResize( Rel.rows(),
+                           Rel.cols()+1); //   append a column
+    Rel.set( a, Rel.cols()-1 ); // B(a,end) = 1;
+    Rel.set( b, Rel.cols()-1 ); // B(b,end) = 1;
 }
 
 void impl::establish_vertical( const Index a)
@@ -918,8 +918,8 @@ void impl::establish_vertical( const Index a)
     m_qConstraint.append( QConstraint::QAligned::create());
     m_constr.append( std::make_shared<Vertical>() );
 
-    Bi.conservativeResize( Bi.rows(), Bi.cols()+1); //  append a column
-    Bi.set( a, Bi.cols()-1 );   // B(a,end)  = 1;
+    Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //  append a column
+    Rel.set( a, Rel.cols()-1 );   // B(a,end)  = 1;
 }
 
 void impl::establish_horizontal( const Index a)
@@ -927,8 +927,8 @@ void impl::establish_horizontal( const Index a)
     m_qConstraint.append( QConstraint::QAligned::create());
     m_constr.append( std::make_shared<Horizontal>() );
 
-    Bi.conservativeResize( Bi.rows(), Bi.cols()+1); //  append a column
-    Bi.set( a, Bi.cols()-1 );   // B(a,end)  = 1;
+    Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //  append a column
+    Rel.set( a, Rel.cols()-1 );   // B(a,end)  = 1;
 }
 
 void impl::establish_diagonal( const Index a)
@@ -936,8 +936,8 @@ void impl::establish_diagonal( const Index a)
     m_qConstraint.append( QConstraint::QAligned::create());
     m_constr.append( std::make_shared<Diagonal>() );
 
-    Bi.conservativeResize( Bi.rows(), Bi.cols()+1); //  append a column
-    Bi.set( a, Bi.cols()-1 );   // B(a,end)  = 1;
+    Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //  append a column
+    Rel.set( a, Rel.cols()-1 );   // B(a,end)  = 1;
 }
 
 void impl::establish_orthogonal( const Index a,
@@ -946,10 +946,10 @@ void impl::establish_orthogonal( const Index a,
     m_qConstraint.append( QConstraint::QOrthogonal::create());
     m_constr.append( std::make_shared<Orthogonal>() );
 
-    Bi.conservativeResize( Bi.rows(),
-                           Bi.cols()+1); //  append a column
-    Bi.set( a, Bi.cols()-1 );   // B(a,end)  = 1;
-    Bi.set( b, Bi.cols()-1 );   // B(b,end)  = 1;
+    Rel.conservativeResize( Rel.rows(),
+                           Rel.cols()+1); //  append a column
+    Rel.set( a, Rel.cols()-1 );   // B(a,end)  = 1;
+    Rel.set( b, Rel.cols()-1 );   // B(b,end)  = 1;
 }
 
 
@@ -960,10 +960,10 @@ void impl::establish_copunctual( const Index a,
     m_qConstraint.append( QConstraint::QCopunctual::create() );
     m_constr.append( std::make_shared<Copunctual>() );
 
-    Bi.conservativeResize( Bi.rows(), Bi.cols()+1) ; // append a column
-    Bi.set( a, Bi.cols()-1 ); // B(a,end) = 1;
-    Bi.set( b, Bi.cols()-1 ); // B(b,end) = 1;
-    Bi.set( c, Bi.cols()-1 ); // B(c,end) = 1;
+    Rel.conservativeResize( Rel.rows(), Rel.cols()+1) ; // append a column
+    Rel.set( a, Rel.cols()-1 ); // B(a,end) = 1;
+    Rel.set( b, Rel.cols()-1 ); // B(b,end) = 1;
+    Rel.set( c, Rel.cols()-1 ); // B(c,end) = 1;
 }
 
 
@@ -1023,7 +1023,7 @@ void impl::remove_constraint( const Index i )
 
     if ( m_constr.at(i)->isInstanceOf<Parallel>() )
     {
-        const VectorXidx idx = spfind<int>( Bi.col(i) );
+        const VectorXidx idx = spfind<int>( Rel.col(i) );
         Q_ASSERT_X( idx.size() == 2, Q_FUNC_INFO,
                     QStringLiteral("parallel with %1 entities")
                     .arg( QString::number(idx.size())).toUtf8() );
@@ -1032,7 +1032,7 @@ void impl::remove_constraint( const Index i )
     }
 
     m_constr.removeAt(i);
-    Bi.remove_column(i);  // B(:,i)=[];
+    Rel.remove_column(i);  // B(:,i)=[];
 }
 
 
@@ -1109,8 +1109,8 @@ void impl::merge_segment( const Index a)
     }
 
     // delete constraints of segment [a] to be deleted.
-    for (Index ic = Bi.cols()-1; ic >= 0; ic--) { // hint: Bi is sparse, but *ColMajor*, loop is inefficient...
-        if ( Bi.isSet(a,ic) ) {
+    for (Index ic = Rel.cols()-1; ic >= 0; ic--) { // hint: Bi is sparse, but *ColMajor*, loop is inefficient...
+        if ( Rel.isSet(a,ic) ) {
             remove_constraint(ic);
             m_qConstraint.removeAt(ic);
         }
@@ -1160,7 +1160,7 @@ QString impl::StatusMsg() const
 
 void impl::identify_subtasks()
 {
-    const VectorXi bicoco = conncomp( Bi.biadjacency());
+    const VectorXi bicoco = conncomp( Rel.biadjacency());
     arr_segm   = bicoco.head( m_segm.length()  ).array();
     arr_constr = bicoco.tail( m_constr.length()).array();
 }
@@ -1209,8 +1209,8 @@ void impl::remove_elements()
         if ( m_qConstrained.at(i)->isSelected()
              || m_qStroke.at(i)->isSelected()
              || m_qUnconstrained.at(i)->isSelected() ) {
-            for (int c=0; c<Bi.cols(); c++) { // Bi is sparse, but ColMajor, loop is inefficient...
-                if ( Bi.isSet(i,c) ) {
+            for (int c=0; c<Rel.cols(); c++) { // Bi is sparse, but ColMajor, loop is inefficient...
+                if ( Rel.isSet(i,c) ) {
                     remove_constraint(c);
                     m_qConstraint.removeAt(c);
                     c--;
@@ -1229,7 +1229,7 @@ void impl::replaceGraphics() {
 
     // qDebug() << Q_FUNC_INFO;
     Q_ASSERT( m_constr.size() == m_qConstraint.size() );
-    Q_ASSERT( m_qConstraint.size() == Bi.cols()      );
+    Q_ASSERT( m_qConstraint.size() == Rel.cols()      );
 
     // *** Check segments. ***
     // If reference count is 1, the segment has been added or modified.
@@ -1249,7 +1249,7 @@ void impl::replaceGraphics() {
     for( int c=0; c<m_constr.length(); c++)
     {
         bool modified = false;
-        const VectorXidx idxx = spfind<int>( Bi.col(c) );
+        const VectorXidx idxx = spfind<int>( Rel.col(c) );
 
         if ( m_constr.at(c).use_count()==1 ) {
             modified = true; // actually not modified, but added
@@ -1299,7 +1299,7 @@ void impl::append( const QPolygonF & track)
     Adj.augment();      // adjacency matrix
     x_touches_l.augment();
     y_touches_l.augment();
-    Bi.conservativeResize( Bi.rows()+1, Bi.cols()  );     //append 1 row,  relations: +1 segment
+    Rel.conservativeResize( Rel.rows()+1, Rel.cols()  );     //append 1 row,  relations: +1 segment
     PP.augment();
 }
 
@@ -1396,7 +1396,7 @@ void impl::clearAll()
     y_touches_l.resize(0,0);
     Adj.resize(0,0);
     PP.resize(0,0);
-    Bi.resize(0,0);
+    Rel.resize(0,0);
 }
 
 std::pair<VectorXd, VectorXd> impl::trackCoords(const QPolygonF &poly)
