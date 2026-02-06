@@ -509,7 +509,12 @@ void impl::remove_segment(const Index i)
 
     x_touches_l.reduce(i);
     y_touches_l.reduce(i);
+
+    m_qStroke.removeAt( i );
+    m_qUnconstrained.removeAt( i );
+    m_qConstrained.removeAt( i );
 }
+
 
 void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
 {
@@ -1033,6 +1038,8 @@ void impl::remove_constraint( const Index i )
 
     m_constr.removeAt(i);
     Rel.remove_column(i);  // B(:,i)=[];
+
+    m_qConstraint.removeAt(i);
 }
 
 
@@ -1112,7 +1119,6 @@ void impl::merge_segment( const Index a)
     for (Index ic = Rel.cols()-1; ic >= 0; ic--) { // hint: Bi is sparse, but *ColMajor*, loop is inefficient...
         if ( Rel.isSet(a,ic) ) {
             remove_constraint(ic);
-            m_qConstraint.removeAt(ic);
         }
     }
 
@@ -1133,10 +1139,8 @@ void impl::merge_segment( const Index a)
 
     // remove segment 'a'
     remove_segment(a);
-    m_qStroke.removeAt(a);
-    m_qUnconstrained.removeAt(a);
-    m_qConstrained.removeAt(a);
 }
+
 
 QString State::StatusMsg() const
 {
@@ -1202,7 +1206,6 @@ void impl::remove_elements()
     for ( Index i=m_qConstraint.size()-1; i>=0; i--) {
         if ( m_qConstraint.at(i)->isSelected() ) {
             remove_constraint( i );
-            m_qConstraint.removeAt( i );
         }
     }
     for ( Index i=m_qConstrained.size()-1; i>=0; i--) {
@@ -1212,14 +1215,10 @@ void impl::remove_elements()
             for (int c=0; c<Rel.cols(); c++) { // Bi is sparse, but ColMajor, loop is inefficient...
                 if ( Rel.isSet(i,c) ) {
                     remove_constraint(c);
-                    m_qConstraint.removeAt(c);
                     c--;
                 }
             }
             remove_segment( i );
-            m_qStroke.removeAt( i );
-            m_qUnconstrained.removeAt( i );
-            m_qConstrained.removeAt( i );
         }
     }
 }
