@@ -18,7 +18,7 @@
 
 
 #include "qconstraints.h"
-#include "usegment.h"
+#include "uncertain/usegment.h"
 
 #include <QColor>
 #include <QGraphicsItem>

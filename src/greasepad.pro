@@ -40,10 +40,10 @@ SOURCES += \
     qstroke.cpp \
     quantiles.cpp \
     state.cpp \
-    uncertain.cpp \
-    upoint.cpp \
-    usegment.cpp \
-    ustraightline.cpp
+    uncertain/uncertain.cpp \
+    uncertain/upoint.cpp \
+    uncertain/usegment.cpp \
+    uncertain/ustraightline.cpp
 
 HEADERS += \
     adjustment.h \
@@ -75,11 +75,11 @@ HEADERS += \
     statistics/normal.h \
     statistics/prob.h \
     statistics/uniform.h \
-    udistance.h \
-    uncertain.h \
-    upoint.h \
-    usegment.h \
-    ustraightline.h
+    uncertain/udistance.h \
+    uncertain/uncertain.h \
+    uncertain/upoint.h \
+    uncertain/usegment.h \
+    uncertain/ustraightline.h
 
 FORMS +=
 

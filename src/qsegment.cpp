@@ -20,8 +20,8 @@
 #include "geometry/conics.h"
 #include "matfun.h"
 #include "qsegment.h"
-#include "upoint.h"
-#include "ustraightline.h"
+#include "uncertain/upoint.h"
+#include "uncertain/ustraightline.h"
 
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>

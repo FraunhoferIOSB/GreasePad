@@ -45,10 +45,10 @@
 #include "qstroke.h"
 #include "quantiles.h"
 #include "state.h"
-#include "udistance.h"
-#include "upoint.h"
-#include "usegment.h"
-#include "ustraightline.h"
+#include "uncertain/udistance.h"
+#include "uncertain/upoint.h"
+#include "uncertain/usegment.h"
+#include "uncertain/ustraightline.h"
 
 #include <QApplication>
 #include <QDebug>
