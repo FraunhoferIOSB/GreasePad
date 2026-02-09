@@ -66,6 +66,7 @@ using Eigen::Matrix3d;
 using Eigen::Index;
 using Eigen::SparseMatrix;
 using Eigen::ColMajor;
+using Eigen::indexing::last;
 
 using Constraint::ConstraintBase;
 using Constraint::Parallel;
@@ -459,28 +460,28 @@ void impl::find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap)
         if ( m_segm.last()->touchedBy( m_segm.at(i)->ux(),
                                       snap.quantile_stdNormDistr(),
                                       snap.quantile_chi2_1dof()) ) {
-            x_touches_l.set( i, N-1);
+            x_touches_l.set(i,last);
             are_adjacent = true;
         }
 
         if ( m_segm.last()->touchedBy( m_segm.at(i)->uy(),
                                       snap.quantile_stdNormDistr(),
                                       snap.quantile_chi2_1dof()) ) {
-            y_touches_l.set(i,N-1);
+            y_touches_l.set(i,last);
             are_adjacent = true;
         }
 
         if ( m_segm.at(i)->touchedBy( m_segm.last()->ux() ,
                                      snap.quantile_stdNormDistr(),
                                      snap.quantile_chi2_1dof() ) ) {
-            x_touches_l.set(N-1,i);
+            x_touches_l.set(last,i);
             are_adjacent = true;
         }
 
         if ( m_segm.at(i)->touchedBy( m_segm.last()->uy(),
                                      snap.quantile_stdNormDistr(),
                                      snap.quantile_chi2_1dof() ) ) {
-            y_touches_l.set(N-1,i);
+            y_touches_l.set(last,i);
             are_adjacent = true;
         }
 
@@ -490,8 +491,8 @@ void impl::find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap)
         }
 
         if ( are_adjacent ) {
-            Adj.set(i, N-1);
-            Adj.set(N-1, i);
+            Adj.set(i, last);
+            Adj.set(last, i);
         }
     }
 }
@@ -912,10 +913,9 @@ void impl::establish_parallel( const Index a,
     m_qConstraint.append( QConstraint::QParallel::create() );
     m_constr.append( std::make_shared<Parallel>() );
 
-    Rel.conservativeResize( Rel.rows(),
-                           Rel.cols()+1); //   append a column
-    Rel.set( a, Rel.cols()-1 ); // B(a,end) = 1;
-    Rel.set( b, Rel.cols()-1 ); // B(b,end) = 1;
+    Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //   append a column
+    Rel.set( a, last );
+    Rel.set( b, last );
 }
 
 void impl::establish_vertical( const Index a)
@@ -924,7 +924,7 @@ void impl::establish_vertical( const Index a)
     m_constr.append( std::make_shared<Vertical>() );
 
     Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //  append a column
-    Rel.set( a, Rel.cols()-1 );   // B(a,end)  = 1;
+    Rel.set( a, last );
 }
 
 void impl::establish_horizontal( const Index a)
@@ -933,7 +933,7 @@ void impl::establish_horizontal( const Index a)
     m_constr.append( std::make_shared<Horizontal>() );
 
     Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //  append a column
-    Rel.set( a, Rel.cols()-1 );   // B(a,end)  = 1;
+    Rel.set( a, last );
 }
 
 void impl::establish_diagonal( const Index a)
@@ -942,7 +942,7 @@ void impl::establish_diagonal( const Index a)
     m_constr.append( std::make_shared<Diagonal>() );
 
     Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //  append a column
-    Rel.set( a, Rel.cols()-1 );   // B(a,end)  = 1;
+    Rel.set( a, last );
 }
 
 void impl::establish_orthogonal( const Index a,
@@ -953,8 +953,8 @@ void impl::establish_orthogonal( const Index a,
 
     Rel.conservativeResize( Rel.rows(),
                            Rel.cols()+1); //  append a column
-    Rel.set( a, Rel.cols()-1 );   // B(a,end)  = 1;
-    Rel.set( b, Rel.cols()-1 );   // B(b,end)  = 1;
+    Rel.set( a, last );
+    Rel.set( b, last );
 }
 
 
@@ -966,9 +966,9 @@ void impl::establish_copunctual( const Index a,
     m_constr.append( std::make_shared<Copunctual>() );
 
     Rel.conservativeResize( Rel.rows(), Rel.cols()+1) ; // append a column
-    Rel.set( a, Rel.cols()-1 ); // B(a,end) = 1;
-    Rel.set( b, Rel.cols()-1 ); // B(b,end) = 1;
-    Rel.set( c, Rel.cols()-1 ); // B(c,end) = 1;
+    Rel.set( a, last );
+    Rel.set( b, last );
+    Rel.set( c, last );
 }
 
 
@@ -1082,27 +1082,27 @@ void impl::merge_segment( const Index a)
 {
     // qDebug() << Q_FUNC_INFO << a;
 
-    const Index last = m_segm.size()-1;  // zero-based
+    const Index last1 = m_segm.size()-1;  // zero-based
 
     const QPolygonF merged_track
             = m_qStroke.at(a)->polygon()
             + m_qStroke.last()->polygon();
 
 
-    m_qStroke.replace( last, std::make_shared<QEntity::QStroke>( merged_track ) );
+    m_qStroke.replace( last1, std::make_shared<QEntity::QStroke>( merged_track ) );
 
     const std::pair<VectorXd, VectorXd> xiyi = trackCoords(merged_track); // {x_i, y_i}
     const std::pair<uPoint, uPoint> uxuy = uEndPoints(xiyi.first, xiyi.second); // ux, uy
 
     auto um = std::make_shared<uStraightLineSegment>( uxuy.first, uxuy.second);
-    m_segm.replace( last, um );
+    m_segm.replace( last1, um );
 
-    m_qUnconstrained.replace( last,
+    m_qUnconstrained.replace( last1,
         std::make_shared<QEntity::QUnconstrained>(
             m_segm.last()->ux(),
             m_segm.last()->uy()   ));
 
-    m_qConstrained.replace( last,
+    m_qConstrained.replace( last1,
         std::make_shared<QEntity::QConstrained>(
             m_segm.last()->ux(),
             m_segm.last()->uy()   ));
@@ -1110,8 +1110,8 @@ void impl::merge_segment( const Index a)
     // inherit adjacencies of [a]
     for ( Index i=0; i<Adj.cols()-1; i++) {
         if ( Adj.isSet(i,a) ) {    // column "a" fix
-            Adj.set( i, Adj.cols()-1 );
-            Adj.set( Adj.rows()-1, i );
+            Adj.set( i, last );
+            Adj.set( last, i );
         }
     }
 
@@ -1123,17 +1123,17 @@ void impl::merge_segment( const Index a)
     }
 
     for ( Index ii=0; ii<x_touches_l.cols(); ii++ )  { // but *ColMajor*...
-        if ( x_touches_l.isSet(  x_touches_l.rows()-1,ii) ) {
-            x_touches_l.unset( x_touches_l.rows()-1,ii );  // explicit zero !
+        if ( x_touches_l.isSet( last,ii) ) {
+            x_touches_l.unset( last,ii );  // explicit zero !
         }
-        if ( y_touches_l.isSet(  y_touches_l.rows()-1,ii) ) {
-            y_touches_l.unset( y_touches_l.rows()-1,ii );
+        if ( y_touches_l.isSet( last,ii) ) {
+            y_touches_l.unset( last,ii );
         }
-        if ( x_touches_l.isSet(  ii,x_touches_l.cols()-1) ) {
-            x_touches_l.unset( ii,x_touches_l.cols()-1 );
+        if ( x_touches_l.isSet(  ii,last) ) {
+            x_touches_l.unset( ii,last );
         }
-        if ( y_touches_l.isSet(  ii,y_touches_l.cols()-1) ) {
-            y_touches_l.unset( ii,y_touches_l.cols()-1 );
+        if ( y_touches_l.isSet(  ii,last) ) {
+            y_touches_l.unset( ii,last );
         }
     }
 

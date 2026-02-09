@@ -45,6 +45,19 @@ bool IncidenceMatrix::isSet( const Index r, const Index c) const
 }
 
 
+bool IncidenceMatrix::isSet( const Index r, const last_t /*unused*/) const
+{
+    return coeff(r,cols()-1)==1;
+}
+
+
+bool IncidenceMatrix::isSet( const last_t /*unused*/, const Index c) const
+{
+    return coeff(rows()-1,c)==1;
+}
+
+
+
 //! Biadjacency matrix A = [O, B;  B',O]
 SparseMatrix<int> IncidenceMatrix::biadjacency() const
 {
