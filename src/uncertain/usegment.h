@@ -21,8 +21,6 @@
 
 #include "geometry/aabb.h"
 
-#include <QDataStream> // Qt
-
 #include <Eigen/Core>
 #include <Eigen/Dense> // Eigen
 
@@ -54,14 +52,13 @@ private:
     uStraightLineSegment() = default;
 
 public:
-    uStraightLineSegment( const uPoint & ux,
-                          const uPoint & uy);
+    uStraightLineSegment( const uPoint & ux, const uPoint & uy);
+    uStraightLineSegment( const Vector9d & t, const Matrix9d & Sigma_tt);
+
+    uStraightLineSegment & operator= ( const uStraightLineSegment &) = default;  //!< Copy assignment
 
     // deserialization with protected constructor
     static std::shared_ptr<uStraightLineSegment> create();
-
-    void serialize( QDataStream & out) const;
-    bool deserialize( QDataStream & in);
 
     // relations ....................................................
     [[nodiscard]] bool intersects( const uStraightLineSegment & ut_) const;

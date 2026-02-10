@@ -26,21 +26,17 @@
 
 #include <Eigen/Core>
 
-#include <QDebug>
-#include <QSharedPointer>
-
 #include <cassert>
 #include <cfloat>
 #include <memory>
 
-using Eigen::Dynamic;
+
 using Eigen::Index;
 using Eigen::Matrix3d;
 using Eigen::VectorXi;
 using Eigen::Vector3d;
 using Eigen::VectorXd;
 using Eigen::Vector;
-using Eigen::MatrixBase;
 
 using Matfun::sign;
 
@@ -70,6 +66,13 @@ uPoint uStraightLineSegment::uy() const
     JJ << -skew( hn() ),  Matrix3d::Zero(), Sl;
 
     return { Sl*hn(), JJ*Cov_tt()*JJ.adjoint() };
+}
+
+
+uStraightLineSegment::uStraightLineSegment( const Vector9d & t, const Matrix9d & Sigma_tt)
+    : m_t(t), m_Cov_tt(Sigma_tt)
+{
+    m_bounding_box = ux().bbox().united( uy().bbox() );
 }
 
 
@@ -280,103 +283,17 @@ void uStraightLineSegment::transform( const Matrix9d & TT)
 }
 
 
-namespace {
-
-template <typename T>
-QDataStream & operator>> (QDataStream & in, Aabb<T> & bbox)
-{
-    T x_min = 0;
-    T x_max = 0;
-    T y_min = 0;
-    T y_max = 0;
-    in >> x_min >> x_max >> y_min >> y_max;
-    // bad design: just 2D boxes:
-    bbox = Aabb<T>(
-        Vector<T,2>(x_min, y_min),
-        Vector<T,2>(x_max, y_max)   );
-
-    return in;
-}
-
-
-//! Overloaded operator>> for vectors
-template <typename T, int N>
-QDataStream & operator>> ( QDataStream & in, Eigen::Vector<T,N> & v)
-{
-    for (T & val : v ) {
-        in >> val;
-    }
-
-    return in;
-}
-
-
-template <typename T>
-QDataStream & operator<< (QDataStream & out, const Aabb<T> & bbox)
-{
-    for (int i=0; i<bbox.dim(); i++) {
-        out << bbox.min(i) << bbox.max(i);
-    }
-
-    return out;
-}
-
-
-//! Overloaded operator>> for matrices
-template <typename T>
-QDataStream & operator>> ( QDataStream & in, MatrixBase<T> & MM)
-{
-    for ( int r=0; r<MM.rows(); r++) {
-        for ( int c=0; c<MM.cols(); c++) {
-            in >> MM(r,c);
-        }
-    }
-
-    return in;
-}
-
-
-//! Overloaded operator<< for vectors
-template <typename T>
-QDataStream & operator<< ( QDataStream & out, const Vector<T,Dynamic> &v)
-{
-    //qDebug() << Q_FUNC_INFO;
-    for (const T val : v) {
-        out << val;
-    }
-
-    return out;
-}
-
-
-//! Overloaded operator<< for matrices
-template <typename T>
-QDataStream & operator<< ( QDataStream & out, const MatrixBase<T> &MM)
-{
-    //qDebug() << Q_FUNC_INFO;
-    for ( int r=0; r<MM.rows(); r++) {
-        for (int c=0; c<MM.cols(); c++) {
-            out << MM(r,c);
-        }
-    }
-
-    return out;
-}
-
-} // namespace
-
-
-//! Serialization of the uncertain straight line segment t=[l',m',n']' and its bounding box
+/* /! Serialization of the uncertain straight line segment t=[l',m',n']' and its bounding box
 void uStraightLineSegment::serialize( QDataStream & out ) const
 {
     //qDebug() << Q_FUNC_INFO;
     out << m_t;
     out << m_Cov_tt;
     out << m_bounding_box;
-}
+}*/
 
 
-//! Deserialization of uncertain straight line segment and its bounding box
+/* /! Deserialization of uncertain straight line segment and its bounding box
 bool uStraightLineSegment::deserialize( QDataStream & in )
 {
     // qDebug() << Q_FUNC_INFO;
@@ -385,7 +302,7 @@ bool uStraightLineSegment::deserialize( QDataStream & in )
     in >> m_bounding_box;
 
     return in.status() == QDataStream::Ok;
-}
+}*/
 
 
 //! Create uncertain straight line segment (for deserialization)

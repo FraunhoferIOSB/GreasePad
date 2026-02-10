@@ -21,7 +21,7 @@
 
 #include <cassert>
 
-#include <Eigen/core>
+#include <Eigen/Core>
 
 namespace Geometry {
 

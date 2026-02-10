@@ -35,6 +35,7 @@
 #include "adjustment.h"
 #include "conncomp.h"
 #include "constraints.h"
+#include "geometry/aabb.h"
 #include "geometry/acute.h"
 #include "global.h"
 #include "mainscene.h"
@@ -61,18 +62,23 @@
 
 using Eigen::VectorXd;
 using Eigen::VectorXi;
+using Eigen::Vector;
 using Eigen::Vector3d;
 using Eigen::Matrix3d;
+using Eigen::Matrix;
+using Eigen::MatrixBase;
 using Eigen::Index;
 using Eigen::SparseMatrix;
 using Eigen::ColMajor;
 using Eigen::indexing::last;
+using Eigen::Dynamic;
+
+using Geometry::Aabb;
 
 using Constraint::ConstraintBase;
 using Constraint::Parallel;
 using Constraint::Orthogonal;
 using Constraint::Copunctual;
-// using Constraint::Identical;
 using Constraint::Vertical;
 using Constraint::Horizontal;
 using Constraint::Diagonal;
@@ -105,17 +111,192 @@ Quantiles::Recognition State::recogn_;
 Quantiles::Snapping    State::snap_;
 
 
+
 namespace {
 
+
 //! Serialization of sparse incidence matrix
-static QDataStream & operator<< ( QDataStream & out, const IncidenceMatrix & AA);
+static QDataStream & operator<< (QDataStream & out, const IncidenceMatrix & AA)
+{
+    // qDebug() << Q_FUNC_INFO;
+
+    out << static_cast<uint>(AA.rows());
+    out << static_cast<uint>(AA.cols());
+    out << static_cast<uint>(AA.nonZeros());
+
+    for( Index c=0; c<AA.outerSize(); ++c) {
+        SparseMatrix<int,ColMajor>::InnerIterator it( AA, c);
+        for( ; it; ++it) {
+            out << static_cast<int>(it.row()) << static_cast<int>(it.col());
+        }
+    }
+    return out;
+}
+
+
 //! Deserialization of sparse incidence matrix
-static QDataStream & operator>> ( QDataStream & in,  IncidenceMatrix & AA);
+QDataStream & operator>> (QDataStream & in,  IncidenceMatrix & AA)
+{
+    // qDebug() << Q_FUNC_INFO;
+
+    uint nrows = 0;
+    uint ncols = 0;
+    uint nnz = 0;
+    in >> nrows >> ncols >> nnz;
+
+    // fill vector with triplets (i,j,value)
+    std::vector< Eigen::Triplet<int> > tripletList;
+    tripletList.reserve( nnz );
+    int r = 0;
+    int c = 0;
+    for ( uint i=0; i<nnz; i++ ) {
+        in >> r >> c;
+        tripletList.emplace_back( r, c, 1 );
+    }
+
+    // fill sparse matrix
+    AA.resize(static_cast<int>(nrows), static_cast<int>(ncols));
+    AA.setFromTriplets( tripletList.begin(),
+                       tripletList.end() );
+
+    return in;
+}
+
 
 //! Serialization of geometric constraint
-static QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c);
+QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c)
+{
+    // qDebug() <<  Q_FUNC_INFO << c.type_name() << c.type_name()[0];
+    out << c.type_name()[0]; // first character, {'v','h','d','o','p','c'}
+    out << c.status();    // { UNEVAL=0 | REQUIRED | OBSOLETE };
+    out << c.enforced();
+
+    return out;
+}
+
 //! Deserialization of geometric constraint
-static QDataStream & operator>> ( QDataStream & in,  ConstraintBase & c);
+QDataStream & operator>> ( QDataStream &in, ConstraintBase &c )
+{
+    // qDebug() << Q_FUNC_INFO;
+    int status = 0;  // underlying type of enum
+    in >> status;
+    c.setStatus( static_cast<ConstraintBase::Status>(status) );
+
+    bool enforced = false;
+    in >> enforced;
+    c.setEnforced( enforced );
+
+    return in;
+}
+
+
+//! Overloaded operator<< for vectors
+template <typename T>
+QDataStream & operator<< ( QDataStream & out, const Vector<T,Dynamic> &v)
+{
+    //qDebug() << Q_FUNC_INFO;
+    for (const T val : v) {
+        out << val;
+    }
+
+    return out;
+}
+
+
+//! Overloaded operator>> for vectors
+template <typename T, int N>
+QDataStream & operator>> ( QDataStream & in, Vector<T,N> & v)
+{
+    for (T & val : v ) {
+        in >> val;
+    }
+
+    return in;
+}
+
+
+//! Overloaded operator>> for matrices
+template <typename T>
+QDataStream & operator>> ( QDataStream & in, MatrixBase<T> & MM)
+{
+    for ( int r=0; r<MM.rows(); r++) {
+        for ( int c=0; c<MM.cols(); c++) {
+            in >> MM(r,c);
+        }
+    }
+
+    return in;
+}
+
+
+//! Overloaded operator<< for matrices
+template <typename T>
+QDataStream & operator<< ( QDataStream & out, const MatrixBase<T> &MM)
+{
+    //qDebug() << Q_FUNC_INFO;
+    for ( int r=0; r<MM.rows(); r++) {
+        for (int c=0; c<MM.cols(); c++) {
+            out << MM(r,c);
+        }
+    }
+
+    return out;
+}
+
+
+template <typename T>
+QDataStream & operator<< (QDataStream & out, const Aabb<T> & bbox)
+{
+    for (int i=0; i<bbox.dim(); i++) {
+        out << bbox.min(i) << bbox.max(i);
+    }
+
+    return out;
+}
+
+
+template <typename T>
+QDataStream & operator>> (QDataStream & in, Aabb<T> & bbox)
+{
+    T x_min = 0;
+    T x_max = 0;
+    T y_min = 0;
+    T y_max = 0;
+    in >> x_min >> x_max >> y_min >> y_max;
+
+    // bad design: just 2D boxes:
+    bbox = Aabb<T>( Vector<T,2>(x_min, y_min), Vector<T,2>(x_max, y_max)   );
+
+    return in;
+}
+
+
+//! Deserialization of uncertain straight line segment and its bounding box
+QDataStream & operator>> ( QDataStream & in, uStraightLineSegment & us)
+{
+    // qDebug() << Q_FUNC_INFO;
+    Vector<double,9> t;
+    Matrix<double,9,9> Sigma_tt;
+    Aabb<double> bbox;
+    in >> t;
+    in >> Sigma_tt;
+    in >> bbox;
+    us = uStraightLineSegment(t, Sigma_tt);
+
+    return in;
+}
+
+
+QDataStream & operator<< ( QDataStream & out, const uStraightLineSegment & us)
+{
+    //qDebug() << Q_FUNC_INFO;
+    out << us.t();
+    out << us.Cov_tt();
+    out << us.bounding_box();
+
+    return out;
+}
+
 } // namespace
 
 
@@ -282,7 +463,8 @@ bool impl::deserialize( QDataStream & in )
     qDebug().noquote() << "(2.1) reading uncertain straight line segments...";
     for ( Index s=0; s<Rel.rows(); s++ ) {
         auto seg = uStraightLineSegment::create();
-        if ( !seg->deserialize( in ) ) {
+        in >> *seg;
+        if ( in.status()!=0) {
             return false;
         }
         m_segm.append( seg );
@@ -415,7 +597,8 @@ void impl::serialize( QDataStream &out ) const
 
     // (2) geometry
     for ( const auto & item : m_segm) {
-        item->serialize( out );
+        // item->serialize( out );
+        out << *item;
     }
     for ( const auto & item : m_constr) {
         // item->serialize( out );
@@ -1445,80 +1628,19 @@ std::pair<uPoint,uPoint> impl::uEndPoints(const VectorXd &xi,
     return { first_, second_};
 }
 
-
-
 namespace {
 
-QDataStream & operator<< (QDataStream & out, const IncidenceMatrix & AA)
-{
-    // qDebug() << Q_FUNC_INFO;
-
-    out << static_cast<uint>(AA.rows());
-    out << static_cast<uint>(AA.cols());
-    out << static_cast<uint>(AA.nonZeros());
-
-    for( Index c=0; c<AA.outerSize(); ++c) {
-        SparseMatrix<int,ColMajor>::InnerIterator it( AA, c);
-        for( ; it; ++it) {
-            out << static_cast<int>(it.row()) << static_cast<int>(it.col());
-        }
-    }
-    return out;
-}
 
 
-QDataStream & operator>> (QDataStream & in,  IncidenceMatrix & AA)
-{
-    // qDebug() << Q_FUNC_INFO;
-
-    uint nrows = 0;
-    uint ncols = 0;
-    uint nnz = 0;
-    in >> nrows >> ncols >> nnz;
-
-    // fill vector with triplets (i,j,value)
-    std::vector< Eigen::Triplet<int> > tripletList;
-    tripletList.reserve( nnz );
-    int r = 0;
-    int c = 0;
-    for ( uint i=0; i<nnz; i++ ) {
-        in >> r >> c;
-        tripletList.emplace_back( r, c, 1 );
-    }
-
-    // fill sparse matrix
-    AA.resize(static_cast<int>(nrows), static_cast<int>(ncols));
-    AA.setFromTriplets( tripletList.begin(),
-                        tripletList.end() );
-
-    return in;
-}
 
 
-QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c)
-{
-    // qDebug() <<  Q_FUNC_INFO << c.type_name() << c.type_name()[0];
-    out << c.type_name()[0]; // first character, {'v','h','d','o','p','c'}
-    out << c.status();    // { UNEVAL=0 | REQUIRED | OBSOLETE };
-    out << c.enforced();
-
-    return out;
-}
 
 
-QDataStream & operator>> ( QDataStream &in, ConstraintBase &c )
-{
-    // qDebug() << Q_FUNC_INFO;
-    int status = 0;  // underlying type of enum
-    in >> status;
-    c.setStatus( static_cast<ConstraintBase::Status>(status) );
 
-    bool enforced = false;
-    in >> enforced;
-    c.setEnforced( enforced );
 
-    return in;
-}
+
+
+
 
 } // namespace
 
