@@ -53,7 +53,7 @@ private:
 
 public:
     uStraightLineSegment( const uPoint & ux, const uPoint & uy);
-    uStraightLineSegment( const Vector9d & t, const Matrix9d & Sigma_tt);
+    uStraightLineSegment( Vector9d t, Matrix9d Sigma_tt);
 
     uStraightLineSegment & operator= ( const uStraightLineSegment &) = default;  //!< Copy assignment
 

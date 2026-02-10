@@ -29,6 +29,7 @@
 #include <cassert>
 #include <cfloat>
 #include <memory>
+#include <utility>
 
 
 using Eigen::Index;
@@ -69,8 +70,8 @@ uPoint uStraightLineSegment::uy() const
 }
 
 
-uStraightLineSegment::uStraightLineSegment( const Vector9d & t, const Matrix9d & Sigma_tt)
-    : m_t(t), m_Cov_tt(Sigma_tt)
+uStraightLineSegment::uStraightLineSegment( Vector9d t, Matrix9d Sigma_tt)
+    : m_t(std::move(t)), m_Cov_tt(std::move(Sigma_tt))
 {
     m_bounding_box = ux().bbox().united( uy().bbox() );
 }

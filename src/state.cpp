@@ -35,7 +35,6 @@
 #include "adjustment.h"
 #include "conncomp.h"
 #include "constraints.h"
-#include "geometry/aabb.h"
 #include "geometry/acute.h"
 #include "global.h"
 #include "mainscene.h"
@@ -72,8 +71,6 @@ using Eigen::SparseMatrix;
 using Eigen::ColMajor;
 using Eigen::indexing::last;
 using Eigen::Dynamic;
-
-using Geometry::Aabb;
 
 using Constraint::ConstraintBase;
 using Constraint::Parallel;
@@ -114,9 +111,8 @@ Quantiles::Snapping    State::snap_;
 
 namespace {
 
-
 //! Serialization of sparse incidence matrix
-static QDataStream & operator<< (QDataStream & out, const IncidenceMatrix & AA)
+QDataStream & operator<< (QDataStream & out, const IncidenceMatrix & AA)
 {
     // qDebug() << Q_FUNC_INFO;
 
@@ -173,6 +169,7 @@ QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c)
 
     return out;
 }
+
 
 //! Deserialization of geometric constraint
 QDataStream & operator>> ( QDataStream &in, ConstraintBase &c )
@@ -244,43 +241,14 @@ QDataStream & operator<< ( QDataStream & out, const MatrixBase<T> &MM)
 }
 
 
-template <typename T>
-QDataStream & operator<< (QDataStream & out, const Aabb<T> & bbox)
-{
-    for (int i=0; i<bbox.dim(); i++) {
-        out << bbox.min(i) << bbox.max(i);
-    }
-
-    return out;
-}
-
-
-template <typename T>
-QDataStream & operator>> (QDataStream & in, Aabb<T> & bbox)
-{
-    T x_min = 0;
-    T x_max = 0;
-    T y_min = 0;
-    T y_max = 0;
-    in >> x_min >> x_max >> y_min >> y_max;
-
-    // bad design: just 2D boxes:
-    bbox = Aabb<T>( Vector<T,2>(x_min, y_min), Vector<T,2>(x_max, y_max)   );
-
-    return in;
-}
-
-
 //! Deserialization of uncertain straight line segment and its bounding box
 QDataStream & operator>> ( QDataStream & in, uStraightLineSegment & us)
 {
     // qDebug() << Q_FUNC_INFO;
     Vector<double,9> t;
     Matrix<double,9,9> Sigma_tt;
-    Aabb<double> bbox;
     in >> t;
     in >> Sigma_tt;
-    in >> bbox;
     us = uStraightLineSegment(t, Sigma_tt);
 
     return in;
@@ -292,7 +260,6 @@ QDataStream & operator<< ( QDataStream & out, const uStraightLineSegment & us)
     //qDebug() << Q_FUNC_INFO;
     out << us.t();
     out << us.Cov_tt();
-    out << us.bounding_box();
 
     return out;
 }
@@ -304,7 +271,7 @@ QDataStream & operator<< ( QDataStream & out, const uStraightLineSegment & us)
 //! Implementation details of class 'state' (pImpl idiom)
 class impl {
 private:
-    using VectorXidx = Eigen::Vector<Index,Eigen::Dynamic>;
+    using VectorXidx = Vector<Index,Dynamic>;
 
 public:
     bool deserialize( QDataStream & in  );        //!< Serialization
@@ -372,7 +339,6 @@ private:
 
     void establish_parallel(   Index a, Index b );
     void establish_orthogonal( Index a, Index b );
-    // void establish_identical(  Index a, Index b );
 
     void establish_copunctual( Index a, Index b, Index c );
 
@@ -474,7 +440,7 @@ bool impl::deserialize( QDataStream & in )
     for ( Index i=0; i<Rel.cols(); i++ ) {
         // auto c = ConstraintBase::deserialize(in);  // calls 'create'
 
-        char type_code = 'x';
+        char type_code = '\0';
         in >> type_code;
         // qDebug() << Q_FUNC_INFO << type_name;
         if ( in.status()!=0) {
@@ -486,7 +452,10 @@ bool impl::deserialize( QDataStream & in )
         if ( c==nullptr ) {
             return false;
         }
-        in >> *c;  // .get();
+        in >> *c;
+        if ( in.status()!=0) {
+            return false;
+        }
         m_constr.append( c );
     }
 
@@ -597,11 +566,9 @@ void impl::serialize( QDataStream &out ) const
 
     // (2) geometry
     for ( const auto & item : m_segm) {
-        // item->serialize( out );
         out << *item;
     }
     for ( const auto & item : m_constr) {
-        // item->serialize( out );
         out << *item;
     }
 
@@ -974,6 +941,7 @@ void impl::snap_endpoints( const Index numNewConstr)
 
             // (1) "is touching" ......................................
             uStraightLineSegment useg( *m_segm.at(s) );
+            // uStraightLineSegment useg =  *m_segm.at(s);
             bool changed = false;
 
             for ( Index n=0; n<x_touches_l.cols(); n++) // but ColMajor
@@ -1627,20 +1595,3 @@ std::pair<uPoint,uPoint> impl::uEndPoints(const VectorXd &xi,
 
     return { first_, second_};
 }
-
-namespace {
-
-
-
-
-
-
-
-
-
-
-
-
-
-} // namespace
-
