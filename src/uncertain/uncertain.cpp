@@ -19,23 +19,22 @@
 
 #include "matfun.h"
 #include "uncertain.h"
-#include "usegment.h"
-
-#include <QDebug>
-#include <QStringLiteral>
 
 #include <cassert>
 #include <cfloat>
 
 #include <Eigen/Core>
-#include <Eigen/Eigenvalues>
 
 
-namespace Uncertain {
+using Eigen::Matrix;
+using Eigen::Matrix2d;
+using Eigen::Vector2d;
 
 using Matfun::null;
 using Matfun::sign;
 
+
+namespace Uncertain {
 
 
 //! Spherically normalize the entity
@@ -45,11 +44,11 @@ void BasicEntity2D::normalizeSpherical()
 
     const Matrix3d I = Matrix3d::Identity();
     assert(m_val.norm() > 0.0);
-    Matrix3d const Jac = (I - m_val*m_val.adjoint()/m_val.squaredNorm()) / m_val.norm();
+    const Matrix3d Jac = (I - m_val*m_val.adjoint()/m_val.squaredNorm()) / m_val.norm();
     m_cov = Jac*m_cov*Jac.adjoint();
-
     m_val.normalize();  // x = x /norm(x)
 }
+
 
 //! Check if uncertainty entity is identical with uncertain entity 'us'
 bool BasicEntity2D::isIdenticalTo( const BasicEntity2D & us,
@@ -67,11 +66,11 @@ bool BasicEntity2D::isIdenticalTo( const BasicEntity2D & us,
     a.m_val *= sign( a.v()(idx) );      // a = a*sign( a(idx) );
     b.m_val *= sign( b.v()(idx) );      // b = b*sign( b(idx) );
 
-    Matrix<double, 3, 2> const JJ = null(a.v());          // (A.120)
-    Vector2d const d = JJ.adjoint()*( a.v() -b.v() );     // (10.141)
-    Eigen::Matrix2d const Cov_dd = JJ.adjoint() * (a.Cov() + b.Cov()) * JJ;
+    const Matrix<double, 3, 2> Jac = null(a.v());         // (A.120)
+    const Vector2d d = Jac.adjoint()*( a.v() -b.v() );     // (10.141)
+    const Matrix2d Sigma_dd = Jac.adjoint() * (a.Cov() + b.Cov()) * Jac;
 
-    return d.dot(Cov_dd.ldlt().solve(d) ) < T;    // dof = 2
+    return d.dot( Sigma_dd.ldlt().solve(d) ) < T;    // dof = 2
 }
 
 } // namespace Uncertain
