@@ -1172,9 +1172,10 @@ void MainWindow::slotBasicDocumentation()
     QMessageBox::about( this, QApplication::applicationName() + " " + QApplication::applicationVersion(),
                         "<h2> Basic documentation</h2>"
                         "<table style=\"white-space: nowrap;\">"
-                        "<tr><td>[left mouse]    </td><td>draw straight strokes (no polylines)</td></tr>"
-                        "<tr><td>[right mouse]   </td><td>select/unselect graphical elements</td></tr>"
+                        "<tr><td>[left mouse button]    </td><td>draw straight strokes (no polylines)</td></tr>"
+                        "<tr><td>[right mouse button]   </td><td>select/unselect graphical elements</td></tr>"
                         "<tr><td>[mouse wheel]   </td><td>zoom in or out</td></tr>"
+                        "<tr><td>[Ctrl]+[left mouse button]    </td><td>shift drawing</td></tr>"
                         "</table>"
                         "<h2>Keyboard shortcuts</h2>"
                         "<table>"
