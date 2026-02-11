@@ -1135,7 +1135,7 @@ bool impl::identities_removed()
     for ( Index a=Adj.rows()-1; a>=0 ; a-- )   // ! decrement
     {
         // if a and c are neighbors, check for identity
-        if ( Adj.isSet( a,Adj.cols()-1 ) ) {
+        if ( Adj.isSet( a,last ) ) {
             if ( are_identical(a, Adj.cols()-1)) {
                 found = true;
 
@@ -1156,30 +1156,25 @@ void impl::merge_segment( const Index a)
 {
     // qDebug() << Q_FUNC_INFO << a;
 
-    const Index last1 = m_segm.size()-1;  // zero-based
-
     const QPolygonF merged_track
             = m_qStroke.at(a)->polygon()
             + m_qStroke.last()->polygon();
 
-
-    m_qStroke.replace( last1, std::make_shared<QEntity::QStroke>( merged_track ) );
+    m_qStroke.last() = std::make_shared<QEntity::QStroke>( merged_track );
 
     const std::pair<VectorXd, VectorXd> xiyi = trackCoords(merged_track); // {x_i, y_i}
     const std::pair<uPoint, uPoint> uxuy = uEndPoints(xiyi.first, xiyi.second); // ux, uy
 
-    auto um = std::make_shared<uStraightLineSegment>( uxuy.first, uxuy.second);
-    m_segm.replace( last1, um );
+    m_segm.last() = std::make_shared<uStraightLineSegment>(
+        uxuy.first, uxuy.second);
 
-    m_qUnconstrained.replace( last1,
-        std::make_shared<QEntity::QUnconstrained>(
-            m_segm.last()->ux(),
-            m_segm.last()->uy()   ));
+    m_qUnconstrained.last() = std::make_shared<QEntity::QUnconstrained>(
+        m_segm.last()->ux(),
+        m_segm.last()->uy()   );
 
-    m_qConstrained.replace( last1,
-        std::make_shared<QEntity::QConstrained>(
-            m_segm.last()->ux(),
-            m_segm.last()->uy()   ));
+    m_qConstrained.last() = std::make_shared<QEntity::QConstrained>(
+        m_segm.last()->ux(),
+        m_segm.last()->uy()   );
 
     // inherit adjacencies of [a]
     for ( Index i=0; i<Adj.cols()-1; i++) {
