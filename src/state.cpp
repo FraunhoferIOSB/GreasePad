@@ -631,26 +631,7 @@ Index impl::find_new_constraints()
 {
     // qDebug() <<  Q_FUNC_INFO;
     const Index previously = m_constr.length();
-
     const Index c = Adj.rows()-1;
-
-    // orthogonality & identity .......................................
-    /* if ( considerOrthogonality | considerIdentity ) {
-        for ( SparseMatrix<int>::InnerIterator it(Adj,c) ; it; ++it) {
-            Q_ASSERT( it.value()==1 );
-            int a = it.index(); // a is direct neighbor of c.
-
-            // a and c: potentially orthogonal or identical, not both
-            if ( considerOrthogonality )
-                if ( are_orthogonal( a, c) ) {
-                    establish_orthogonality( a, c);
-                    continue; // (a, c) are not identical, too.  !!!
-                }
-            if ( considerIdentity )
-                if ( are_identical( a, c))
-                    establish_identity( a, c);
-        }
-    }*/
 
     // unary relations ......................................
     if ( State::considerVertical() ) {
@@ -672,7 +653,7 @@ Index impl::find_new_constraints()
 
     if (  State::considerOrthogonal() ) {
         for ( SparseMatrix<int>::InnerIterator it(Adj,c) ; it; ++it) {
-            Q_ASSERT( it.value()==1 );
+            assert( it.value()==1 );
             const int a = it.index(); // a is direct neighbor of c.
             // a and c: potentially orthogonal or identical, not both
             if ( are_orthogonal( a, c) ) {
@@ -681,10 +662,8 @@ Index impl::find_new_constraints()
         }
     }
 
-
-    // if square: number of walks of length 2
+    // walks of length 2
     SparseMatrix<int> WW = Adj*Adj;
-
 
     // concurrence & parallelism (1) ..................................
     if ( State::considerCopunctual() || State::considerParallel() ) {
@@ -716,8 +695,9 @@ Index impl::find_new_constraints()
                     }
 
                     // [b] is neighbor of [a] and [c].
-
                     if ( b > a ) {
+                        // establish copunctiality
+                        // if straight lines not pairwise identical
                         if ( !are_identical(b,c) && !are_identical(a,c) && !are_identical(a,b) ) {
                             if ( are_copunctual( a, b, c) ) {
                                 establish_copunctual( a, b, c );
@@ -731,26 +711,22 @@ Index impl::find_new_constraints()
     }
 
     // parallelism (2) ......................................
-    // case: straight line segment connects two segments
-    const VectorXidx idx = spfind<int>( Adj.col(c) ); // neighbors of [c]
+    if ( State::considerParallel() ) {
+        // case: straight line segment connects two segments
+        const VectorXidx idx = spfind<int>( Adj.col(c) ); // neighbors of [c]
 
-    // Check all pairs of neighbors.
-    for ( Index i=0; i<idx.rows(); i++) {
-        const Index a = idx(i);
-        for ( Index j=i+1; j<idx.rows(); j++) {
-            const Index b = idx(j);
-            if ( WW.coeffRef(a,b) == 1 ) {
-                // qDebug().noquote() << QString("There is just one walk of length 2 between [%1} and [%2].").arg(idx(i)).arg(idx(j));
-                if ( are_identical(a,b) ) {
-                    qDebug() << "bug\n";
-                    assert( 0 && "bug!");
-                    // establish_identical(a,b);
-                }
-                else {
-                    if ( State::considerParallel() ) {
-                        if ( are_parallel(a,b) ) {
-                            establish_parallel(a,b);
-                        }
+        // Check all pairs of neighbors.
+        for ( Index i=0; i<idx.rows(); i++) {
+            const Index a = idx(i);
+            for ( Index j=i+1; j<idx.rows(); j++) {
+                const Index b = idx(j);
+                if ( WW.coeffRef(a,b) == 1 ) {
+                    // qDebug().noquote() << QString("There is just one walk of length 2 between [%1} and [%2].").arg(idx(i)).arg(idx(j));
+                    if ( are_identical(a,b) ) {
+                        assert( 0 && "unexpected behavior");
+                    }
+                    if ( are_parallel(a,b) ) {
+                        establish_parallel(a,b);
                     }
                 }
             }
@@ -759,6 +735,7 @@ Index impl::find_new_constraints()
 
     return m_constr.length() -previously;
 }
+
 
 void impl::solve_subtask_greedy( const int cc )
 {
