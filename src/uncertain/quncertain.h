@@ -24,93 +24,39 @@
 
 #include <QDataStream>
 
-using Uncertain::uStraightLineSegment;
+#include <Eigen/Core>
 
-using Eigen::Vector;
-using Eigen::Matrix;
+
+namespace Uncertain {
+
 using Eigen::MatrixBase;
 using Eigen::Dynamic;
+using Eigen::Vector;
 
-
-namespace {
 
 //! Overloaded operator>> for matrices
 template <typename T>
-QDataStream & operator>> ( QDataStream & in, MatrixBase<T> & MM)
-{
-    for ( int r=0; r<MM.rows(); r++) {
-        for ( int c=0; c<MM.cols(); c++) {
-            in >> MM(r,c);
-        }
-    }
-
-    return in;
-}
-
+QDataStream & operator>> ( QDataStream & in, MatrixBase<T> & MM);
 
 //! Overloaded operator<< for matrices
 template <typename T>
-QDataStream & operator<< ( QDataStream & out, const MatrixBase<T> &MM)
-{
-    //qDebug() << Q_FUNC_INFO;
-    for ( int r=0; r<MM.rows(); r++) {
-        for (int c=0; c<MM.cols(); c++) {
-            out << MM(r,c);
-        }
-    }
-
-    return out;
-}
-
+QDataStream & operator<< ( QDataStream & out, const MatrixBase<T> &MM);
 
 //! Overloaded operator<< for vectors
 template <typename T>
-QDataStream & operator<< ( QDataStream & out, const Vector<T,Dynamic> &v)
-{
-    //qDebug() << Q_FUNC_INFO;
-    for (const T val : v) {
-        out << val;
-    }
-
-    return out;
-}
-
+QDataStream & operator<< ( QDataStream & out, const Vector<T,Dynamic> &v);
 
 //! Overloaded operator>> for vectors
 template <typename T, int N>
-QDataStream & operator>> ( QDataStream & in, Vector<T,N> & v)
-{
-    for (T & val : v ) {
-        in >> val;
-    }
-
-    return in;
-}
+QDataStream & operator>> ( QDataStream & in, Vector<T,N> & v);
 
 
 //! Deserialization of uncertain straight line segment and its bounding box
-QDataStream & operator>> ( QDataStream & in, uStraightLineSegment & us)
-{
-    // qDebug() << Q_FUNC_INFO;
-    Vector<double,9> t;
-    Matrix<double,9,9> Sigma_tt;
-    in >> t;
-    in >> Sigma_tt;
-    us = uStraightLineSegment(t, Sigma_tt);
-
-    return in;
-}
-
-
-QDataStream & operator<< ( QDataStream & out, const uStraightLineSegment & us)
-{
-    //qDebug() << Q_FUNC_INFO;
-    out << us.t();
-    out << us.Cov_tt();
-
-    return out;
-}
+QDataStream & operator>> ( QDataStream & in, uStraightLineSegment & us);
+QDataStream & operator<< ( QDataStream & out, const uStraightLineSegment & us);
 
 } // namespace
+
+
 
 #endif // QUNCERTAIN_H

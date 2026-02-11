@@ -40,6 +40,7 @@ SOURCES += \
     qstroke.cpp \
     quantiles.cpp \
     state.cpp \
+    uncertain/quncertain.cpp \
     uncertain/uncertain.cpp \
     uncertain/upoint.cpp \
     uncertain/usegment.cpp \
