@@ -79,8 +79,8 @@ public:
 
     //! Check if constraint is of a certain, specified type
     template<typename T>
-    [[nodiscard]] bool isInstanceOf() {
-        return ( dynamic_cast<T*>(this) != nullptr);
+    [[nodiscard]] bool isInstanceOf() const {
+        return ( dynamic_cast<T const*>(this) != nullptr);
     }
 
     //! Clone constraints via nonvirtual interface pattern
@@ -281,9 +281,9 @@ private:
     ~Factory() { m_map.clear();  }
 
 public:
-    Factory(const Factory & ) = delete;  // not clonable
-    Factory(const Factory && ) = delete; // not movable
-    Factory & operator= ( Factory &&) = delete;
+    Factory(const Factory & other) = delete;  // not clonable
+    Factory(Factory &&  other) = delete; // not movable
+    Factory & operator= (Factory && other) = delete;
     Factory & operator= (const Factory & other) = delete;
 
     Factory() {
