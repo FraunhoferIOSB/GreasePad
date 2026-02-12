@@ -19,7 +19,6 @@
 #ifndef CONSTRAINTS_H
 #define CONSTRAINTS_H
 
-#include <QDebug>
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
@@ -53,9 +52,6 @@ public:
 
     //! Status: unevaluated, required, obsolete (redundant)
     enum Status : int { UNEVAL=0, REQUIRED, OBSOLETE };
-
-    // virtual void serialize( QDataStream &out) const;  //!< Serialize (Qt)
-    // static std::shared_ptr<ConstraintBase> deserialize( QDataStream &in ); //!< Deserialization (Qt)
 
     [[nodiscard]] virtual const char *type_name() const = 0;  //!< Get type name of constraint
     [[nodiscard]] virtual int dof()   const = 0;   //!< Get degrees of freedom for this constraint

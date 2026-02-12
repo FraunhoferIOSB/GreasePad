@@ -20,9 +20,6 @@
 
 #include <Eigen/Core>
 
-#include <QDebug>
-#include <QStringLiteral>
-
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
