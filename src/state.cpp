@@ -227,7 +227,7 @@ private:
     void identify_subtasks();
 
     // augment
-    Index find_new_constraints();
+    Index findNewConstraints();
     void find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap);
     void merge_segment ( Index a );
     bool identities_removed();
@@ -248,8 +248,9 @@ private:
 
     void setAltColors() const;
 
-    void lookOutForOrthogonalNeighbors( Index c);
-    void lookOutForParallelNeighbors( Index c, const SparseMatrix<int> & WW);
+    void lookOutForOrthogonality( Index c);
+    void lookOutForParallelism( Index c);
+    void lookOutForCopunctuality( Index c);
 
     bool is_vertical(   Index a);
     bool is_horizontal( Index a);
@@ -606,7 +607,7 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
     }
 
     // (1) find constraints .....................................
-    const Index num_new_constraints_ = find_new_constraints();
+    const Index num_new_constraints_ = findNewConstraints();
     assert( num_new_constraints_ >= 0 );
 
     qDebug().noquote() << QString( num_new_constraints_==1 ?
@@ -631,7 +632,7 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
 }
 
 
-Index impl::find_new_constraints()
+Index impl::findNewConstraints()
 {
     // qDebug() <<  Q_FUNC_INFO;
     const Index previously = m_constr.length();
@@ -653,66 +654,21 @@ Index impl::find_new_constraints()
             establish_diagonal(c);
         }
     }
-
     if ( State::considerOrthogonal() ) {
-        lookOutForOrthogonalNeighbors(c);
+        lookOutForOrthogonality(c);
     }
-
-    // walks of length 2
-    SparseMatrix<int> WW = Adj*Adj;
-
-    // concurrence & parallelism (1) ..................................
-    if ( State::considerCopunctual() || State::considerParallel() ) {
-        // Find walks of length 2 between the vertices of the graph.
-        const VectorXidx nbs = spfind<int>( WW.col(c) );
-        for ( const auto a : nbs) { // Index n=0; n<nbs.rows()-1; n++) {
-            // a is a walk of length 2 away from c.
-            if ( !Adj.isSet(a,c) ) {
-                // a and c are no neighbors.
-                if ( State::considerParallel() ) {
-                    // Check if a and c are parallel.
-                    if ( !are_identical(a,c) && are_parallel( a, c) ) {
-                        establish_parallel( a, c);
-                    }
-                }
-                continue;
-            }
-
-            if ( State::considerCopunctual() ) {
-                // a and c are adjacent and have at least one common neighbor.
-                // Find all common neighbors of a and c.
-                const VectorXidx nbnb = spfind<int>( Adj.col(a) ); // neighbors of a.
-                for ( const auto b : nbnb ) {
-                    if ( !Adj.isSet( b,c ) ) {
-                        continue;   // b is not a common neighbor of a and c.
-                    }
-
-                    // b is neighbor of a and c.
-                    if ( b > a ) {
-                        // establish copunctiality
-                        // if straight lines not pairwise identical
-                        if ( !are_identical(b,c) && !are_identical(a,c) && !are_identical(a,b) ) {
-                            if ( are_copunctual( a, b, c) ) {
-                                establish_copunctual( a, b, c );
-                            }
-                        }
-                    }
-                }
-            }
-
-        }
-    }
-
-    // parallelism (2) ......................................
     if ( State::considerParallel() ) {
-        lookOutForParallelNeighbors(c, WW);
+        lookOutForParallelism(c);
+    }
+    if ( State::considerCopunctual() ) {
+        lookOutForCopunctuality(c);
     }
 
     return m_constr.length() -previously;
 }
 
 
-void impl::lookOutForOrthogonalNeighbors( const Index c )
+void impl::lookOutForOrthogonality( const Index c )
 {
     for ( SparseMatrix<int>::InnerIterator it(Adj,c) ; it; ++it) {
         assert( it.value()==1 );
@@ -724,29 +680,78 @@ void impl::lookOutForOrthogonalNeighbors( const Index c )
 }
 
 
-void impl::lookOutForParallelNeighbors( const Index c, const SparseMatrix<int> & WW)
+void impl::lookOutForParallelism(const Index c)
 {
+    const SparseMatrix<int> WW = Adj*Adj;
+
     // case: straight line segment connects two segments
     const VectorXidx idx = spfind<int>( Adj.col(c) ); // neighbors of c
 
-    // Check all pairs of neighbors.
+    // Check all pairs of direct neighbors.
     for ( Index i=0; i<idx.rows(); i++) {
         const Index a = idx(i);
         for ( Index j=i+1; j<idx.rows(); j++) {
             const Index b = idx(j);
+            qDebug().noquote() << QString( WW.coeff(a,b)==1 ?
+                "%1 walk with length 2 between %2 and %3." :
+                "%1 walks with length 2 between %2 and %3." ).arg(WW.coeff(a,b)).arg(a).arg(b);
+            // The relation has been check earlier
+            // if the number of walks with length 2
+            // between a and b is greater than 1.
             if ( WW.coeff(a,b) == 1 ) {
                 // There is just one walk of length 2 between a and b via c.
-                if ( are_identical(a,b) ) {
-                    assert( 0 && "unexpected behavior");
-                }
+                assert( are_identical(a,b)==false && "unexpected behavior" );
                 if ( are_parallel(a,b) ) {
                     establish_parallel(a,b);
                 }
             }
         }
     }
+
+
+    // Find walks of length 2 between the vertices of the graph.
+    const VectorXidx nbs = spfind<int>( WW.col(c) );
+    for ( const auto a : nbs) { // Index n=0; n<nbs.rows()-1; n++) {
+        // a is a walk of length 2 away from c.
+        if ( !Adj.isSet(a,c) ) {
+            // a and c are no neighbors.
+            // Check if a and c are parallel.
+            if ( !are_identical(a,c) && are_parallel( a, c) ) {
+                establish_parallel( a, c);
+            }
+        }
+    }
 }
 
+
+void impl::lookOutForCopunctuality( const Index c )
+{
+    const SparseMatrix<int> WW = Adj*Adj;
+
+    const VectorXidx nbs = spfind<int>( WW.col(c) );
+    for ( const auto a : nbs) {
+        // a and c are adjacent and have at least one common neighbor.
+        // Find all common neighbors of a and c.
+        const VectorXidx nbnb = spfind<int>( Adj.col(a) ); // neighbors of a.
+        for ( const auto b : nbnb ) {
+            if ( !Adj.isSet( b,c ) ) {
+                continue;   // b is not a common neighbor of a and c.
+            }
+
+            // b is neighbor of a and c.
+            if ( b > a ) {
+                // establish copunctiality
+                // if straight lines not pairwise identical
+                if ( !are_identical(b,c) && !are_identical(a,c) && !are_identical(a,b) ) {
+                    if ( are_copunctual( a, b, c) ) {
+                        establish_copunctual( a, b, c );
+                    }
+                }
+            }
+        }
+
+    }
+}
 
 void impl::solve_subtask_greedy( const int cc )
 {
