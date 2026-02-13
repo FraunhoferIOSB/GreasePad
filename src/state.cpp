@@ -55,10 +55,12 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QPolygonF>
+#include <QStringLiteral>
 #include <QtCompilerDetection>
 
 #include <Eigen/Core>
 #include <Eigen/SparseCore>
+
 
 using Eigen::VectorXd;
 using Eigen::VectorXi;
@@ -245,6 +247,9 @@ private:
     static std::pair<VectorXd, VectorXd> trackCoords(const QPolygonF &poly);
 
     void setAltColors() const;
+
+    void lookOutForOrthogonalNeighbors( Index c);
+    void lookOutForParallelNeighbors( Index c, const SparseMatrix<int> & WW);
 
     bool is_vertical(   Index a);
     bool is_horizontal( Index a);
@@ -604,9 +609,8 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
     const Index num_new_constraints_ = find_new_constraints();
     assert( num_new_constraints_ >= 0 );
 
-    qDebug().noquote() << QStringLiteral("%1 new constraint%2 found.")
-                .arg(num_new_constraints_)
-                .arg(num_new_constraints_==1 ? "" : "s");
+    qDebug().noquote() << QString( num_new_constraints_==1 ?
+        "%1 new constraint found." : "%1 new constraints found.").arg(num_new_constraints_);
 
     // (2) check for independence and consistency ...............
     identify_subtasks();  // connected components
@@ -650,16 +654,8 @@ Index impl::find_new_constraints()
         }
     }
 
-
-    if (  State::considerOrthogonal() ) {
-        for ( SparseMatrix<int>::InnerIterator it(Adj,c) ; it; ++it) {
-            assert( it.value()==1 );
-            const int a = it.index(); // a is direct neighbor of c.
-            // a and c: potentially orthogonal or identical, not both
-            if ( are_orthogonal( a, c) ) {
-                establish_orthogonal( a, c);
-            }
-        }
+    if ( State::considerOrthogonal() ) {
+        lookOutForOrthogonalNeighbors(c);
     }
 
     // walks of length 2
@@ -669,13 +665,12 @@ Index impl::find_new_constraints()
     if ( State::considerCopunctual() || State::considerParallel() ) {
         // Find walks of length 2 between the vertices of the graph.
         const VectorXidx nbs = spfind<int>( WW.col(c) );
-        for ( Index n=0; n<nbs.rows()-1; n++) {
-            const Index a = nbs(n);  // [a] is a walk of length 2 away from [c].
-
+        for ( const auto a : nbs) { // Index n=0; n<nbs.rows()-1; n++) {
+            // a is a walk of length 2 away from c.
             if ( !Adj.isSet(a,c) ) {
-                // [a] and [c] are no neighbors.
+                // a and c are no neighbors.
                 if ( State::considerParallel() ) {
-                    // Check if [a] and [c] are parallel.
+                    // Check if a and c are parallel.
                     if ( !are_identical(a,c) && are_parallel( a, c) ) {
                         establish_parallel( a, c);
                     }
@@ -684,17 +679,15 @@ Index impl::find_new_constraints()
             }
 
             if ( State::considerCopunctual() ) {
-                // [a] and [c] are adjacent and have at least one common neighbor.
-                // Find all common neighbors of [a] and [c].
-                const VectorXidx nbnb = spfind<int>( Adj.col(a) ); // neighbors of [a].
-                for ( Index m=0; m<nbnb.rows()-1; m++) {
-                    const Index b = nbnb(m);
-
+                // a and c are adjacent and have at least one common neighbor.
+                // Find all common neighbors of a and c.
+                const VectorXidx nbnb = spfind<int>( Adj.col(a) ); // neighbors of a.
+                for ( const auto b : nbnb ) {
                     if ( !Adj.isSet( b,c ) ) {
-                        continue;   // [b] is not a common neighbor of [a] and [c].
+                        continue;   // b is not a common neighbor of a and c.
                     }
 
-                    // [b] is neighbor of [a] and [c].
+                    // b is neighbor of a and c.
                     if ( b > a ) {
                         // establish copunctiality
                         // if straight lines not pairwise identical
@@ -712,28 +705,46 @@ Index impl::find_new_constraints()
 
     // parallelism (2) ......................................
     if ( State::considerParallel() ) {
-        // case: straight line segment connects two segments
-        const VectorXidx idx = spfind<int>( Adj.col(c) ); // neighbors of [c]
+        lookOutForParallelNeighbors(c, WW);
+    }
 
-        // Check all pairs of neighbors.
-        for ( Index i=0; i<idx.rows(); i++) {
-            const Index a = idx(i);
-            for ( Index j=i+1; j<idx.rows(); j++) {
-                const Index b = idx(j);
-                if ( WW.coeffRef(a,b) == 1 ) {
-                    // qDebug().noquote() << QString("There is just one walk of length 2 between [%1} and [%2].").arg(idx(i)).arg(idx(j));
-                    if ( are_identical(a,b) ) {
-                        assert( 0 && "unexpected behavior");
-                    }
-                    if ( are_parallel(a,b) ) {
-                        establish_parallel(a,b);
-                    }
+    return m_constr.length() -previously;
+}
+
+
+void impl::lookOutForOrthogonalNeighbors( const Index c )
+{
+    for ( SparseMatrix<int>::InnerIterator it(Adj,c) ; it; ++it) {
+        assert( it.value()==1 );
+        const int a = it.index(); // a is direct neighbor of c.
+        if ( are_orthogonal( a, c) ) {
+            establish_orthogonal( a, c);
+        }
+    }
+}
+
+
+void impl::lookOutForParallelNeighbors( const Index c, const SparseMatrix<int> & WW)
+{
+    // case: straight line segment connects two segments
+    const VectorXidx idx = spfind<int>( Adj.col(c) ); // neighbors of c
+
+    // Check all pairs of neighbors.
+    for ( Index i=0; i<idx.rows(); i++) {
+        const Index a = idx(i);
+        for ( Index j=i+1; j<idx.rows(); j++) {
+            const Index b = idx(j);
+            if ( WW.coeff(a,b) == 1 ) {
+                // There is just one walk of length 2 between a and b via c.
+                if ( are_identical(a,b) ) {
+                    assert( 0 && "unexpected behavior");
+                }
+                if ( are_parallel(a,b) ) {
+                    establish_parallel(a,b);
                 }
             }
         }
     }
-
-    return m_constr.length() -previously;
 }
 
 
