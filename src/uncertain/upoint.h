@@ -39,7 +39,7 @@ public:
     uPoint( const Vector3d & x,
             const Matrix3d & Sigma_xx);
 
-    [[nodiscard]] Aabb<double> bbox() const;
+    [[nodiscard]] Aabb<double,2> bbox() const;
     [[nodiscard]] uPoint euclidean() const;
     [[nodiscard]] uPoint sphericalNormalized() const;
     [[nodiscard]] uPoint transformed( const Matrix3d & TT) const;

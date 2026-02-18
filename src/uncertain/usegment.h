@@ -100,13 +100,13 @@ public:
 
     //! Get angle between straight line l and x-axis in degree
     [[nodiscard]] double phi_deg() const {
-        constexpr double pi  = 3.141592653589793;
+        constexpr double pi = 3.14159265358979323846;
         constexpr double rho = 180./pi;
         return rho*atan2( m_t(1),m_t(0) );
     }
 
     //! Get axis-aligned bounding box
-    [[nodiscard]] Aabb<double> bounding_box() const { return m_bounding_box; }
+    [[nodiscard]] Aabb<double,2> bounding_box() const { return m_bounding_box; }
 
     [[nodiscard]] bool move_x_to( const Vector3d & m );
     [[nodiscard]] bool move_y_to( const Vector3d & n );
@@ -115,7 +115,7 @@ public:
 private:
     Vector9d m_t;              // 9-vector t=[l',m',n']'
     Matrix9d m_Cov_tt;
-    Aabb<double> m_bounding_box;   // not constant, due to merge operation, .united(...)
+    Aabb<double,2> m_bounding_box;   // not constant, due to merge operation, .united(...)
 };
 
 } // namespace Uncertain

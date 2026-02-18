@@ -57,7 +57,7 @@ uPoint::uPoint( const Vector3d & x, const Matrix3d & Sigma_xx)
 
 
 //! Get axis-aligned bounding box
-Aabb<double> uPoint::bbox() const
+Aabb<double,2> uPoint::bbox() const
 {
     const double uu = v(0);
     const double vv = v(1);
@@ -76,7 +76,7 @@ Aabb<double> uPoint::bbox() const
     const double y_min = y - sqrt(Cov_xx(1, 1));
     const double y_max = y + sqrt(Cov_xx(1, 1));
 
-    return Aabb<double>{
+    return Aabb<double,2>{
         Vector2d(x_min, y_min),
         Vector2d(x_max, y_max)
     };

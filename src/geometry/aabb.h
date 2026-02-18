@@ -31,12 +31,12 @@ using Eigen::Vector;
 
 
 //! Axis-aligned bounding box
-template <typename T>
-class Aabb {
-
+template <typename T, int Dim>
+class Aabb
+{
 public:
     //! Value constructor
-    explicit Aabb( Vector<T,Dynamic> min, Vector<T,Dynamic> max)
+    explicit Aabb( Vector<T,Dim> min, Vector<T,Dim> max)
         : m_min(min), m_max(max)
     {
         assert( m_min.size() == m_max.size() );
@@ -73,11 +73,11 @@ public:
     }
 
     //! Get dimension of bounding box
-    [[nodiscard]] Index dim() const {return m_min.size();}
+    [[nodiscard]] Index dim() const {return Dim;}
 
 private:
-    Vector<T,Dynamic> m_min;
-    Vector<T,Dynamic> m_max;
+    Vector<T,Dim> m_min;
+    Vector<T,Dim> m_max;
 };
 
 } // namespace Geometry
