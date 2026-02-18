@@ -25,7 +25,6 @@
 
 namespace Geometry {
 
-using Eigen::Dynamic;
 using Eigen::Index;
 using Eigen::Vector;
 
