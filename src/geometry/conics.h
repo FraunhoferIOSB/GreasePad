@@ -26,11 +26,6 @@
 #include <cmath>
 #include <utility>
 
-#include <QDebug>
-
-#include "qassert.h"
-#include "qlogging.h"
-
 #include "geometry/skew.h"
 
 
@@ -41,6 +36,8 @@ using Eigen::Matrix3d;
 using Eigen::Vector3d;
 using Eigen::Matrix2d;
 using Eigen::Vector2d;
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
 
 
 //! Base class for conics
@@ -55,21 +52,23 @@ public:
     }
 
     [[nodiscard]] Matrix3d C() const { return CC;}  //!< getter
-    [[nodiscard]] bool isCentral() const  //!< Check if conic has a central point
+
+    //! check if conic has a central point
+    [[nodiscard]] bool isCentral() const
     {
         return CC.topLeftCorner(2,2).determinant() !=0.;
     }
 
-
-    [[nodiscard]] std::pair<Vector3d,Vector3d> intersect( const Vector3d & l ) const  //!< Two intersection points with a straight line
+    //! two intersection points with a straight line
+    [[nodiscard]] std::pair<Vector3d,Vector3d> intersect( const Vector3d & l ) const
     {
-        Matrix3d const MM = skew(l);
-        Matrix3d BB = MM.adjoint()*CC*MM;
+        const Matrix3d MM = skew(l);
+        const Matrix3d BB = MM.adjoint()*CC*MM;
 
         int idx = 0;       // [den,idx] = max( abs(l) );
-        double const den = l.array().abs().maxCoeff(&idx);
+        const double denom = l.array().abs().maxCoeff(&idx);
 
-        // minors ...............................................
+        // minors
         double alpha = 0;
         switch (idx) {
         case 0:
@@ -82,25 +81,22 @@ public:
             alpha = BB(0,0)*BB(1,1) -BB(1,0)*BB(0,1);
             break;
         default:
-            Q_ASSERT_X( false, "ConicBase::intersect",
-                       "intersection of conic and straight line: index out of range");
+            assert( false && "intersection of conic and straight line: index out of range");
         }
 
         // intersection points .......................................
-        Q_ASSERT( alpha <= 0 );
-        Q_ASSERT(   den >  0 );
-        Matrix3d DD = BB +std::sqrt(-alpha)/den*MM;
+        assert( alpha <= 0 );
+        assert( denom >  0 );
+        const Matrix3d DD = BB +std::sqrt(-alpha)/denom*MM;
         int r = 0;
         int c = 0;
         DD.array().abs().maxCoeff( &r, &c);
-        Vector3d const p = DD.row(r);
-        Vector3d const q = DD.col(c);
 
-        return {p,q};
+        return {DD.row(r), DD.col(c)};
     }
 
 private:
-    Matrix3d CC;
+    Matrix3d CC;  // symmetric and homogeneous
 };
 
 
@@ -114,38 +110,38 @@ public:
         // check if matrix represents an ellipse
         assert( C().topLeftCorner(2,2).determinant() > 0.0 );  // PCV Table 5.8
     }
-    [[nodiscard]] std::pair<Eigen::VectorXd,Eigen::VectorXd> poly( int N ) const  //!< Get N points on ellipse
-    {
-        Matrix2d const Chh = C().topLeftCorner(2, 2);
-        Vector2d const ch0 = C().topRightCorner(2, 1);
-        Vector2d x0 = -Chh.ldlt().solve(ch0);  // centre point
-        double const c00q = C().coeff(2, 2) - ch0.dot(Chh.ldlt().solve(ch0));
 
+    //! get N points on ellipse
+    [[nodiscard]] std::pair<VectorXd,VectorXd> poly( const int N ) const
+    {
+        const Matrix2d Chh = C().topLeftCorner(2,2);
+        const Vector2d ch0 = C().topRightCorner(2,1);
+        const Vector2d  x0 = -Chh.ldlt().solve(ch0);  // centre point
+        const double  c00q = C().coeff(2,2) -ch0.dot(Chh.ldlt().solve(ch0));
         assert( std::fabs(c00q)>0. );
 
-        Eigen::EigenSolver<Matrix2d> const eig(-Chh / c00q, true);
+        const Eigen::EigenSolver<Matrix2d> eig(-Chh / c00q, true);
+        const Matrix2d RR = eig.eigenvectors().real();
         Vector2d ev = eig.eigenvalues().real();
-        Matrix2d const RR = eig.eigenvectors().real();
-
-        if ( ev(0)<0.0 ) {
-            ev *= -1;
+        if ( ev(0) < 0 ) {
+            ev = -ev;
         }
 
-        const double two_pi = 2*3.14159;
-        Eigen::VectorXd t = Eigen::VectorXd::LinSpaced( N, 0, two_pi);
+        constexpr double two_pi = 2*M_PI;
+        const VectorXd t = VectorXd::LinSpaced( N, 0, two_pi);
 
-        Eigen::MatrixXd  x(2,N);
-        x.row(0) = t.array().sin()/std::sqrt(ev(0));
-        x.row(1) = t.array().cos()/std::sqrt(ev(1));
+        MatrixXd xx(2,N);
+        xx.row(0) = t.array().sin()/std::sqrt(ev(0));
+        xx.row(1) = t.array().cos()/std::sqrt(ev(1));
 
-        x = RR*x;                    // rotation
-        x.row(0).array() += x0(0);   // translation
-        x.row(1).array() += x0(1);
+        xx = RR*xx;           // rotation
+        xx.colwise() += x0;   // translation
 
-        return { x.row(0), x.row(1)};
+        return { xx.row(0), xx.row(1)};  // (x,y)
     }
 
-    [[nodiscard]] Vector3d polar( const Vector3d & x ) const { return C()*x; }   //!< Compute polar l (straight line) for point x, i.e., l=C*x
+    //! polar l (straight line) for point x, i.e., l=C*x
+    [[nodiscard]] Vector3d polar( const Vector3d & x ) const { return C()*x; }
 };
 
 
@@ -153,29 +149,30 @@ public:
 class Hyperbola : public Conic
 {
 public:
-    explicit Hyperbola(const Matrix3d &CC) //!< Value constructor (uncertain straight line)
+    explicit Hyperbola(const Matrix3d &CC)
         : Conic(CC)
     {
-        // check if matrix represents a hyperbola
-        assert( C().topLeftCorner(2,2).determinant() < 0.0); // PCV Table 5.8
+        // check if matrix CC represents a hyperbola
+        assert( C().topLeftCorner(2,2).determinant() < 0.0 ); // PCV Table 5.8
     }
 
-    [[nodiscard]] Vector3d centerline() const  //!< Get straight line
+    //! centerline of hyperbola, i.e., axis of symmetry
+    [[nodiscard]] Vector3d centerline() const
     {
         const Vector3d x0 = center();
-        const double phi_ = angle_rad();
-        const double nx = -std::sin(phi_);
-        const double ny =  std::cos(phi_);
-
-        assert( fabs(x0(2)) > 0 );
+        const double phi = angle_rad();
+        const double nx  = -std::sin(phi);
+        const double ny  =  std::cos(phi);
+        assert( std::fabs(x0(2)) > 0 );
         return { nx, ny, -nx*x0(0)/x0(2) -ny*x0(1)/x0(2) };
     }
 
-    [[nodiscard]] std::pair<double,double> lengthsSemiAxes() const  //!< Get lengths/2 of axes
+    //! lengths of the two semiaxes
+    [[nodiscard]] std::pair<double,double> lengthsSemiAxes() const
     {
-        const auto ev = eigenvalues();
+        const Vector2d ev = eigenvalues();
         const double Delta = C().determinant();
-        const double D = C().topLeftCorner(2, 2).determinant();
+        const double D = C().topLeftCorner(2,2).determinant();
         assert( -Delta/( ev(0)*D) >= 0. );
         assert( +Delta/( ev(1)*D) >= 0. );
         const double a = std::sqrt(-Delta / (ev(0) * D));
@@ -184,39 +181,38 @@ public:
         return {a,b};
     }
 
-    [[nodiscard]] double angle_rad() const    //!< Get angle between straight line and x-axis in radians.
+    //! angle between straight line and x-axis in radians.
+    [[nodiscard]] double angle_rad() const
     {
-        return atan2( 2*C().coeff(0,1), C().coeff(0,0)-C().coeff(1,1)) / 2;
+        return 0.5*atan2( 2*C().coeff(0,1), C().coeff(0,0)-C().coeff(1,1));
     }
 
-    [[nodiscard]] double angle_deg() const     //!< Get angle between straight line and x-axis in degerees.
+    //! angle between straight line and x-axis in degrees.
+    [[nodiscard]] double angle_deg() const
     {
-        constexpr double rho = 180./3.14159;
-        return rho * angle_rad();
+        constexpr double rho = 180./M_PI;
+        return rho*angle_rad();
     }
 
-    [[nodiscard]] Vector3d center() const   //!< Get center point of conic
+    //! center point of hyperbola (point of symmetry)
+    [[nodiscard]] Vector3d center() const
     {
-        Vector3d xh;
-        if ( isCentral() ) {
-            Matrix2d const C33 = C().topLeftCorner(2, 2);
-            Vector2d const ch0 = C().topRightCorner(2, 1);
-            Vector2d x0 = -C33.ldlt().solve(ch0);
-            xh << x0(0), x0(1), 1.0;
+        if ( !isCentral() ) {
+            return {0,0,0};
         }
-        else {
-            qDebug() << "! no central conic";  // TODO(meijoc)
-            xh << 0,0,0;
-        }
-        return xh;
-    }
 
+        const Matrix2d C33 = C().topLeftCorner(2,2);
+        const Vector2d ch0 = C().topRightCorner(2,1);
+        const Vector2d x0 = -C33.ldlt().solve(ch0);
+
+        return {x0(0),x0(1),1};
+    }
 
 private:
     [[nodiscard]] Vector2d eigenvalues() const
     {
-        const double p = -C().topLeftCorner(2, 2).trace();
-        const double q = C().topLeftCorner(2, 2).determinant();
+        const double p = -C().topLeftCorner(2,2).trace();
+        const double q =  C().topLeftCorner(2,2).determinant();
 
         const double radicant = p*p/4 -q;
         assert( radicant >=0 );
@@ -229,9 +225,6 @@ private:
 
 };
 
-
-
 } // namespace Geometry
-
 
 #endif // CONICS_H
