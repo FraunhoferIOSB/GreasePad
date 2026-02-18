@@ -44,8 +44,8 @@ using Eigen::VectorXd;
 class Conic
 {
 public:
-    explicit Conic(Matrix3d other) //!< Value constructor
-        : CC(std::move(other))
+    explicit Conic(const Matrix3d & other) //!< Value constructor
+        : CC(other)
     {
         constexpr double T_sym = 1e-6;
         assert( ( CC -CC.adjoint() ).norm() < T_sym );
@@ -56,7 +56,9 @@ public:
     //! check if conic has a central point
     [[nodiscard]] bool isCentral() const
     {
-        return CC.topLeftCorner(2,2).determinant() !=0.;
+        constexpr double T_zero = 1e-6;
+        const double det = CC.topLeftCorner(2,2).determinant();
+        return std::fabs(det) > T_zero;
     }
 
     //! two intersection points with a straight line
@@ -84,7 +86,7 @@ public:
             assert( false && "intersection of conic and straight line: index out of range");
         }
 
-        // intersection points .......................................
+        // intersection points
         assert( alpha <= 0 );
         assert( denom >  0 );
         const Matrix3d DD = BB +std::sqrt(-alpha)/denom*MM;
@@ -127,7 +129,7 @@ public:
             ev = -ev;
         }
 
-        constexpr double two_pi = 2*M_PI;
+        constexpr double two_pi = 2*3.14159265358979323846;
         const VectorXd t = VectorXd::LinSpaced( N, 0, two_pi);
 
         MatrixXd xx(2,N);
@@ -190,7 +192,8 @@ public:
     //! angle between straight line and x-axis in degrees.
     [[nodiscard]] double angle_deg() const
     {
-        constexpr double rho = 180./M_PI;
+        constexpr double pi = 3.14159265358979323846;
+        constexpr double rho = 180./pi;
         return rho*angle_rad();
     }
 
