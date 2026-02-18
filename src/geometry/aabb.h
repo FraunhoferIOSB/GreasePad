@@ -38,21 +38,20 @@ public:
     explicit Aabb( Vector<T,Dim> min, Vector<T,Dim> max)
         : m_min(min), m_max(max)
     {
-        assert( m_min.size() == m_max.size() );
         assert( ( m_min.array() <= m_max.array() ).all() );
     }
     Aabb() = default;
 
     //! Get i-th minimum value
-    [[nodiscard]] T min(const int i) const {
-        assert( i>=0 && i<m_min.size() );
-        return m_min(i);
+    [[nodiscard]] T min(const Index idx) const {
+        assert( idx>=0 && idx<m_min.size() );
+        return m_min(idx);
     }
 
     //! Get i-th maximum value
-    [[nodiscard]] T max(const int i) const {
-        assert( i>=0 && i<m_max.size() );
-        return m_max(i);
+    [[nodiscard]] T max(const Index idx) const {
+        assert( idx>=0 && idx<m_max.size() );
+        return m_max(idx);
     }
 
     //! Check if the other box overlaps
