@@ -35,12 +35,17 @@ class Aabb
 {
 public:
     //! Value constructor
-    explicit Aabb( Vector<T,Dim> min, Vector<T,Dim> max)
+    explicit Aabb(const Vector<T,Dim> & min, const Vector<T,Dim> & max)
         : m_min(min), m_max(max)
     {
         assert( ( m_min.array() <= m_max.array() ).all() );
     }
-    Aabb() = default;
+
+    Aabb()
+    {
+        m_min.setZero();
+        m_max.setZero();
+    };
 
     //! Get i-th minimum value
     [[nodiscard]] T min(const Index idx) const {
