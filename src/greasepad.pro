@@ -81,7 +81,8 @@ HEADERS += \
     uncertain/uncertain.h \
     uncertain/upoint.h \
     uncertain/usegment.h \
-    uncertain/ustraightline.h
+    uncertain/ustraightline.h \
+    unique.h
 
 FORMS +=
 

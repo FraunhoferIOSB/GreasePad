@@ -50,6 +50,7 @@
 #include "uncertain/upoint.h"
 #include "uncertain/usegment.h"
 #include "uncertain/ustraightline.h"
+#include "unique.h"
 
 #include <QApplication>
 #include <QDebug>
@@ -843,7 +844,7 @@ void impl::snap_endpoints( const Index numNewConstr)
 
     // qDebug() << Q_FUNC_INFO;
 
-    VectorXi newLabels(numNewConstr+1);
+    Eigen::ArrayXi newLabels(numNewConstr+1);
     newLabels << arr_constr.tail(numNewConstr), arr_segm.tail(1);
     newLabels = unique(newLabels);
 
