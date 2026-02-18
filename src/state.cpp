@@ -843,21 +843,18 @@ void impl::snap_endpoints( const Index numNewConstr)
 
     // qDebug() << Q_FUNC_INFO;
 
-    VectorXi LabelsNew = arr_constr.tail(numNewConstr);
-    LabelsNew.conservativeResize( LabelsNew.rows()+1 );
-    LabelsNew.coeffRef(LabelsNew.rows()-1) = arr_segm.tail(1)(0);
-    const VectorXi LabelsNewUnique = unique(LabelsNew);
+    VectorXi newLabels(numNewConstr+1);
+    newLabels << arr_constr.tail(numNewConstr), arr_segm.tail(1);
+    newLabels = unique(newLabels);
 
-    for ( const int cc : LabelsNewUnique ) {
-        qDebug().noquote() << blue << QString("  snap subtask %1/%2")
-                              .arg( cc+1 ).arg( LabelsNewUnique.size() );
+    for ( const int cc : newLabels) {
+        qDebug().noquote() << blue
+            << QString("  snap subtask %1/%2").arg( cc+1 ).arg( newLabels.size() );
 
-        const VectorXidx m = find( arr_segm==cc );
-        for ( const auto s : m) {
+        for ( const auto s : find( arr_segm==cc) ) {
 
             // (1) "is touching" ......................................
             uStraightLineSegment useg( *m_segm.at(s) );
-            // uStraightLineSegment useg =  *m_segm.at(s);
             bool changed = false;
 
             for ( Index n=0; n<x_touches_l.cols(); n++) // but ColMajor
@@ -871,7 +868,7 @@ void impl::snap_endpoints( const Index numNewConstr)
             }
 
             for ( Index n=0; n<y_touches_l.cols(); n++) {
-                if ( y_touches_l.isSet( s, n)  && !x_touches_l.isSet( s, n) ) {
+                if ( y_touches_l.isSet( s, n) && !x_touches_l.isSet( s, n) ) {
                     if (useg.move_y_to(m_segm.at(n)->hl())) {
                         changed = true;
                         break;
@@ -888,7 +885,7 @@ void impl::snap_endpoints( const Index numNewConstr)
             for ( SparseMatrix<int,ColMajor>::InnerIterator it( x_touches_l, s) ; it; ++it) {
                 const Index n = it.row(); // neighbor of segment s
                 if ( ( arr_segm(n) != cc) && ( !y_touches_l.isSet(it.index(),s) ) ) {
-                    auto us = std::make_shared<uStraightLineSegment>(  *m_segm.at(n) );
+                    auto us = std::make_shared<uStraightLineSegment>( *m_segm.at(n) );
                     if (us->move_x_to(m_segm.at(s)->hl())) {
                         m_segm.replace( n, us);
                     }
