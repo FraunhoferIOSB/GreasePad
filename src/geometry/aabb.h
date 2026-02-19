@@ -25,17 +25,16 @@
 
 namespace Geometry {
 
-using Eigen::Index;
 using Eigen::Vector;
 
 
 //! Axis-aligned bounding box
-template <typename T, int Dim>
+template <typename T, int N>
 class Aabb
 {
 public:
     //! Value constructor
-    explicit Aabb(const Vector<T,Dim> & min, const Vector<T,Dim> & max)
+    explicit Aabb( const Vector<T,N> & min, const Vector<T,N> & max)
         : m_min(min), m_max(max)
     {
         assert( ( m_min.array() <= m_max.array() ).all() );
@@ -48,14 +47,14 @@ public:
     };
 
     //! Get i-th minimum value
-    [[nodiscard]] T min(const Index idx) const {
-        assert( idx>=0 && idx<m_min.size() );
+    [[nodiscard]] T min( const int idx) const {
+        assert( idx>=0 && idx<N );
         return m_min(idx);
     }
 
     //! Get i-th maximum value
-    [[nodiscard]] T max(const Index idx) const {
-        assert( idx>=0 && idx<m_max.size() );
+    [[nodiscard]] T max( const int idx) const {
+        assert( idx>=0 && idx<N );
         return m_max(idx);
     }
 
@@ -76,11 +75,11 @@ public:
     }
 
     //! Get dimension of bounding box
-    [[nodiscard]] Index dim() const {return Dim;}
+    [[nodiscard]] int dim() const {return N;}
 
 private:
-    Vector<T,Dim> m_min;
-    Vector<T,Dim> m_max;
+    Vector<T,N> m_min;
+    Vector<T,N> m_max;
 };
 
 } // namespace Geometry
