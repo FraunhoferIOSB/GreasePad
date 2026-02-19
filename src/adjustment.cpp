@@ -68,7 +68,8 @@ AdjustmentFramework::getEntity( const Index s) const
 {
     const Index offset = 3*s;
     // vector must be the null space of the covariance matrix
-    const MatrixXd RR = Rot_ab( l_.segment(offset,3),  l0_.segment(offset,3));
+    const MatrixXd RR = Rot_ab<double,3>( l_.segment(offset,3),
+                                         l0_.segment(offset,3) );
 
     return {  l0_.segment(offset,3),
               RR*Cov_ll_.block(offset,offset,3,3)*RR.adjoint() };
@@ -220,7 +221,7 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
 
 
 void AdjustmentFramework::reduce (
-    Eigen::VectorXd & lr,
+    VectorXd & lr,
     SparseMatrix<double,ColMajor> & rCov_ll) const
 {
     // reduced coordinates: vector and covariance matrix .............
@@ -236,7 +237,8 @@ void AdjustmentFramework::reduce (
         lr.segment(offset2,2) = NN.adjoint() * l_.segment(offset3,3);
 
         // (ii) covariance matrix, reduced coordinates
-        const Eigen::Matrix3d RR = Rot_ab(l_.segment(offset3, 3), l0_.segment(offset3, 3) );
+        const Eigen::Matrix3d RR = Rot_ab<double,3>( l_.segment(offset3, 3),  l0_.segment(offset3, 3) );
+
         const Eigen::Matrix<double, 2, 3> JJ = NN.adjoint() * RR;
         const Eigen::Matrix2d Cov_rr = JJ*Cov_ll_.block( offset3,offset3,3,3)*JJ.adjoint();
 

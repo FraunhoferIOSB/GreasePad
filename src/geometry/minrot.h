@@ -24,21 +24,22 @@
 
 #include <Eigen/Core>
 
+#include <QDebug>
 
 namespace Geometry {
 
-using Eigen::MatrixXd;
-using Eigen::VectorXd;
+using Eigen::Matrix;
+using Eigen::Vector;
 
-
-[[maybe_unused]] static MatrixXd Rot_ab( const VectorXd &a, const VectorXd &b)
+template <typename T, int N>
+[[nodiscard]] static inline Matrix<T,N,N>
+Rot_ab( const Vector<T,N> &a, const Vector<T,N> &b)
 {
-    assert( a.size()==b.size() );
-#ifdef QT_DEBUG
-    Q_ASSERT( std::fabs( a.norm()-1.) < 1e-5 );
-    Q_ASSERT( std::fabs( b.norm()-1.) < 1e-5 );
-#endif
-    return MatrixXd::Identity( a.size(),a.size())
+    constexpr double T_zero = 1e-5;
+    assert( std::fabs( a.norm()-1.) < T_zero );
+    assert( std::fabs( b.norm()-1.) < T_zero );
+
+    return Matrix<T,N,N>::Identity(N,N)
            +2*b*a.adjoint()
            -(a+b)*(a+b).adjoint()/(1.+a.dot(b));
 }
