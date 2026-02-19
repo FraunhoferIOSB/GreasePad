@@ -22,7 +22,6 @@
 #include "geometry/aabb.h"
 
 #include <Eigen/Core>
-#include <Eigen/Dense> // Eigen
 
 #include <cmath>
 #include <memory> // C++

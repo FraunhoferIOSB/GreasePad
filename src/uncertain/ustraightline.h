@@ -22,7 +22,6 @@
 #include "Eigen/Core"
 
 #include "uncertain.h"
-#include "upoint.h"
 
 #include <cmath>
 
@@ -30,6 +29,8 @@
 namespace Uncertain {
 
 using Eigen::VectorXd;
+
+class uPoint;
 
 
 //! Uncertain straight line
