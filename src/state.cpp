@@ -229,7 +229,7 @@ private:
 
     // augment
     Index findNewConstraints();
-    void find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap);
+    void findAdjacenciesRecentSegment(const Quantiles::Snapping &snap);
     void merge_segment ( Index a );
     bool identities_removed();
     void snap_endpoints( Index numNewConstr );
@@ -519,14 +519,11 @@ void impl::serialize( QDataStream &out ) const
     qDebug().noquote() << "Export finished.";
 }
 
-void impl::find_adjacencies_of_latest_segment(const Quantiles::Snapping &snap)
+void impl::findAdjacenciesRecentSegment(const Quantiles::Snapping &snap)
 {
     // qDebug() << Q_FUNC_INFO;
 
-    const Index N = m_segm.length();
-
-
-    for ( int i=0; i<N-1; i++)
+    for ( int i=0; i<m_segm.length()-1; i++)
     {
          bool are_adjacent = false;
 
@@ -602,9 +599,9 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
     // qDebug() <<  Q_FUNC_INFO ;
 
     // (0) find adjacencies / connectivity
-    find_adjacencies_of_latest_segment( snap);
+    findAdjacenciesRecentSegment( snap);
     if ( identities_removed() ) {
-        find_adjacencies_of_latest_segment( snap); // ! 2nd time
+        findAdjacenciesRecentSegment( snap); // ! 2nd time
     }
 
     // (1) find constraints .....................................
