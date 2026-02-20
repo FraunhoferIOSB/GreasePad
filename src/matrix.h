@@ -41,31 +41,30 @@ public:
     template<typename OtherDerived>
     IncidenceMatrix& operator=( const SparseMatrixBase <OtherDerived>& other)
     {
-        this->SparseMatrix<int, ColMajor,int>::operator=(other);
+        this->SparseMatrix<int,ColMajor,int>::operator=(other);
         return *this;
     }
 
     //! indexing with vectors
     template <typename Indices>
-    SparseMatrix<int,ColMajor,int>
-    operator() (const Indices & rowIndices, const Indices & colIndices) const
+    IncidenceMatrix operator() (const Indices & rowIndices, const Indices & colIndices) const
     {
         const Index R = rowIndices.size();
         const Index C = colIndices.size();
 
-        SparseMatrix<int,ColMajor,int> Left(R, this->rows());
+        SparseMatrix<int,ColMajor,int> Left(R,this->rows());
         Left.reserve(R);
         for (Index r=0; r<R; r++) {
             Left.insert(r,rowIndices(r)) = 1;
         }
 
-        SparseMatrix<int,ColMajor,int> Right(this->cols(), C);
-        Right.reserve(colIndices.size());
+        SparseMatrix<int,ColMajor,int> Right(this->cols(),C);
+        Right.reserve(C);
         for (Index c=0; c<C; c++) {
             Right.insert(colIndices(c),c) = 1;
         }
 
-        return Left*(*this)*Right;
+        return {Left*(*this)*Right};
     }
 
     [[nodiscard]] bool isSet( Index r, Index c) const;     //!< Check if r and c are related
