@@ -45,6 +45,29 @@ public:
         return *this;
     }
 
+    //! indexing with vectors
+    template <typename Indices>
+    SparseMatrix<int,ColMajor,int>
+    operator() (const Indices & rowIndices, const Indices & colIndices) const
+    {
+        const Index R = rowIndices.size();
+        const Index C = colIndices.size();
+
+        SparseMatrix<int,ColMajor,int> Left(R, this->rows());
+        Left.reserve(R);
+        for (Index r=0; r<R; r++) {
+            Left.insert(r,rowIndices(r)) = 1;
+        }
+
+        SparseMatrix<int,ColMajor,int> Right(this->cols(), C);
+        Right.reserve(colIndices.size());
+        for (Index c=0; c<C; c++) {
+            Right.insert(colIndices(c),c) = 1;
+        }
+
+        return Left*(*this)*Right;
+    }
+
     [[nodiscard]] bool isSet( Index r, Index c) const;     //!< Check if r and c are related
     [[nodiscard]] bool isSet( Index r, last_t last) const;     //!< Check if r and c are related
     [[nodiscard]] bool isSet( last_t last, Index c) const;     //!< Check if r and c are related
