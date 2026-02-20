@@ -25,14 +25,8 @@
 #include <Eigen/SparseCore>
 #include <Eigen/SparseQR>
 
-#include <cfloat>
+#include <cassert>
 #include <cmath>
-
-#include <QDebug>
-#include <QString>
-#include <QStringLiteral>
-#include <qassert.h>
-#include <qtdeprecationdefinitions.h>
 
 
 namespace Matfun {
@@ -42,42 +36,34 @@ using Eigen::VectorXd;
 using Eigen::SparseMatrix;
 using Eigen::SparseVector;
 using Eigen::Matrix3d;
-using Eigen::Vector3d;
 using Eigen::Index;
-using Eigen::Matrix;
 using Eigen::Vector;
-using Eigen::VectorXi;
 using Eigen::Dynamic;
-using Eigen::Array;
+using Eigen::placeholders::last;
 
 
 //! Nullspace of row vector
 [[nodiscard,maybe_unused]] static MatrixXd null( const VectorXd & xs )
 {
     // cf. PCV, eq. (A.120)
-
-#ifdef QT_DEBUG
-    const QString what = QStringLiteral("norm(x) = %1").arg( QString::number(xs.norm()) );
-    Q_ASSERT_X(fabs(xs.norm() - 1.) <= FLT_EPSILON, "null(x)", what.toStdString().data());
-#endif
+    constexpr double T_zero = 1e-6;
+    assert( std::fabs( xs.norm()-1. ) < T_zero && "vector norm not 1");
 
     const Index N = xs.size();
-
     VectorXd x0 = xs.head(N-1);
-    double   xN = xs(N-1);
+    double   xN = xs(last);
     if ( xN < 0.0 ) {
         x0 = -x0;
         xN = -xN;
     }
 
-    MatrixXd JJ( N, N-1);
-    JJ.topRows(N-1)  = MatrixXd::Identity(N-1,N-1) -x0*x0.adjoint()/(1.+xN);
-    JJ.bottomRows(1) = -x0.adjoint();
+    const MatrixXd JJ = ( MatrixXd(N,N-1)
+         << MatrixXd::Identity(N-1,N-1) -x0*x0.adjoint()/(1.+xN),
+            -x0.adjoint() ).finished();
 
-    VectorXd const check = JJ.adjoint() * xs;
-#ifdef QT_DEBUG
-    Q_ASSERT_X( check.norm() <= FLT_EPSILON, Q_FUNC_INFO, "not a zero vector");
-#endif
+    const VectorXd check = JJ.adjoint()*xs;
+    assert( check.norm() < T_zero && "not a zero vector");
+
     return JJ;
 }
 
@@ -97,20 +83,18 @@ using Eigen::Array;
 
 
 //! 3x3 cofactor matrix, i.e., transposed adjugate
-[[maybe_unused]] static Matrix3d cof3(const Matrix3d &MM)
+[[nodiscard,maybe_unused]] static Matrix3d cof3(const Matrix3d &MM)
 {
-    Matrix3d Cof;
-    Cof(0,0) = +MM(1,1)*MM(2,2) -MM(2,1)*MM(1,2);
-    Cof(0,1) = -MM(1,0)*MM(2,2) +MM(2,0)*MM(1,2);
-    Cof(0,2) = +MM(1,0)*MM(2,1) -MM(2,0)*MM(1,1);
-
-    Cof(1,0) = -MM(0,1)*MM(2,2) +MM(2,1)*MM(0,2);
-    Cof(1,1) = +MM(0,0)*MM(2,2) -MM(2,0)*MM(0,2);
-    Cof(1,2) = -MM(0,0)*MM(2,1) +MM(2,0)*MM(0,1);
-
-    Cof(2,0) = +MM(0,1)*MM(1,2) -MM(1,1)*MM(0,2);
-    Cof(2,1) = -MM(0,0)*MM(1,2) +MM(1,0)*MM(0,2);
-    Cof(2,2) = +MM(0,0)*MM(1,1) -MM(1,0)*MM(0,1);
+    const Matrix3d Cof{
+        {  +MM(1,1)*MM(2,2) -MM(2,1)*MM(1,2),
+           -MM(1,0)*MM(2,2) +MM(2,0)*MM(1,2),
+           +MM(1,0)*MM(2,1) -MM(2,0)*MM(1,1) },
+        {  -MM(0,1)*MM(2,2) +MM(2,1)*MM(0,2),
+           +MM(0,0)*MM(2,2) -MM(2,0)*MM(0,2),
+           -MM(0,0)*MM(2,1) +MM(2,0)*MM(0,1) },
+        {  +MM(0,1)*MM(1,2) -MM(1,1)*MM(0,2),
+           -MM(0,0)*MM(1,2) +MM(1,0)*MM(0,2),
+           +MM(0,0)*MM(1,1) -MM(1,0)*MM(0,1) }};
 
     return Cof;
 }
@@ -145,7 +129,7 @@ constexpr int sign(T val) noexcept {
 //! Matlab's find
 [[nodiscard,maybe_unused]] static Vector<Index,Dynamic> find( const Vector<bool,Dynamic> & cond)
 {
-    Eigen::Vector<Index,Dynamic> idx( cond.count() );
+    Vector<Index,Dynamic> idx( cond.count() );
     for (int i=0, k=0; i< cond.size(); i++) {
         if ( cond(i) ) {
             idx(k++) = i;
