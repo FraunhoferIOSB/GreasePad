@@ -38,7 +38,7 @@ Rot_ab( const Vector<T,N> &a, const Vector<T,N> &b)
     assert( std::fabs( a.norm()-1.) < T_zero );
     assert( std::fabs( b.norm()-1.) < T_zero );
 
-    const double denom = T(1)+a.dot(b);
+    const T denom = T(1)+a.dot(b);
     if ( std::fabs(denom) < T_zero ) {
         // case a==-b
         return Matrix<T,N,N>::Identity(N,N) +T(2)*b*a.adjoint();
