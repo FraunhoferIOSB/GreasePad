@@ -23,6 +23,7 @@
 #include "matfun.h"
 #include "matrix.h"
 
+#include <QDebug>
 #include <QString>
 #include <QStringLiteral>
 

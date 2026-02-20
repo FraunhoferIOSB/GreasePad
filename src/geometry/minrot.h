@@ -24,7 +24,6 @@
 
 #include <Eigen/Core>
 
-#include <QDebug>
 
 namespace Geometry {
 
@@ -39,9 +38,15 @@ Rot_ab( const Vector<T,N> &a, const Vector<T,N> &b)
     assert( std::fabs( a.norm()-1.) < T_zero );
     assert( std::fabs( b.norm()-1.) < T_zero );
 
+    const double denom = T(1)+a.dot(b);
+    if ( std::fabs(denom) < T_zero ) {
+        // case a==-b
+        return Matrix<T,N,N>::Identity(N,N) +T(2)*b*a.adjoint();
+    }
+
     return Matrix<T,N,N>::Identity(N,N)
-           +2*b*a.adjoint()
-           -(a+b)*(a+b).adjoint()/(1.+a.dot(b));
+           +T(2)*b*a.adjoint()
+           -(a+b)*(a+b).adjoint()/denom;
 }
 
 } // namespace Geometry
