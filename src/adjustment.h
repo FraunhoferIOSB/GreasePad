@@ -58,9 +58,8 @@ public:
     AdjustmentFramework & operator= ( AdjustmentFramework &&) = delete;
 
     //! Enforce the constraints of a subtask (adjustment)
-    bool enforce_constraints(const QVector<std::shared_ptr<Constraint::ConstraintBase> > &constr,
-                             const Graph::IncidenceMatrix &Bi,
-                             const VectorXidx &maps,
+    bool enforceConstraints(const QVector<std::shared_ptr<Constraint::ConstraintBase> > &constr,
+                             const Graph::IncidenceMatrix &relsub,
                              const VectorXidx &mapc);
 
     //! Get s-th entity, i.e., segment, represented by vector of length len
@@ -76,18 +75,16 @@ private:
     void update( const Eigen::VectorXd & x );  // update of adjusted observatons in l0_
 
     void Jacobian(const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
-                  const Graph::IncidenceMatrix & Bi,
+                  const Graph::IncidenceMatrix & relsub,
                   Eigen::SparseMatrix<double, Eigen::ColMajor> & BBr,
                   Eigen::VectorXd & g0,
-                  const VectorXidx & maps,
                   const VectorXidx & mapc) const;
     //! compute reduced coordinates
     void reduce ( Eigen::VectorXd &, Eigen::SparseMatrix<double,Eigen::ColMajor> &) const;
 
-    void check_constraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
-                            const Graph::IncidenceMatrix & bi,
-                            const VectorXidx & maps,
-                            const VectorXidx & mapc ) const;
+    void checkConstraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
+                           const Graph::IncidenceMatrix & relsub,
+                           const VectorXidx & mapc ) const;
 
     bool verbose = true;
 

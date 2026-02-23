@@ -55,7 +55,6 @@ using Geometry::Rot_ab;
 
 using Matfun::null;
 using Matfun::is_rank_deficient;
-using Matfun::indexOf;
 using Matfun::spfind;
 
 using TextColor::black;
@@ -100,13 +99,15 @@ void AdjustmentFramework::update( const VectorXd &x)
     }
 }
 
-bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
-                                               const IncidenceMatrix & Bi,
-                                               const VectorXidx & maps,
-                                               const VectorXidx & mapc )
+bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
+                                              const IncidenceMatrix & relsub,
+                                              const VectorXidx & mapc )
 {
+    //assert( relsub.rows()==maps.size() );
+    assert( relsub.cols()==mapc.size() );
+
     const Index numOfConstraints = mapc.size();
-    const Index numOfSegments    = maps.size();
+    const Index numOfSegments    = relsub.rows();
 
     if ( numOfConstraints < 1 ) {
         return true;
@@ -154,7 +155,8 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
         if ( verbose ) {
             qDebug().noquote() << QStringLiteral("  iteration #%1...").arg(it+1);
         }
-        Jacobian( constr, Bi, BBr, g0, maps, mapc);
+
+        Jacobian( constr, relsub, BBr, g0, mapc);
         reduce ( lr, rCov_ll);
 
         // check rank and condition .....................................
@@ -213,8 +215,8 @@ bool AdjustmentFramework::enforce_constraints( const QVector<std::shared_ptr<Con
                               .arg(it).arg(suffix).arg( reciprocalConditionNumber ) << black;
     }
 
-    // check constraints .........................................
-    check_constraints( constr, Bi, maps, mapc);
+    // check constraints
+    checkConstraints( constr, relsub, mapc);
 
     return true;
 }
@@ -255,31 +257,28 @@ void AdjustmentFramework::reduce (
 
 void AdjustmentFramework::Jacobian(
         const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
-        const IncidenceMatrix &  Bi,
+        const IncidenceMatrix & relsub,
         SparseMatrix<double,ColMajor> & BBr,
         VectorXd & g0,
-        const VectorXidx & maps,
         const VectorXidx & mapc ) const
 {
+    // assert( relsub.rows()==maps.size() );
+    assert( relsub.cols()==mapc.size() );
+
     int R = 0; // counter for number of equations
 
-    for ( const auto & c : mapc)
+    for ( Index c = 0; c < mapc.size(); c++) // const auto & c : mapc)
     {
         //qDebug().noquote() << QStringLiteral("constraint #%1 (status = %2)").arg( c+1).arg(
            //                       constr_.at(mapc_(c))->status());
 
         // !! not required ==> obsolete or(!) unevaluated
-        const auto & con = constr.at( c );
+        const auto & con = constr.at( mapc(c) );
         if ( con->status() != ConstraintBase::REQUIRED )  { // observe the "!="
             continue;
         }
 
-        // (first) location of idx(i) in vector 'maps',
-        //     Matlab: [~,idx] = ismember(idx,maps)
-        auto idx = spfind<int>( Bi.col(c) );
-        for ( Index i=0; i<idx.size(); i++ ) {
-            idx(i) = indexOf<Index>( maps, idx(i) );
-        }
+        VectorXidx idx = spfind( relsub.col(c).eval() );
 
         auto JJ = con->Jacobian( idx, l0_, l_ );
         int const dof = con->dof();
@@ -297,19 +296,20 @@ void AdjustmentFramework::Jacobian(
 }
 
 //! check constraints (required and non-required)
-void AdjustmentFramework::check_constraints(
+void AdjustmentFramework::checkConstraints(
     const QVector<std::shared_ptr<ConstraintBase> > & constr,
-    const IncidenceMatrix & bi,
-    const VectorXidx & maps,
+    const IncidenceMatrix & relsub,
     const VectorXidx & mapc) const
 {
-    // double d = NAN;       // distance to be checked, d = 0?
+    // assert( relsub.rows()==maps.size() );
+    assert( relsub.cols()==mapc.size() );
+
     const Index numOfConstraints = mapc.size();
 
 
     // check intrinsic constraints ..............................
 #ifdef QT_DEBUG
-    const Index numOfSegments = maps.size();
+    const Index numOfSegments = relsub.rows();
     for (Index s=0; s<numOfSegments; s++) {
         if (verbose) {
             const Eigen::IOFormat fmt(4,0, ", ", "", "[", "]");
@@ -336,10 +336,7 @@ void AdjustmentFramework::check_constraints(
             continue;
         }
 
-        VectorXidx idx = spfind<int>( bi.col(mapc(c)) );
-        for ( Index i=0; i<idx.size(); i++ ) {
-            idx(i) = indexOf<Index>( maps, idx(i) );
-        }
+        const VectorXidx idx = spfind( relsub.col(c).eval() );
 
         const double d =  con->contradict( idx, l0_ ).norm();
         con->setEnforced(  fabs(d) < threshold_numericalCheck()  );
@@ -352,11 +349,6 @@ void AdjustmentFramework::check_constraints(
             deb << QStringLiteral("constraint #%1:  ").arg(c+1,3);
             deb << (con->required() ? green : blue) << msg1 << black;
             deb << (con->enforced() ? black : red)  << msg2 << black;
-
-            const VectorXidx idxx = spfind<int>( bi.col(mapc(c)) );
-            for ( auto i : idxx ) {
-                deb << indexOf<Index>(maps, i) +1;
-            }
         }
 #endif
     }

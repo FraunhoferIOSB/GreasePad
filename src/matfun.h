@@ -25,6 +25,7 @@
 #include <Eigen/SparseCore>
 #include <Eigen/SparseQR>
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 
@@ -78,7 +79,7 @@ using Eigen::placeholders::last;
     qr.compute(AA);
     qr.setPivotThreshold( threshold );
 
-    return ( qr.rank() < AA.rows() );
+    return ( qr.rank() < std::min( AA.rows(), AA.cols()) );
 }
 
 
@@ -99,24 +100,25 @@ using Eigen::placeholders::last;
     return Cof;
 }
 
-//! Matlab's find(x,1,'first')
-template <typename T>
-[[nodiscard]] static Index indexOf(const Eigen::Vector<T,Eigen::Dynamic> &v, const T x)
-{
-    for ( Index i=0; i<v.size(); i++) {
-        if ( v(i)==x ) {
-            return i;
-        }
-    }
-    return -1;
 
-    /* Eigen 3.4.0
-    auto it = std::find( v.begin(), v.end(), i);
-    if ( it==v.end() ) {
-        return -1;
-    }
-    return std::distance( v.begin(), it); */
-}
+// //! Matlab's find(x,1,'first')
+// template <typename T>
+// [[nodiscard]] static Index indexOf(const Eigen::Vector<T,Eigen::Dynamic> &v, const T x)
+// {
+//     for ( Index i=0; i<v.size(); i++) {
+//         if ( v(i)==x ) {
+//             return i;
+//         }
+//     }
+//     return -1;
+//
+//     /* Eigen 3.4.0
+//     auto it = std::find( v.begin(), v.end(), i);
+//     if ( it==v.end() ) {
+//         return -1;
+//     }
+//     return std::distance( v.begin(), it); */
+// }
 
 
 //! signum function with sign(0):=+1
@@ -130,7 +132,7 @@ constexpr int sign(T val) noexcept {
 [[nodiscard,maybe_unused]] static Vector<Index,Dynamic> find( const Vector<bool,Dynamic> & cond)
 {
     Vector<Index,Dynamic> idx( cond.count() );
-    for (int i=0, k=0; i< cond.size(); i++) {
+    for (Index i=0, k=0; i< cond.size(); i++) {
         if ( cond(i) ) {
             idx(k++) = i;
         }
@@ -144,7 +146,7 @@ template <typename T>
 {
     Vector<Index,Dynamic> idx( v.nonZeros() );
 
-    int i=0;
+    Index i=0;
     for ( typename SparseVector<T>::InnerIterator it(v); it; ++it) {
         idx(i++) = it.index();
     }

@@ -759,6 +759,8 @@ void impl::solve_subtask_greedy( const int cc )
     const VectorXidx mapc_ = find( arr_constr==cc );
     assert( mapc_.size()>0 );
 
+    const IncidenceMatrix relsub = Rel(maps_,mapc_);
+
     AdjustmentFramework a{ a_Maker( maps_)};
 
     //qDebug().noquote().nospace() << red << "greedy search..." << black;
@@ -775,8 +777,7 @@ void impl::solve_subtask_greedy( const int cc )
             m_constr.at( mapc_(c) )->setStatus( ConstraintBase::REQUIRED );
 
             // enforce constraints (adjustment)
-            last_constraint_required =  a.enforce_constraints( m_constr, Rel,
-                                                               maps_, mapc_ );
+            last_constraint_required =  a.enforceConstraints( m_constr, relsub, mapc_ );
 
             if ( !last_constraint_required ) {
                 m_constr.at( mapc_(c) )->setStatus( ConstraintBase::OBSOLETE );
@@ -792,8 +793,7 @@ void impl::solve_subtask_greedy( const int cc )
                               .arg( C==1 ? "constraint" : "consistent constraints" ) << black;
         // number of equations (not constraints!):
         // const int E = number_of_required_equations( mapc_ );  TODO
-        last_constraint_required = a.enforce_constraints( m_constr, Rel,
-                                                          maps_, mapc_);
+        last_constraint_required = a.enforceConstraints( m_constr, relsub, mapc_);
     }
     // Q_ASSERT_X( last_constraint_required, "greedy search", "final adjustment with inconsistent set");
     if ( !last_constraint_required ) {
