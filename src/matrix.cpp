@@ -18,29 +18,22 @@
 
 #include "matrix.h"
 
-#include <QDataStream>
-#include <QtCompilerDetection>
-#include <qassert.h>
-
 #include <Eigen/Core>
 #include <Eigen/SparseCore>
 
+#include <cassert>
 #include <vector>
 
 
-using Eigen::Index;
-using VectorXidx = Eigen::Vector<Index,Eigen::Dynamic>;
-
-
 namespace Graph {
+
+using Eigen::Index;
 
 
 //! check if coeff(r,c)==1
 bool IncidenceMatrix::isSet( const Index r, const Index c) const
 {
-    Q_ASSERT_X( r>=0 && r<rows(), Q_FUNC_INFO, "row index out of range" );
-    Q_ASSERT_X( c>=0 && c<cols(), Q_FUNC_INFO, "column index out of range" );
-    Q_ASSERT( coeff(r,c)<2 );
+    assert( coeff(r,c)<2 );
     return coeff(r,c)==1;
 }
 
@@ -57,8 +50,7 @@ bool IncidenceMatrix::isSet( const last_t /*unused*/, const Index c) const
 }
 
 
-
-//! Biadjacency matrix A = [O, B;  B',O]
+//! Biadjacency matrix B = [O, A;  A',O]
 SparseMatrix<int> IncidenceMatrix::biadjacency() const
 {
     const Index C = cols();
@@ -84,62 +76,67 @@ SparseMatrix<int> IncidenceMatrix::biadjacency() const
 
 
 //! remove column c
-void IncidenceMatrix::remove_column( const Index c) {
-
-    // qDebug() << Q_FUNC_INFO;
-
-    Q_ASSERT( c>=0 &&  c<cols() );
+void IncidenceMatrix::remove_column( const Index c)
+{
+    assert( c>=0 && c<cols() );
 
     const Index C = cols()-1;
 
-    SparseMatrix<int> TT(C+1,C);
+    SparseMatrix<int> RR(C+1,C);
     for (Index i=0; i<c; i++) {
-        TT.insert(i,i) = 1;
+        RR.insert(i,i) = 1;
     }
     for (Index i=c; i<C; i++) {
-        TT.insert(i+1,i) = 1;
+        RR.insert(i+1,i) = 1;
     }
-    *this = (*this)*TT;
+    *this = (*this)*RR;
 }
 
 
 //! remove row r
 void IncidenceMatrix::remove_row( const Index r)
 {
-    // qDebug() << QString("remove row #%1").arg(r);
-
-    Q_ASSERT( r>=0 && r<rows() );
+    assert( r>=0 && r<rows() );
 
     const Index R = rows()-1;
 
-    SparseMatrix<int> SS(R,R+1);
+    SparseMatrix<int> LL(R,R+1);
     for (Index i=0; i<r; i++) {
-        SS.insert(i,i) = 1;  // i.e., true
+        LL.insert(i,i) = 1;
     }
     for (Index i=r; i<R; i++) {
-        SS.insert(i,i+1) = 1;
+        LL.insert(i,i+1) = 1;
     }
 
-    *this = SS*(*this);
+    *this = LL*(*this);
 }
 
 
-//! remove i-th column and i-th row
-void IncidenceMatrix::reduce( const Index i)
+//! remove r-th column and c-th row
+void IncidenceMatrix::reduce( const Index r, const Index c)
 {
-    Q_ASSERT( i>=0 && i<rows() && i<cols() );
-    // qDebug() << QString("reduce %1").arg(i);
+    assert( r>=0 && r<rows() );
+    assert( c>=0 && c<cols() );
 
-    // selection matrix S
-    SparseMatrix<int> SS( rows()-1,rows());
-    for ( Index j=0; j<i; j++) {
-        SS.insert(j,j) = 1;
+    // selection matrix LL (left, rows)
+    SparseMatrix<int> LL( rows()-1,rows());
+    for ( Index i=0; i<r; i++) {
+        LL.insert(i,i) = 1;
     }
-    for ( Index j=i; j<SS.rows(); j++) {
-        SS.insert(j,j+1) = 1;
+    for ( Index i=r; i<LL.rows(); i++) {
+        LL.insert(i,i+1) = 1;
     }
 
-    *this = SS*(*this)*SS.transpose();
+    // selection matrix RR (right, cols)
+    SparseMatrix<int> RR( cols(),cols()-1);
+    for ( Index i=0; i<c; i++) {
+        RR.insert(i,i) = 1;
+    }
+    for ( Index i=c; i<RR.cols(); i++) {
+        RR.insert(i+1,i) = 1;
+    }
+
+    *this = LL*(*this)*RR;
 }
 
 } // namespace Graph

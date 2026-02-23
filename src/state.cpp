@@ -581,12 +581,12 @@ void impl::remove_segment(const Index i)
     // qDebug() << Q_FUNC_INFO;
 
     m_segm.removeAt(i);
-    Adj.reduce(i);     // A(i,:)= []; A(:,i)=[]
-    PP.reduce(i);
+    Adj.reduce(i,i);     // A(i,:)= []; A(:,i)=[]
+    PP.reduce(i,i);
     Rel.remove_row(i);   // B(i,:) = [];
 
-    x_touches_l.reduce(i);
-    y_touches_l.reduce(i);
+    x_touches_l.reduce(i,i);
+    y_touches_l.reduce(i,i);
 
     m_qStroke.removeAt( i );
     m_qUnconstrained.removeAt( i );

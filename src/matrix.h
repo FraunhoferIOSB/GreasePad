@@ -67,23 +67,23 @@ public:
         return {Left*(*this)*Right};
     }
 
-    [[nodiscard]] bool isSet( Index r, Index c) const;     //!< Check if r and c are related
-    [[nodiscard]] bool isSet( Index r, last_t last) const;     //!< Check if r and c are related
-    [[nodiscard]] bool isSet( last_t last, Index c) const;     //!< Check if r and c are related
+    [[nodiscard]] bool isSet( Index r, Index c) const;       //!< A(r,c)==1 ?
+    [[nodiscard]] bool isSet( Index r, last_t last) const;   //!< A(r,end)==1 ?
+    [[nodiscard]] bool isSet( last_t last, Index c) const;   //!< A(end,c)==1 ?
 
-    [[nodiscard]] SparseMatrix<int> biadjacency() const;   //!< Create biadjacency matrix [O, A; A', O]
+    [[nodiscard]] SparseMatrix<int> biadjacency() const;   //!< Create biadjacency matrix B = [O, A; A', O]
 
     void set( const Index r, const Index c) { coeffRef(r,c) = 1; }  //!< Set relation (row r, column c)
-    void set( const Index r, const last_t /*unused*/) { coeffRef(r,cols()-1) = 1; }  //!< Set relation (row r, column c)
-    void set( const last_t /*unused*/, const Index c) { coeffRef(rows()-1,c) = 1; }  //!< Set relation (row r, column c)
+    void set( const Index r, const last_t /*unused*/) { coeffRef(r,cols()-1) = 1; }  //!< Set relation (row r, last column)
+    void set( const last_t /*unused*/, const Index c) { coeffRef(rows()-1,c) = 1; }  //!< Set relation (last row, column c)
 
     void unset( const Index r, const Index c)  { coeffRef(r,c) = 0; }  //!< Delete relation (row r, column c)
-    void unset( const Index r, const last_t /*unused*/)  { coeffRef(r,cols()-1) = 0; }  //!< Delete relation (row r, column c)
-    void unset( const last_t /*unused*/, const Index c)  { coeffRef(rows()-1,c) = 0; }  //!< Delete relation (row r, column c)
+    void unset( const Index r, const last_t /*unused*/)  { coeffRef(r,cols()-1) = 0; }  //!< Delete relation (row r, last column)
+    void unset( const last_t /*unused*/, const Index c)  { coeffRef(rows()-1,c) = 0; }  //!< Delete relation (last row, column c)
 
     void remove_row(    Index r );  //!< Remove r-th row
     void remove_column( Index c );  //!< Remove c-th column
-    void reduce( Index i);          //!< Remove i-th column and i-th row
+    void reduce(Index r, Index c);  //!< Remove r-th column and c-th row
 
     //! Augment matrix by one row and one column
     void augment() { conservativeResize( rows()+1, cols()+1); }
