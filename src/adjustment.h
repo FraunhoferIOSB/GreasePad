@@ -19,19 +19,18 @@
 #ifndef ADJUSTMENT_H
 #define ADJUSTMENT_H
 
-#include "constraints.h"
-#include "matrix.h"
 
 #include <Eigen/Core>
-#include <Eigen/Dense>
 #include <Eigen/SparseCore>
 
-#include <memory> // C++
+#include <memory>
 #include <utility>
 
-#include <QList>         // Qt
-
 #include "qcontainerfwd.h"
+
+
+namespace Constraint {class ConstraintBase;} // namespace Constraints
+namespace Graph {class IncidenceMatrix;} // namespace Graph
 
 
 //! Adjustment framework: observations, Jacobians, optimization...
