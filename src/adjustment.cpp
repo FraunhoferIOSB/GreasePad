@@ -48,7 +48,9 @@ using Constraint::ConstraintBase;
 using Eigen::ColMajor;
 using Eigen::Index;
 using Eigen::VectorXd;
+using Eigen::Vector3d;
 using Eigen::MatrixXd;
+using Eigen::Matrix3d;
 using Eigen::SparseMatrix;
 
 using Geometry::Rot_ab;
@@ -63,23 +65,21 @@ using TextColor::green;
 using TextColor::red;
 
 
-std::pair<VectorXd,MatrixXd >
+std::pair<Vector3d,Matrix3d >
 AdjustmentFramework::getEntity( const Index s) const
 {
     const Index offset = 3*s;
-    // vector must be the null space of the covariance matrix
-    const MatrixXd RR = Rot_ab<double,3>( l_.segment(offset,3),
-                                         l0_.segment(offset,3) );
-
-    return {  l0_.segment(offset,3),
-              RR*Cov_ll_.block(offset,offset,3,3)*RR.adjoint() };
+    const Matrix3d RR = Rot_ab<double,3>( l_.segment(offset,3),
+                                          l0_.segment(offset,3) );
+    return { l0_.segment(offset,3),
+             RR*Cov_ll_.block(offset,offset,3,3)*RR.adjoint() };
 }
 
 
 //! update of parameters (observations) via retraction
 void AdjustmentFramework::update( const VectorXd &x)
 {
-    constexpr double kNormEps = 1e-8;
+    constexpr double T_zero = 1e-8;
 
     for (Index s=0; s<x.size()/2; s++) {
         const Index idx3 = 3*s;
@@ -90,16 +90,16 @@ void AdjustmentFramework::update( const VectorXd &x)
         // m.segment(idx3,3).normalize();
 
         // (2) via retraction ......................................................
-        const Eigen::Vector3d v = null( l0_.segment(idx3, 3) ) * x.segment(2 * s, 2);
+        const Vector3d v = null( l0_.segment(idx3, 3) ) * x.segment(2 * s, 2);
         const double nv = v.norm();
-        if ( nv > kNormEps ) {
-            const Eigen::Vector3d p = l0_.segment(idx3, 3);
+        if ( nv > T_zero ) {
+            const Vector3d p = l0_.segment(idx3, 3);
             l0_.segment( idx3,3) = cos( nv)*p +sin(nv)*v/nv;
         }
     }
 }
 
-bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
+bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<ConstraintBase> > & constr,
                                               const IncidenceMatrix & relsub,
                                               const VectorXidx & mapc )
 {
@@ -113,19 +113,16 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
         return true;
     }
 
-    QString suffix;
-
     // number of required constraints, inclusive hypothesis to be tested
     const Index numOfRequiredConstraints = std::count_if( mapc.begin(), mapc.end(),
         [&constr](Index i){ return constr.at(i)->required();} );
 
     if ( verbose ) {
-        suffix = numOfConstraints==1 ? "" : "s";
-        qDebug().noquote() << QStringLiteral("%1 constraint%2 recognized...")
-                              .arg(numOfConstraints). arg(suffix);
-        suffix = numOfRequiredConstraints==1 ? "" : "s";
-        qDebug().noquote() << QStringLiteral("%1 constraint%2 required?...")
-                              .arg(numOfRequiredConstraints).arg(suffix);
+        qDebug().noquote() << QString( numOfConstraints==1 ?
+             "%1 constraint recognized..." : "%1 constraints recognized...").arg(numOfConstraints);
+
+        qDebug().noquote() << QString( numOfRequiredConstraints==1 ?
+            "%1 constraint required?..." : "%1 constraints required?...").arg(numOfRequiredConstraints);
     }
 
     // number of required equations (not constraints!),
@@ -164,7 +161,7 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
         if ( is_rank_deficient( BBr, threshold_rankEstimate()) ) {
             // redundant or contradictory constraint
             if ( verbose ) {
-                qDebug().noquote() << QStringLiteral("-> Rank deficiency");
+                qDebug().noquote() << red << QStringLiteral("-> Rank deficiency") << black;
             }
             return false;
         }
@@ -202,17 +199,16 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
     if ( normUpdateReducedObserv >= threshold_convergence() )  {
         // redundant or contradictory
         if ( verbose ) {
-            suffix = nIterMax()==1 ? "" : "s";
-            qDebug().noquote() << red << QStringLiteral("-> Not converged after %1 iteration%2. Reciprocal condition number = %3")
-                                  .arg(nIterMax()).arg(suffix)
-                                  .arg(reciprocalConditionNumber) << black;
+            qDebug().noquote() << red << QString( nIterMax()==1 ?
+                "-> Not converged after %1 iteration." :  "-> Not converged after %1 iterations.").arg(nIterMax());
+            qDebug().noquote() << QStringLiteral("Reciprocal condition number = %1").arg(reciprocalConditionNumber) << black;
         }
         return false;
     }
     if ( verbose ) {
-        suffix = it+1==1 ? "" : "s";
-        qDebug().noquote() << green << QStringLiteral("-> Converged after %1 iteration%2. Reciprocal condition number = %3")
-                              .arg(it).arg(suffix).arg( reciprocalConditionNumber ) << black;
+        qDebug().noquote() << green << QString( it==0 ?
+             "-> Converged after %1 iteration." : "-> Converged after %1 iterations.").arg(it+1);
+        qDebug().noquote() << QStringLiteral("Reciprocal condition number = %1").arg( reciprocalConditionNumber ) << black;
     }
 
     // check constraints
@@ -240,23 +236,22 @@ void AdjustmentFramework::reduce (
         lr.segment(offset2,2) = NN.adjoint() * l_.segment(offset3,3);
 
         // (ii) covariance matrix, reduced coordinates
-        const Eigen::Matrix3d RR = Rot_ab<double,3>( l_.segment(offset3, 3),  l0_.segment(offset3, 3) );
+        const Matrix3d RR = Rot_ab<double,3>( l_.segment(offset3, 3),  l0_.segment(offset3, 3) );
 
         const Eigen::Matrix<double, 2, 3> JJ = NN.adjoint() * RR;
         const Eigen::Matrix2d Cov_rr = JJ*Cov_ll_.block( offset3,offset3,3,3)*JJ.adjoint();
 
         // rCov_ll.block(offset2, offset2, 2, 2) = Cov_rr; // not for sparse matrices
-        for ( int i=0; i<2; i++ ) {
-            for ( int j=0; j<2; j++ ) {
-                rCov_ll.coeffRef( offset2 +i,offset2 +j) = Cov_rr(i,j);
-            }
-        }
+        rCov_ll.coeffRef( offset2,  offset2  ) = Cov_rr(0,0);
+        rCov_ll.coeffRef( offset2+1,offset2  ) = Cov_rr(1,0);
+        rCov_ll.coeffRef( offset2  ,offset2+1) = Cov_rr(0,1);
+        rCov_ll.coeffRef( offset2+1,offset2+1) = Cov_rr(1,1);
     }
 }
 
 
 void AdjustmentFramework::Jacobian(
-        const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
+        const QVector<std::shared_ptr<ConstraintBase> > & constr,
         const IncidenceMatrix & relsub,
         SparseMatrix<double,ColMajor> & BBr,
         VectorXd & g0,
@@ -267,7 +262,7 @@ void AdjustmentFramework::Jacobian(
 
     int R = 0; // counter for number of equations
 
-    for ( Index c = 0; c < mapc.size(); c++) // const auto & c : mapc)
+    for ( Index c=0; c<mapc.size(); c++) // const auto & c : mapc)
     {
         //qDebug().noquote() << QStringLiteral("constraint #%1 (status = %2)").arg( c+1).arg(
            //                       constr_.at(mapc_(c))->status());
@@ -281,7 +276,7 @@ void AdjustmentFramework::Jacobian(
         VectorXidx idx = spfind( relsub.col(c).eval() );
 
         auto JJ = con->Jacobian( idx, l0_, l_ );
-        int const dof = con->dof();
+        const int dof = con->dof();
         assert( JJ.rows()==dof );
         for ( Index i=0; i< con->arity(); i++ ) {
             for ( Index r=0; r<JJ.rows(); r++ ) {
@@ -329,7 +324,7 @@ void AdjustmentFramework::checkConstraints(
 #endif
 
     // check all(!) geometric constraints
-    for ( int c=0; c<numOfConstraints; c++ )
+    for ( Index c=0; c<numOfConstraints; c++ )
     {
         const auto & con = constr.at( mapc(c) );
         if ( con->unevaluated() ) {
@@ -339,7 +334,7 @@ void AdjustmentFramework::checkConstraints(
         const VectorXidx idx = spfind( relsub.col(c).eval() );
 
         const double d =  con->contradict( idx, l0_ ).norm();
-        con->setEnforced(  fabs(d) < threshold_numericalCheck()  );
+        con->setEnforced( std::fabs(d) < threshold_numericalCheck()  );
 
 #ifdef QT_DEBUG
         if ( verbose ) {

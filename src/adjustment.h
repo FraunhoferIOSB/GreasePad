@@ -62,7 +62,7 @@ public:
                              const VectorXidx &mapc);
 
     //! Get s-th entity, i.e., segment, represented by vector of length len
-    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::MatrixXd> getEntity( Eigen::Index s) const;
+    [[nodiscard]] std::pair<Eigen::Vector3d, Eigen::Matrix3d> getEntity( Eigen::Index s) const;
 
 private:
     [[nodiscard]] static int nIterMax() { return nIterMax_; }
