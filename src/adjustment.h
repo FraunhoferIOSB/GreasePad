@@ -29,7 +29,7 @@
 #include "qcontainerfwd.h"
 
 
-namespace Constraint {class ConstraintBase;} // namespace Constraints
+namespace Constraint {class ConstraintBase;} // namespace Constraint
 namespace Graph {class IncidenceMatrix;} // namespace Graph
 
 
@@ -95,7 +95,7 @@ private:
     static constexpr double convergence     = 1e-7;  // Threshold convergence
     static constexpr double ReciprocalConditionNumber = 1e-4;  // condition number
     static constexpr double rankEstimate    = 1e-6;  // rank estimation
-    static constexpr double numericalCheck  = 1e-5;  // numerical check constraints    
+    static constexpr double numericalCheck  = 1e-5;  // numerical check of constraints
 };
 
 #endif // ADJUSTMENT_H
