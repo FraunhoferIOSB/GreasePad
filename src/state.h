@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,14 +23,15 @@
 
 #include "quantiles.h"
 
-#include <QDataStream>
-#include <QPolygonF>
-
-
+class QDataStream;
+class QPolygonF;
 class QString;
 class QGraphicsScene;
 
 class impl;
+
+namespace Stats {class Prob;}
+
 
 //! Class for a set of uncertain straight line segments and geometric relations
 class State
