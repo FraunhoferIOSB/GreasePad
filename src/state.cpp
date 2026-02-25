@@ -344,11 +344,11 @@ void State::clearAll()
 }
 
 
-//! Set significane level for recognition tasks
+//! Set significance level for recognition tasks
 void State::setAlphaRecognition( const double alpha) {
     recogn_.setAlpha( Stats::Prob(alpha) );  }
 
-//! Set significane level for snapping of end points
+//! Set significance level for snapping of end points
 void State::setAlphaSnapping( const double alpha) {
     snap_.setAlpha( Stats::Prob(alpha) );  }
 
@@ -704,7 +704,7 @@ void impl::lookOutForParallelism(const Index c)
             qDebug().noquote() << QString( WW.coeff(a,b)==1 ?
                 "%1 walk with length 2 between %2 and %3." :
                 "%1 walks with length 2 between %2 and %3." ).arg(WW.coeff(a,b)).arg(a).arg(b);
-            // The relation has been check earlier
+            // The relation has been checked earlier
             // if the number of walks with length 2
             // between a and b is greater than 1.
             if ( WW.coeff(a,b) == 1 ) {
@@ -749,7 +749,7 @@ void impl::lookOutForCopunctuality( const Index c )
 
             // b is neighbor of a and c.
             if ( b > a ) {
-                // establish copunctiality
+                // establish copunctuality
                 // if straight lines not pairwise identical
                 if ( !are_identical(b,c) && !are_identical(a,c) && !are_identical(a,b) ) {
                     if ( are_copunctual( a, b, c) ) {
@@ -1150,7 +1150,7 @@ bool impl::identities_removed()
 }
 
 
-// uncertaint segment via merged tracks
+// uncertain segment via merged tracks
 void impl::merge_segment( const Index a)
 {
     // qDebug() << Q_FUNC_INFO << a;
