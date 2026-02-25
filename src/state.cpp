@@ -45,6 +45,7 @@
 #include "qstroke.h"
 #include "quantiles.h"
 #include "state.h"
+#include "statistics/prob.h"
 #include "uncertain/quncertain.h"
 #include "uncertain/udistance.h"
 #include "uncertain/upoint.h"
@@ -341,6 +342,16 @@ void State::clearAll()
 {
     pImpl()->clearAll();
 }
+
+
+//! Set significane level for recognition tasks
+void State::setAlphaRecognition( const double alpha) {
+    recogn_.setAlpha( Stats::Prob(alpha) );  }
+
+//! Set significane level for snapping of end points
+void State::setAlphaSnapping( const double alpha) {
+    snap_.setAlpha( Stats::Prob(alpha) );  }
+
 
 
 bool impl::deserialize( QDataStream & in )

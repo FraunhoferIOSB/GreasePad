@@ -30,8 +30,6 @@ class QGraphicsScene;
 
 class impl;
 
-namespace Stats {class Prob;}
-
 
 //! Class for a set of uncertain straight line segments and geometric relations
 class State
@@ -92,12 +90,10 @@ public:
     static bool considerDiagonal()   { return considerDiagonal_;   }
 
     //! Set significane level for recognition tasks
-    static void setAlphaRecognition( const double alpha) {
-        recogn_.setAlpha( Stats::Prob(alpha) );  }
+    static void setAlphaRecognition( double alpha);
 
     //! Set significane level for snapping of end points
-    static void setAlphaSnapping(    const double alpha) {
-        snap_.setAlpha( Stats::Prob(alpha) );  }
+    static void setAlphaSnapping( double alpha);
 
     static Quantiles::Recognition recogn_;  //!< Quantiles for recognition
     static Quantiles::Snapping    snap_;    //!< Quantiles for snapping
