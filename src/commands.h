@@ -49,13 +49,15 @@ public:
     static GUI::MainScene * scene() { return s_scene;  }
 
 protected:
-    explicit Undo(QUndoCommand *parent, State *st); //!< Standard constructor
+    explicit Undo(QUndoCommand *parent,
+                  std::unique_ptr<State> &p,
+                  std::unique_ptr<State> &n,
+                  State *st); //!< Standard constructor
     ~Undo() override = default;
 
+private:
     std::unique_ptr<State> next_state_;  //!< Pointer to next state (redo)
     std::unique_ptr<State> prev_state_;  //!< Pointer to previous state (undo)
-
-private:
     State *current_state_{};             //!< Pointer to current state
 
     static GUI::MainScene *s_scene;
@@ -99,7 +101,10 @@ class TabulaRasa : public Undo
 {
 public:
     //! Value constructor
-    TabulaRasa( State *st, QUndoCommand *parent);
+    TabulaRasa( State *st,
+                std::unique_ptr<State> &p,
+                std::unique_ptr<State> &n,
+                QUndoCommand *parent);
 };
 
 

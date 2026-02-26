@@ -821,8 +821,12 @@ void MainWindow::readBinaryFile( const QString & fileName)
 
 void MainWindow::slotCmdTabulaRasa()
 {
+
+    std::unique_ptr<State> p = std::make_unique<State>(curr_state);
+    std::unique_ptr<State> n = std::make_unique<State>();
+
     m_undoStack->push(
-                new Cmd::TabulaRasa( &curr_state, nullptr )
+                new Cmd::TabulaRasa( &curr_state, p, n, nullptr )
                 );
 
     setWindowModified( true );
@@ -875,7 +879,7 @@ void MainWindow::slotCmdDeleteSelection()
     if ( next_state_->reduce() )
     {
         std::unique_ptr<State> prev_state_
-                = std::make_unique<State>(curr_state); // copy
+            = std::make_unique<State>(curr_state);
 
         m_undoStack->push(
                     new Cmd::DeleteSelection( &curr_state,

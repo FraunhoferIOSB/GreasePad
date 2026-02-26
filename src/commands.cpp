@@ -32,8 +32,13 @@ namespace Cmd {
 
 GUI::MainScene * Undo::s_scene = nullptr;
 
-Undo::Undo( QUndoCommand *parent, State *st)
-    : QUndoCommand(parent), current_state_(st)
+Undo::Undo( QUndoCommand *parent,
+            std::unique_ptr<State> &p,
+            std::unique_ptr<State> &n, State *st)
+    : QUndoCommand(parent),
+      next_state_(std::move(n)),
+      prev_state_(std::move(p)),
+      current_state_(st)
 {
     // qDebug() << Q_FUNC_INFO;
 }
@@ -70,20 +75,17 @@ void Undo::redo()
 AddStroke::AddStroke( State *curr,
                       std::unique_ptr<State> &p,
                       std::unique_ptr<State> &n,
-                      QUndoCommand *parent) : Undo(parent, curr)
+                      QUndoCommand *parent) : Undo(parent, p, n, curr)
 {
     // qDebug() << Q_FUNC_INFO;
-    setText( QStringLiteral("add stroke") );
-
-    prev_state_ = std::move(p);
-    next_state_ = std::move(n);
+    setText( "add stroke" );
 }
 
 
 DeleteSelection::DeleteSelection( State *st,
                                   std::unique_ptr<State> & p,
                                   std::unique_ptr<State> & n,
-                                  QUndoCommand *parent) : Undo(parent, st)
+                                  QUndoCommand *parent) : Undo(parent, p,n, st)
 {
     // qDebug() << Q_FUNC_INFO ;
     auto *scn = scene();
@@ -91,21 +93,19 @@ DeleteSelection::DeleteSelection( State *st,
         return;
     }
 
-    const QString suffix = scn->selectedItems().size()==1 ? QStringLiteral("") : QStringLiteral("s");
-    setText( QStringLiteral("delete selected item%1").arg(suffix) );
-
-    prev_state_ = std::move(p);
-    next_state_ = std::move(n);
+    setText( QString( scn->selectedItems().size()==1 ?
+                        "delete selected item" : "delete selected items") );
 }
 
 
-TabulaRasa::TabulaRasa( State *st, QUndoCommand *parent ) : Undo(parent, st)
+TabulaRasa::TabulaRasa( State *st,
+                        std::unique_ptr<State> &p,
+                        std::unique_ptr<State> &n,
+                        QUndoCommand *parent )
+    : Undo(parent, p,n,  st)
 {
     // qDebug() << Q_FUNC_INFO ;
-    setText( QStringLiteral("clear all") );
-
-    prev_state_ = std::make_unique<State>(*st);   // copy
-    next_state_ = std::make_unique<State>();
+    setText( "clear all" );
 }
 
 
@@ -114,13 +114,10 @@ ReplaceStateWithFileContent::ReplaceStateWithFileContent( const QString & fileNa
                                                           std::unique_ptr<State> & p,
                                                           std::unique_ptr<State> & n,
                                                           QUndoCommand *parent)
-    : Undo(parent, curr)
+    : Undo(parent, p,n, curr)
 {
     // qDebug() << Q_FUNC_INFO;
     setText( fileName );
-
-    prev_state_ = std::move(p);  // copy
-    next_state_ = std::move(n);
 }
 
 } // namespace Cmd
