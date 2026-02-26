@@ -284,37 +284,21 @@ void uStraightLineSegment::transform( const Matrix9d & TT)
 }
 
 
-/* /! Serialization of the uncertain straight line segment t=[l',m',n']' and its bounding box
-void uStraightLineSegment::serialize( QDataStream & out ) const
-{
-    //qDebug() << Q_FUNC_INFO;
-    out << m_t;
-    out << m_Cov_tt;
-    out << m_bounding_box;
-}*/
-
-
-/* /! Deserialization of uncertain straight line segment and its bounding box
-bool uStraightLineSegment::deserialize( QDataStream & in )
-{
-    // qDebug() << Q_FUNC_INFO;
-    in >> m_t;
-    in >> m_Cov_tt;
-    in >> m_bounding_box;
-
-    return in.status() == QDataStream::Ok;
-}*/
-
-
 //! Create uncertain straight line segment (for deserialization)
 std::shared_ptr<uStraightLineSegment>
 uStraightLineSegment::create()
 {
-     return std::shared_ptr<uStraightLineSegment>(
-                    new uStraightLineSegment()
-                    );
-     // TODO(meijoc)
-     // return std::make_shared<uStraightLineSegment>();  //  why not?
+    return std::shared_ptr<uStraightLineSegment>(
+        new uStraightLineSegment()
+        );
+     // return std::make_shared<uStraightLineSegment>();
+
+    // Note from
+    // https://en.cppreference.com/w/cpp/memory/shared_ptr/make_shared.html:
+    //
+    // std::shared_ptr<T>(new T(args...)) may call a non-public constructor
+    // of T if executed in context where it is accessible, while
+    // std::make_shared requires public access to the selected constructor.
 }
 
 } // namespace Uncertain
