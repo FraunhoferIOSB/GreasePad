@@ -32,6 +32,7 @@
 
 namespace Matfun {
 
+using Eigen::ArrayXi;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::SparseMatrix;
@@ -129,16 +130,19 @@ constexpr int sign(T val) noexcept {
 
 
 //! Matlab's find
-[[nodiscard,maybe_unused]] static Vector<Index,Dynamic> find( const Vector<bool,Dynamic> & cond)
+[[nodiscard,maybe_unused]] static ArrayXi
+find( const Vector<bool,Dynamic> & cond)
 {
-    Vector<Index,Dynamic> idx( cond.count() );
-    for (Index i=0, k=0; i< cond.size(); i++) {
+    ArrayXi idx( cond.count() );
+    for (int i=0, k=0; i<cond.size(); i++) {
         if ( cond(i) ) {
             idx(k++) = i;
         }
     }
+
     return idx;
 }
+
 
 //! find indices of sparse vectors
 template <typename T>

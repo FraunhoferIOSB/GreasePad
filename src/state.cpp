@@ -64,6 +64,7 @@
 #include <Eigen/SparseCore>
 
 
+using Eigen::ArrayXi;
 using Eigen::VectorXd;
 using Eigen::VectorXi;
 using Eigen::Vector;
@@ -234,7 +235,7 @@ private:
     void merge_segment ( Index a );
     bool identities_removed();
     void snap_endpoints( Index numNewConstr );
-    void update_segments( const VectorXidx & maps, const AdjustmentFramework & a);
+    void update_segments( const ArrayXi & maps, const AdjustmentFramework & a);
 
     // reduce
     void remove_constraint( Index i );
@@ -274,7 +275,7 @@ private:
     void establish_copunctual( Index a, Index b, Index c );
 
     [[nodiscard]] std::pair<Eigen::VectorXd, SparseMatrix<double> >
-    a_Maker( const VectorXidx & maps_ ) const;
+    a_Maker( const ArrayXi & maps_ ) const;
 
     [[nodiscard]] Index number_of_required_constraints() const; // for statistics only
 
@@ -766,8 +767,8 @@ void impl::solve_subtask_greedy( const int cc )
 {
     // qDebug() << Q_FUNC_INFO;
 
-    const VectorXidx maps_ = find(   arr_segm==cc );
-    const VectorXidx mapc_ = find( arr_constr==cc );
+    const ArrayXi maps_ = find(   arr_segm==cc );
+    const ArrayXi mapc_ = find( arr_constr==cc );
     assert( mapc_.size()>0 );
 
     const IncidenceMatrix relsub = Rel(maps_,mapc_);
@@ -825,7 +826,7 @@ void impl::solve_subtask_greedy( const int cc )
 
 
 //! project end points of segments onto adjusted lines
-void impl::update_segments( const VectorXidx & maps_,
+void impl::update_segments( const ArrayXi & maps_,
                             const AdjustmentFramework & a)
 {
     for ( Index s=0; s<maps_.size(); s++ ) {
@@ -1059,7 +1060,7 @@ void impl::establish_identical( const Index a,  const Index b)
 
 
 std::pair<Eigen::VectorXd, SparseMatrix<double> >
-impl::a_Maker( const VectorXidx & maps_) const
+impl::a_Maker(const ArrayXi &maps_) const
 {
     // qDebug() << Q_FUNC_INFO;
 
@@ -1250,7 +1251,7 @@ void impl::reasoning_reduce_and_adjust()
     {
         bool greedySearchRequired = false;
 
-        const VectorXidx mapc_ = find( arr_constr==cc );
+        const ArrayXi mapc_ = find( arr_constr==cc );
         for ( auto c : mapc_ ) {
             if ( m_constr.at( c )->obsolete())  {
                 greedySearchRequired = true;
@@ -1382,13 +1383,13 @@ void impl::setAltColors() const
         const QColor col =  QColor::fromHsv( hue,255,255, 255);  // hue, saturation, value, alpha
 
         // (1) segments ...
-        const VectorXidx idx_s = find( arr_segm==cc );
+        const ArrayXi idx_s = find( arr_segm==cc );
         for ( const auto s : idx_s ) {
             m_qConstrained.at( s )->setAltColor(col);
         }
 
         // (2) constraints ...
-        const VectorXidx idx_c = find( arr_constr==cc );
+        const ArrayXi idx_c = find( arr_constr==cc );
         for ( const auto c : idx_c ) {
             m_qConstraint.at( c )->setAltColor( col );
         }

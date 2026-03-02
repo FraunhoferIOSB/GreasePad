@@ -45,6 +45,7 @@
 using Graph::IncidenceMatrix;
 using Constraint::ConstraintBase;
 
+using Eigen::ArrayXi;
 using Eigen::ColMajor;
 using Eigen::Index;
 using Eigen::VectorXd;
@@ -101,7 +102,7 @@ void AdjustmentFramework::update( const VectorXd &x)
 
 bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<ConstraintBase> > & constr,
                                               const IncidenceMatrix & relsub,
-                                              const VectorXidx & mapc )
+                                              const ArrayXi & mapc )
 {
     //assert( relsub.rows()==maps.size() );
     assert( relsub.cols()==mapc.size() );
@@ -255,7 +256,7 @@ void AdjustmentFramework::Jacobian(
         const IncidenceMatrix & relsub,
         SparseMatrix<double,ColMajor> & BBr,
         VectorXd & g0,
-        const VectorXidx & mapc ) const
+        const ArrayXi & mapc ) const
 {
     // assert( relsub.rows()==maps.size() );
     assert( relsub.cols()==mapc.size() );
@@ -294,7 +295,7 @@ void AdjustmentFramework::Jacobian(
 void AdjustmentFramework::checkConstraints(
     const QVector<std::shared_ptr<ConstraintBase> > & constr,
     const IncidenceMatrix & relsub,
-    const VectorXidx & mapc) const
+    const ArrayXi & mapc) const
 {
     // assert( relsub.rows()==maps.size() );
     assert( relsub.cols()==mapc.size() );

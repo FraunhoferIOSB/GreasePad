@@ -59,7 +59,7 @@ public:
     //! Enforce the constraints of a subtask (adjustment)
     bool enforceConstraints(const QVector<std::shared_ptr<Constraint::ConstraintBase> > &constr,
                              const Graph::IncidenceMatrix &relsub,
-                             const VectorXidx &mapc);
+                             const Eigen::ArrayXi &mapc);
 
     //! Get s-th entity, i.e., segment, represented by vector of length len
     [[nodiscard]] std::pair<Eigen::Vector3d, Eigen::Matrix3d> getEntity( Eigen::Index s) const;
@@ -77,13 +77,13 @@ private:
                   const Graph::IncidenceMatrix & relsub,
                   Eigen::SparseMatrix<double, Eigen::ColMajor> & BBr,
                   Eigen::VectorXd & g0,
-                  const VectorXidx & mapc) const;
+                  const Eigen::ArrayXi & mapc) const;
     //! compute reduced coordinates
     void reduce ( Eigen::VectorXd &, Eigen::SparseMatrix<double,Eigen::ColMajor> &) const;
 
     void checkConstraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
                            const Graph::IncidenceMatrix & relsub,
-                           const VectorXidx & mapc ) const;
+                           const Eigen::ArrayXi & mapc ) const;
 
     bool verbose = true;
 
