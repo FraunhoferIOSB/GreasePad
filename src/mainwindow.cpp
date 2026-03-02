@@ -1280,22 +1280,27 @@ void MainWindow::slotUpdateLineStyle( const int s)
 
 void MainWindow::slotUpdateColor( const QColor & col)
 {
-    // qDebug() << Q_FUNC_INFO << col;
     for ( auto & item : m_scene->selectedItems() )
     {
-        if ( item->type()==QConstraint::QConstraintBase::Type ) {
+        switch ( item->type() ) {
+
+        case QConstraint::QConstraintBase::Type: {
             auto *i = qgraphicsitem_cast<QConstraint::QConstraintBase*>(item);
             i->setColor( col );
-            continue;
+            break;
         }
-        if ( item->type()==QGraphicsPolygonItem::Type ) {
+        case QGraphicsPolygonItem::Type: {
             auto *i = qgraphicsitem_cast<QEntity::QStroke*>(item);
             i->setColor( col );
-            continue;
+            break;
         }
-        if ( item->type()==QEntity::QSegment::Type ) {
+        case QEntity::QSegment::Type: {
             auto *i = qgraphicsitem_cast<QEntity::QSegment*>(item);
             i->setColor( col );
+            break;
+        }
+        default:
+            break;
         }
     }
     m_scene->update();
