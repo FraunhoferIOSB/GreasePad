@@ -21,14 +21,12 @@
 
 #include <memory>
 
-#include <QGraphicsScene>
-#include <QString>
 #include <QUndoCommand>
 
 class State;
-namespace GUI {
-class MainScene;
-} // namespace GUI
+namespace GUI {class MainScene;} // namespace GUI
+
+class QString;
 
 
 //! Namespace for commands (undo/redo)
@@ -43,17 +41,17 @@ public:
     Undo & operator= (const Undo & other) = delete; //!< Copy assignment operator
     Undo & operator= (Undo && other) = delete;      //!< Move assignment operator
 
-    //! Set pointer to scene
-    static void setScene ( GUI::MainScene * sc) {  s_scene = sc; }
-    //! Get pointer to scene
-    static GUI::MainScene * scene() { return s_scene;  }
-
-protected:
     explicit Undo(QUndoCommand *parent,
                   std::unique_ptr<State> &p,
                   std::unique_ptr<State> &n,
                   State *st); //!< Standard constructor
     ~Undo() override = default;
+
+
+    //! Set pointer to scene
+    static void setScene ( GUI::MainScene * sc) {  s_scene = sc; }
+    //! Get pointer to scene
+    static GUI::MainScene * scene() { return s_scene;  }
 
 private:
     std::unique_ptr<State> next_state_;  //!< Pointer to next state (redo)

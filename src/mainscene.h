@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,17 +19,19 @@
 #ifndef MAINSCENE_H
 #define MAINSCENE_H
 
-#include <QAction>
-#include <QDebug>
 #include <QGraphicsPathItem>
 #include <QGraphicsScene>
-#include <QObject>
 
 #include "qtmetamacros.h"
 
 #include <memory>
 
+class QAction;
+class QObject;
+class QString;
+
 class State;
+
 
 namespace GUI {
 
@@ -64,8 +66,8 @@ private:
     QGraphicsPathItem m_path_item;  // point set (stroke) as graphics item
     QPainterPath m_painter_path;
 
-    const double threshold_ratio_eigenvalues = 0.01;
-    const int    min_number_of_points = 7;
+    constexpr static double threshold_ratio_eigenvalues = 0.01;
+    constexpr static int    min_number_of_points = 7;
 
     static bool isaStraightStroke(double T, const QPainterPath &);
 

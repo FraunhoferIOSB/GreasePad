@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,17 +19,18 @@
 #ifndef MAINVIEW_H
 #define MAINVIEW_H
 
-#include <QAction>
-#include <QDebug>
-#include <QGraphicsScene>
 #include <QGraphicsView>
-#include <QObject>
-#include <QPainter>
 
 #include "qtmetamacros.h"
-#include "qwidget.h"
 
 #include <memory>
+
+class QAction;
+class QGraphicsScene;
+class QPainter;
+class QWheelEvent;
+class QWidget;
+
 
 namespace GUI {
 
@@ -54,10 +55,10 @@ private:
     std::unique_ptr<QAction> actionZoomIn;                      //!< Zoom in  [+]
     std::unique_ptr<QAction> actionZoomOut;                     //!< Zoom out [-]
 
-    const double lod_max = 100.0;
-    const double lod_min = 0.01;
-    const double zoom_in = 1.25;
-    const double zoom_out = 1./zoom_in;
+    constexpr static double lod_max = 100.0;
+    constexpr static double lod_min = 0.01;
+    constexpr static double zoom_in = 1.25;
+    constexpr static double zoom_out = 1./zoom_in;
 
     void createActions();
     void establishConnections();

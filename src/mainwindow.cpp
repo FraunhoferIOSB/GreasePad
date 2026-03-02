@@ -58,6 +58,7 @@
 #include <QOverload>
 #include <QPdfWriter>
 #include <QSizePolicy>
+#include <QStatusBar>
 #include <QStringLiteral>
 #include <QStringView>
 #include <QStyleOptionGraphicsItem>
@@ -162,6 +163,18 @@ void MainWindow::createSceneAndView()
     m_view  = std::make_unique<MainView>( m_scene.get(), this );
     setCentralWidget( m_view.get() );
     showMaximized();     // after 'setCentralWidget'
+}
+
+
+void MainWindow::slotShowStatus( const QString & s)
+{
+    statusBar()->showMessage( s, 0);
+}
+
+
+void MainWindow::slotStackIndexChanged()
+{
+    statusBar()->showMessage( curr_state.StatusMsg() );
 }
 
 void MainWindow::slotToggleShowUnconstrained()

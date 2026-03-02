@@ -19,12 +19,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QAction>
-#include <QColor>
-#include <QLabel>
 #include <QMainWindow>
-#include <QPainterPath>
-#include <QStatusBar>
 #include <QWidget>
 
 #include "qtmetamacros.h"
@@ -35,10 +30,14 @@
 
 
 class MainScene;
+
+class QColor;
 class QUndoStack;
 class QGraphicsPixmapItem;
 class QDoubleSpinBox;
 class QLabel;
+class QPainterPath;
+
 
 //! Graphical user interface
 namespace GUI {
@@ -89,8 +88,8 @@ private:
         double default_val;
     };
 
-    const SpinBox alphaBox   = { 0.01, 1.00, 0.01,  2, 0.05 };
-    const SpinBox opacityBox = { 0.00, 1.00, 0.05,  2, 0.50 };
+    const SpinBox alphaBox { 0.01, 1.00, 0.01,  2, 0.05 };
+    const SpinBox opacityBox { 0.00, 1.00, 0.05,  2, 0.50 };
 
     std::unique_ptr<QAction>   actionAbout;
     std::unique_ptr<QAction>   actionAboutQt;
@@ -175,9 +174,8 @@ private:
     void slotItemMoveToTop();
     void slotSelectionChanged();
     void slotSetFont();
-    void slotShowStatus( const QString & s) { statusBar()->showMessage( s, 0); }
-    void slotStackIndexChanged() {  statusBar()->showMessage( curr_state.StatusMsg() ); }
-
+    void slotShowStatus( const QString & s);
+    void slotStackIndexChanged();
     void slotToggleConsiderOrthogonal();
     void slotToggleConsiderParallel();
     void slotToggleConsiderCopunctual();
