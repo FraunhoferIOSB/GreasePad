@@ -22,6 +22,8 @@
 
 #include <Eigen/Core>
 
+#include <QDataStream>
+
 using Eigen::Matrix;
 
 

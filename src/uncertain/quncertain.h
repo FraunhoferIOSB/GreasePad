@@ -22,9 +22,9 @@
 
 #include "uncertain/usegment.h"
 
-#include <QDataStream>
-
 #include <Eigen/Core>
+
+class QDataStream;
 
 
 namespace Uncertain {
@@ -55,8 +55,7 @@ QDataStream & operator>> ( QDataStream & in, Vector<T,N> & v);
 QDataStream & operator>> ( QDataStream & in, uStraightLineSegment & us);
 QDataStream & operator<< ( QDataStream & out, const uStraightLineSegment & us);
 
-} // namespace
-
+} // namespace Uncertain
 
 
 #endif // QUNCERTAIN_H
