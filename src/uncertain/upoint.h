@@ -40,15 +40,13 @@ public:
             const Matrix3d & Sigma_xx);
 
     [[nodiscard]] Aabb<double,2> bbox() const;
+    [[nodiscard]] Matrix3d conicMatrix(double) const;
     [[nodiscard]] uPoint euclidean() const;
     [[nodiscard]] uPoint sphericalNormalized() const;
     [[nodiscard]] uPoint transformed( const Matrix3d & TT) const;
-
     [[nodiscard]] uStraightLine cross( const uPoint &) const;
-
     [[nodiscard]] uDistance distanceAlgebraicTo( const uStraightLine & ul) const;
     [[nodiscard]] uDistance distanceEuclideanTo( const uStraightLine & ul) const;
-
     [[nodiscard]] bool isIncidentWith( const uStraightLine & ul, double T) const;
 };
 

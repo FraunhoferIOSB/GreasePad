@@ -41,6 +41,7 @@ using Eigen::Matrix2d;
 using Eigen::Vector2d;
 
 using Matfun::sign;
+using Matfun::cof3;
 
 using Stats::isCovMat;
 
@@ -53,6 +54,14 @@ uPoint::uPoint( const Vector3d & x, const Matrix3d & Sigma_xx)
     : BasicEntity2D (x, Sigma_xx)
 {
     // qDebug() << Q_FUNC_INFO;
+}
+
+
+//! confidence ellipse
+Matrix3d uPoint::conicMatrix(const double k2) const
+{
+    const uPoint ux = this->euclidean();
+    return cof3( k2*ux.Cov() -ux.v()*ux.v().transpose() );
 }
 
 

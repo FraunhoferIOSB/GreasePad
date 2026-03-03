@@ -44,6 +44,7 @@ public:
 
     [[nodiscard]] uStraightLine euclidean() const;
     [[nodiscard]] uStraightLine sphericalNormalized() const;
+    [[nodiscard]] Matrix3d conicMatrix(double) const;
 
     //! Angle between this straight line and the x-axis in radians
     [[nodiscard]] double angle_rad()  const { return std::atan2( v(1),v(0) ); }

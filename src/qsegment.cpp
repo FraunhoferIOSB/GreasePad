@@ -18,7 +18,6 @@
 
 
 #include "geometry/conics.h"
-#include "matfun.h"
 #include "qsegment.h"
 #include "uncertain/upoint.h"
 #include "uncertain/ustraightline.h"
@@ -54,8 +53,6 @@ using Eigen::VectorXd;
 
 using Uncertain::uStraightLine;
 using Uncertain::uPoint;
-
-using Matfun::cof3;
 
 
 namespace QEntity {
@@ -198,81 +195,69 @@ double QSegment::getSelectionOffset(const uPoint &ux, const uPoint &uy)
 void QSegment::setShape( const uPoint &ux,
                          const uPoint &uy)
 {
-    // qDebug() << Q_FUNC_INFO;
-    // const double k2 = 4.6; // ch2inv(0.9,2)
-    constexpr int nSupport = 64;
-
+    // set QLineF
     const Vector3d xh = ux.v().normalized();
     const Vector3d yh = uy.v().normalized();
-
-    // check .........................................
-    Q_ASSERT_X( xh.cross(yh).norm() >  FLT_EPSILON,
-                Q_FUNC_INFO,
-                "identical end-points");
-    if ( std::fabs( xh(2) )>0.  &&  std::fabs( yh(2) )>0. ) {
+    assert( xh.cross(yh).norm() > FLT_EPSILON && "identical end-points");
+    if ( std::fabs(xh(2)) > 0 && std::fabs(yh(2)) > 0 ) {
         line_.setLine( m_scale*xh(0)/xh(2), m_scale*xh(1)/xh(2),
                        m_scale*yh(0)/yh(2), m_scale*yh(1)/yh(2) );
     }
 
-    /*if ( k2<=0.) {
-        ellipse_.first.clear();
-        ellipse_.second.clear();
-        branch_.first.clear();
-        branch_.second.clear();   //update();
-        return;
-    }*/
-
-    // unconditioning .........................................
+    // unconditioning
     const Matrix3d TT = Vector3d(m_scale, m_scale, 1).asDiagonal();
-    const uPoint x2 = ux.transformed(TT);
-    const uPoint y2 = uy.transformed(TT);
+    const uPoint ux2 = ux.transformed(TT);
+    const uPoint uy2 = uy.transformed(TT);
 
-    Q_ASSERT( x2.v().norm() > FLT_EPSILON );
-    Q_ASSERT( y2.v().norm() > FLT_EPSILON );
-    Q_ASSERT( x2.v().cross( y2.v() ).norm()  > FLT_EPSILON );
+    assert( ux2.v().norm() > FLT_EPSILON );
+    assert( uy2.v().norm() > FLT_EPSILON );
+    assert( ux2.v().cross(uy2.v()).norm() > FLT_EPSILON );
 
-    // two ellipses ...............................................
-    uPoint ux2 = x2.euclidean();
-    Matrix3d CC = cof3( m_quantile*ux2.Cov() -ux2.v()*ux2.v().adjoint() );
-    const Geometry::Ellipse ell_x(CC);
-
-    ux2 = y2.euclidean();
-    CC = cof3( m_quantile*ux2.Cov() -ux2.v()*ux2.v().adjoint() );
-    const Geometry::Ellipse ell_y(CC);
-
+    // Points: two ellipses
+    constexpr int nSupport = 64;
+    const Matrix3d CCx = ux2.conicMatrix(m_quantile);
+    const Matrix3d CCy = uy2.conicMatrix(m_quantile);
+    const Geometry::Ellipse ell_x(CCx);
+    const Geometry::Ellipse ell_y(CCy);
     ellipse_.first  = toPoly( ell_x.poly( nSupport ) );
     ellipse_.second = toPoly( ell_y.poly( nSupport ) );
 
-    // hyperbola ..................................................
-    uStraightLine ul(x2.cross(y2));
-    ul = ul.euclidean();
-    CC = m_quantile*ul.Cov() -ul.v()*ul.v().adjoint();
-    const Geometry::Hyperbola hyp( CC );
+    // Straight line: hyperbola
+    const uStraightLine ul(ux2.cross(uy2));
+    const Matrix3d CCl = ul.conicMatrix(m_quantile);
+    const Geometry::Hyperbola hyp( CCl );
 
-    // Two polar lines ............................................
-    const Vector3d lx = ell_y.polar( x2.v() ).normalized();
-    const Vector3d ly = ell_x.polar( y2.v() ).normalized();
+    // Two polar lines
+    const Vector3d lx = (CCy*ux2.v()).normalized();
+    const Vector3d ly = (CCx*uy2.v()).normalized();
 
-    // Four tangent points ........................................
+    // Four tangent points
     std::pair<Vector3d,Vector3d> pair1 = hyp.intersect( lx );
     std::pair<Vector3d,Vector3d> pair2 = hyp.intersect( ly );
 
-    // Hyperbola: Axis and point of symmetry ......................
+    // Hyperbola: Axis and point of symmetry
     Vector3d symaxis = hyp.centerline();
     const Vector3d x0 = hyp.center();
-    assert( std::fabs(x0(2))>0. );
-    Vector3d m;              // perpendicular m, passing the center
+    assert( std::fabs(x0(2)) > 0 );
+
+    // hyperbola: branches to plot
+    const auto ab = hyp.lengthsSemiAxes();
+    const double aa = ab.first * ab.first;
+    const double bb = ab.second * ab.second;
+
+    // perpendicular m, passing the center
+    Vector3d m;
     m(0) = -symaxis(1);
     m(1) = +symaxis(0);
     m(2) = -x0.head(2).dot( m.head(2) )/ x0(2);
 
     // checks before Euclidean normalization
-    assert( std::fabs( symaxis.head(2).norm() ) >0. );
-    assert( std::fabs(       m.head(2).norm() ) >0. );
-    assert( std::fabs( pair1.first(2)  ) >0. );
-    assert( std::fabs( pair1.second(2) ) >0. );
-    assert( std::fabs( pair2.first(2)  ) >0. );
-    assert( std::fabs( pair2.second(2) ) >0. );
+    assert( std::fabs( symaxis.head(2).norm() ) > 0 );
+    assert( std::fabs(       m.head(2).norm() ) > 0 );
+    assert( std::fabs( pair1.first(2)  ) > 0 );
+    assert( std::fabs( pair1.second(2) ) > 0 );
+    assert( std::fabs( pair2.first(2)  ) > 0 );
+    assert( std::fabs( pair2.second(2) ) > 0 );
 
     // Euclidean normalizations for efficient distance computations
     symaxis /= symaxis.head(2).norm();
@@ -282,19 +267,21 @@ void QSegment::setShape( const uPoint &ux,
     pair2.first  /= pair2.first(2);
     pair2.second /= pair2.second(2);
 
-    // Euclidean distances of tangent points to axis a.
-    Vector4d lr;
-    lr(0) = symaxis.dot( pair1.first );
-    lr(1) = symaxis.dot( pair1.second);
-    lr(2) = symaxis.dot( pair2.first );
-    lr(3) = symaxis.dot( pair2.second);
+    // Euclidean distances of tangent points to axis
+    const Vector4d lr {
+        symaxis.dot( pair1.first ),
+        symaxis.dot( pair1.second),
+        symaxis.dot( pair2.first ),
+        symaxis.dot( pair2.second)
+    };
 
-    // orthogonal distances of the 4 tangent points to m.
-    Vector4d ud;
-    ud(0) = m.dot( pair1.first);
-    ud(1) = m.dot( pair1.second);
-    ud(2) = m.dot( pair2.first);
-    ud(3) = m.dot( pair2.second);
+    // orthogonal distances of the 4 tangent points
+    const Vector4d ud {
+        m.dot( pair1.first),
+        m.dot( pair1.second),
+        m.dot( pair2.first),
+        m.dot( pair2.second)
+    };
 
     Vector4d d = Vector4d::Zero();
     for (int i=0; i<ud.size(); i++) {
@@ -317,34 +304,27 @@ void QSegment::setShape( const uPoint &ux,
             }
     }
 
-    // hyperbola: branches to plot
-    const auto ab = hyp.lengthsSemiAxes();
-    const double aa = ab.first * ab.first;
-    const double bb = ab.second * ab.second;
+    // first branch of hyperbola .................................
+    branch_.first.clear();
+    VectorXd xi = VectorXd::LinSpaced( nSupport, d(0),d(1) );
+    VectorXd yi = (xi.array().square() *aa/bb +aa).sqrt();
+    for (Index i=0; i<xi.size(); i++) {
+        branch_.first << QPointF(xi(i),yi(i));
+    }
 
-    // transformation branches (motion) ..........................
+    // second branch of hyperbola .................................
+    branch_.second.clear();
+    xi = VectorXd::LinSpaced( nSupport, d(3), d(2) );
+    yi = -(xi.array().square() *aa/bb +aa).sqrt();
+    for (Index i=0; i<xi.size(); i++) {
+        branch_.second << QPointF(xi(i),yi(i));
+    }
+
+    // transformation branches (motion)
     QTransform t;
     t.translate( x0(0)/x0(2), x0(1)/x0(2) );
     t.rotate( hyp.angle_deg(), Qt::ZAxis );
-
-    // first branch of hyperbola .................................
-    VectorXd xi = VectorXd::LinSpaced( nSupport, d(0),d(1) );
-    VectorXd yi = xi;
-    branch_.first.clear();
-    for ( Eigen::Index i=0; i<xi.size(); i++ )
-    {
-        yi(i) = +sqrt( xi(i)*xi(i) *aa/(bb) +aa);
-        branch_.first << QPointF( xi(i),yi(i) );
-    }
-    branch_.first = t.map( branch_.first );
-
-    // second branch of hyperbola .................................
-    xi = VectorXd::LinSpaced( nSupport, d(3), d(2) );
-    branch_.second.clear();
-    yi =  -((xi.array().square() *aa/(bb)).array() +aa ).sqrt();
-    for ( Index i=0; i<xi.size(); i++ ) {
-        branch_.second << QPointF( xi(i), yi(i) );
-    }
+    branch_.first  = t.map( branch_.first );
     branch_.second = t.map( branch_.second );
 }
 

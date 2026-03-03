@@ -143,6 +143,14 @@ uPoint uStraightLine::project(const uPoint &ux) const
 }
 
 
+//! conic matrix
+Matrix3d uStraightLine::conicMatrix(const double k2) const
+{
+    const uStraightLine ul = this->euclidean();
+    return k2*ul.Cov() -ul.v()*ul.v().transpose();
+}
+
+
 //! Get Euclidean normalized version of this uncertain straight line
 uStraightLine uStraightLine::euclidean() const
 {
