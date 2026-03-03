@@ -36,7 +36,6 @@
 #include <Eigen/Core>
 
 #include <cassert>
-#include <cfloat>
 #include <cmath>
 #include <memory>
 
@@ -71,14 +70,12 @@ QConstraintBase::QConstraintBase()
 }
 
 QConstraintBase::QConstraintBase(const QConstraintBase &other)
-    : // QGraphicsItem(),
-    m_altColor(other.m_altColor)
-    , m_pen_req(other.m_pen_req)
+    : m_pen_req(other.m_pen_req)
     , m_pen_red(other.m_pen_red)
     , m_is_required(other.m_is_required)
     , m_is_enforced(other.m_is_enforced)
+    , m_altColor(other.m_altColor)
 {
-    // qDebug() << Q_FUNC_INFO << m_sc;
     setVisible( s_show);
 
     setFlag(ItemIsSelectable, true);
@@ -215,7 +212,7 @@ void QAligned::paint( QPainter *painter,
     }
 
     if ( showColor() ) {
-        pen.setColor( m_altColor);
+        pen.setColor( altColor() );
     }
 
     painter->setPen( pen );
@@ -306,7 +303,7 @@ void QOrthogonal::paint( QPainter *painter,
     }
 
     if ( showColor() ) {
-        pen.setColor( m_altColor);
+        pen.setColor( altColor() );
     }
 
     painter->setPen( pen );
@@ -422,7 +419,7 @@ void QCopunctual::paint( QPainter *painter,
     QPen pen = QPen( required() ? m_pen_req : m_pen_red);
 
     if ( showColor()) {
-        pen.setColor( m_altColor);
+        pen.setColor( altColor() );
     }
     if ( !enforced() ) {
         pen.setColor(Qt::red);
@@ -541,7 +538,7 @@ void QParallel::paint( QPainter *painter,
     QPen pen = QPen( required() ? m_pen_req : m_pen_red);
 
     if ( showColor() ) {
-        pen.setColor( m_altColor);
+        pen.setColor( altColor() );
     }
 
     if ( !enforced() ) {

@@ -73,6 +73,7 @@ public:
     void setLineWidth( int w);       //!< Set line width
     void setLineStyle( int s);       //!< Set line style
     void setAltColor( const QColor &col ); //!< Set color for automatic colorization
+    [[nodiscard]] QColor altColor() const {return m_altColor;}
     void setStatus( bool isrequired, bool isenforced);      //!< Set status
 
     virtual void setMarkerSize ( qreal s) = 0;  //!< Set marker size
@@ -111,7 +112,6 @@ protected:
     static QPen s_defaultPenRed;      //!< Default pen for redundant constraints
     static QPen s_penSelected;        //!< Pen for selection
 
-    QColor m_altColor;        //!< Color for automatic colorization (subtasks)
     QPen m_pen_req;           //!< Pen for required constraint
     QPen m_pen_red;           //!< Pen for redundant constraint
 
@@ -125,6 +125,8 @@ private:
 
     bool m_is_required = true;    //!< Constraint is required? (for painting)
     bool m_is_enforced = false;   //!< Constraint is enforced? (for painting)
+
+    QColor m_altColor;   //!< Color for automatic colorization of subtasks
 
     static bool s_showColor;
     static bool s_show;
