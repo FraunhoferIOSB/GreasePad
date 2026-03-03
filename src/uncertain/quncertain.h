@@ -20,7 +20,6 @@
 #ifndef QUNCERTAIN_H
 #define QUNCERTAIN_H
 
-#include "uncertain/usegment.h"
 
 #include <Eigen/Core>
 
@@ -32,6 +31,9 @@ namespace Uncertain {
 using Eigen::MatrixBase;
 using Eigen::Dynamic;
 using Eigen::Vector;
+
+class uStraightLineSegment;
+
 
 
 //! Overloaded operator>> for matrices
