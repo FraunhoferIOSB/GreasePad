@@ -1263,16 +1263,22 @@ void MainWindow::setCurrentFileName( const QString &fileName )
 
 void MainWindow::slotUpdateLineStyle( const int s)
 {
-    // qDebug() << Q_FUNC_INFO;
-    for ( auto & item : m_scene->selectedItems() )
+    for (const auto & item : m_scene->selectedItems() )
     {
-        if ( item->type()==QConstraint::QConstraintBase::Type ) {
+        switch (item->type()) {
+
+        case QConstraint::QConstraintBase::Type: {
             auto *a = qgraphicsitem_cast<QConstraint::QConstraintBase*>(item);
             a->setLineStyle( s );
+            break;
         }
-        if ( item->type()==QEntity::QSegment::Type ) {
+        case QEntity::QSegment::Type: {
             auto *c = qgraphicsitem_cast<QEntity::QSegment*>(item);
             c->setLineStyle( s );
+            break;
+        }
+        default:
+            break;
         }
         m_scene->update();
     }
@@ -1280,7 +1286,7 @@ void MainWindow::slotUpdateLineStyle( const int s)
 
 void MainWindow::slotUpdateColor( const QColor & col)
 {
-    for ( auto & item : m_scene->selectedItems() )
+    for (const auto & item : m_scene->selectedItems() )
     {
         switch ( item->type() ) {
 
@@ -1309,24 +1315,32 @@ void MainWindow::slotUpdateColor( const QColor & col)
 
 void MainWindow::slotUpdateLineWidth( const int w)
 {
-    // qDebug() << Q_FUNC_INFO;
-    for ( auto & item : m_scene->selectedItems() )
+    for (const auto & item : m_scene->selectedItems() )
     {
-        if ( item->type()==QConstraint::QConstraintBase::Type ) {
+        switch (item->type()) {
+
+        case QConstraint::QConstraintBase::Type: {
             auto *a = qgraphicsitem_cast<QConstraint::QConstraintBase*>(item);
             a->setLineWidth( w );
+            break;
         }
-        if ( item->type()==QGraphicsPolygonItem::Type ) {
+        case QGraphicsPolygonItem::Type: {
             auto *b = qgraphicsitem_cast<QEntity::QStroke*>(item);
             b->setLineWidth( w );
+            break;
         }
-        if ( item->type()==QEntity::QSegment::Type ) {
+        case QEntity::QSegment::Type: {
             auto *c = qgraphicsitem_cast<QEntity::QSegment*>(item);
             c->setLineWidth( w );
+            break;
+        }
+        default:
+            break;
         }
     }
     m_scene->update();
 }
+
 
 void MainWindow::slotUpdateMarkerSize( const int sz)
 {
