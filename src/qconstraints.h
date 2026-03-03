@@ -19,17 +19,13 @@
 #ifndef QCONSTRAINTS_H
 #define QCONSTRAINTS_H
 
-#include <QDebug>
 #include <QGraphicsItem>
 #include <QPen>
-#include <QWidget>
 
 #include "qcontainerfwd.h"
-#include "qsharedpointer.h"
 #include "qtypes.h"
 
 #include <Eigen/Core>
-#include <Eigen/Dense>
 
 #include <functional>
 #include <map>
@@ -37,10 +33,13 @@
 #include <string>
 
 
-
 namespace Uncertain {
 class uStraightLineSegment;
 } // namespace Uncertain
+
+class QColor;
+class QDataStream;
+class QWidget;
 
 
 //! Graphics: Constraints
@@ -75,6 +74,8 @@ public:
     void setAltColor( const QColor &col ); //!< Set color for automatic colorization
     [[nodiscard]] QColor altColor() const {return m_altColor;}
     void setStatus( bool isrequired, bool isenforced);      //!< Set status
+    [[nodiscard]] QPen penRequiredConstraint() const {return m_penReq;}  //!< get pen for required constraint
+    [[nodiscard]] QPen penRedundantConstraint() const {return m_penRed;}  //!< get pen for redundant constraint
 
     virtual void setMarkerSize ( qreal s) = 0;  //!< Set marker size
     virtual void setGeometry( QVector<std::shared_ptr< const uStraightLineSegment>> &,
@@ -112,9 +113,6 @@ protected:
     static QPen s_defaultPenRed;      //!< Default pen for redundant constraints
     static QPen s_penSelected;        //!< Pen for selection
 
-    QPen m_pen_req;           //!< Pen for required constraint
-    QPen m_pen_red;           //!< Pen for redundant constraint
-
     [[nodiscard]] bool enforced() const { return m_is_enforced; }  //!< Get status enforcment (success/failure)
     [[nodiscard]] bool required() const {return m_is_required;}
 
@@ -127,6 +125,8 @@ private:
     bool m_is_enforced = false;   //!< Constraint is enforced? (for painting)
 
     QColor m_altColor;   //!< Color for automatic colorization of subtasks
+    QPen m_penReq;       //!< Pen for required constraint
+    QPen m_penRed;       //!< Pen for redundant constraint
 
     static bool s_showColor;
     static bool s_show;

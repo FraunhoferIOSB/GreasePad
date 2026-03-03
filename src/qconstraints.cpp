@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,20 +20,18 @@
 #include "qconstraints.h"
 #include "uncertain/usegment.h"
 
-#include <QColor>
 #include <QGraphicsItem>
 #include <QGraphicsSceneMouseEvent>
-#include <QMenu>
 #include <QPainter>
 #include <QtPreprocessorSupport>
 
 #include "qcontainerfwd.h"
 #include "qnamespace.h"
-#include "qsharedpointer.h"
 #include "qstyleoption.h"
 #include "qtypes.h"
 
 #include <Eigen/Core>
+#include <Eigen/Dense>
 
 #include <cassert>
 #include <cmath>
@@ -56,9 +54,9 @@ QPen QConstraintBase::s_defaultPenRed = QPen();
 QPen QConstraintBase::s_penSelected   = QPen();
 
 QConstraintBase::QConstraintBase()
-    : m_pen_req(s_defaultPenReq)
-    , m_pen_red(s_defaultPenRed)
-    , m_is_required(false)
+    : m_is_required(false)
+    , m_penReq(s_defaultPenReq)
+    , m_penRed(s_defaultPenRed)
 {
     // qDebug() << Q_FUNC_INFO;
     setVisible(s_show);
@@ -70,11 +68,11 @@ QConstraintBase::QConstraintBase()
 }
 
 QConstraintBase::QConstraintBase(const QConstraintBase &other)
-    : m_pen_req(other.m_pen_req)
-    , m_pen_red(other.m_pen_red)
-    , m_is_required(other.m_is_required)
+    : m_is_required(other.m_is_required)
     , m_is_enforced(other.m_is_enforced)
     , m_altColor(other.m_altColor)
+    , m_penReq(other.m_penReq)
+    , m_penRed(other.m_penRed)
 {
     setVisible( s_show);
 
@@ -98,8 +96,8 @@ void QConstraintBase::serialize( QDataStream &out )
     out << m_is_required;
     out << m_is_enforced;
 
-    out << m_pen_req;
-    out << m_pen_red;
+    out << m_penReq;
+    out << m_penRed;
     out << m_altColor;
 
     out << markerSize();
@@ -114,8 +112,8 @@ bool QConstraintBase::deserialize( QDataStream &in )
     in >> m_is_required;
     in >> m_is_enforced;
 
-    in >> m_pen_req;
-    in >> m_pen_red;
+    in >> m_penReq;
+    in >> m_penRed;
 
     in >> m_altColor;
     qreal s = NAN;
@@ -134,21 +132,21 @@ bool QConstraintBase::deserialize( QDataStream &in )
 
 void QConstraintBase::setColor( const QColor & col)
 {
-    m_pen_req.setColor(col);
-    m_pen_red.setColor(col);
+    m_penReq.setColor(col);
+    m_penRed.setColor(col);
 }
 
 void QConstraintBase::setLineWidth( const int w)
 {
-    m_pen_req.setWidth(w);
-    m_pen_red.setWidth(w);
+    m_penReq.setWidth(w);
+    m_penRed.setWidth(w);
 }
 
 
 void QConstraintBase::setLineStyle( const int s)
 {
-    m_pen_req.setStyle( Qt::PenStyle(s) );
-    m_pen_red.setStyle( Qt::PenStyle(s) );
+    m_penReq.setStyle( Qt::PenStyle(s) );
+    m_penRed.setStyle( Qt::PenStyle(s) );
 }
 
 
@@ -195,9 +193,9 @@ void QConstraintBase::setStatus( bool isrequired,
 QRectF QAligned::boundingRect() const
 {
     return a.boundingRect().adjusted(
-                -2*m_pen_req.width(), -2*m_pen_req.width(),
-                +2*m_pen_req.width(), +2*m_pen_req.width()
-                );
+        -2*penRequiredConstraint().width(), -2*penRequiredConstraint().width(),
+        +2*penRequiredConstraint().width(), +2*penRequiredConstraint().width()
+        );
 }
 
 
@@ -206,7 +204,7 @@ void QAligned::paint( QPainter *painter,
                        const QStyleOptionGraphicsItem * option,
                        QWidget * widget)
 {
-    QPen pen = QPen( required() ? m_pen_req : m_pen_red);
+    QPen pen = QPen( required() ? penRequiredConstraint() : penRedundantConstraint());
     if ( !enforced() ) {
         pen.setColor( Qt::red );
     }
@@ -284,10 +282,10 @@ std::shared_ptr<QConstraintBase> QAligned::create()
 
 QRectF QOrthogonal::boundingRect() const
 {
-    return rect().adjusted(-2*m_pen_req.widthF(),
-                           -2*m_pen_req.widthF(),
-                           2*m_pen_req.widthF(),
-                           2*m_pen_req.widthF());
+    return rect().adjusted(-2*penRequiredConstraint().widthF(),
+                           -2*penRequiredConstraint().widthF(),
+                           2*penRequiredConstraint().widthF(),
+                           2*penRequiredConstraint().widthF());
 }
 
 
@@ -297,7 +295,7 @@ void QOrthogonal::paint( QPainter *painter,
                          const QStyleOptionGraphicsItem * option,
                          QWidget * widget)
 {
-    QPen pen = QPen( required() ? m_pen_req : m_pen_red);
+    QPen pen = QPen( required() ? penRequiredConstraint() : penRedundantConstraint());
     if ( !enforced() ) {
         pen.setColor( Qt::cyan );
     }
@@ -416,7 +414,7 @@ void QCopunctual::paint( QPainter *painter,
                          const QStyleOptionGraphicsItem * option,
                          QWidget * widget)
 {
-    QPen pen = QPen( required() ? m_pen_req : m_pen_red);
+    QPen pen = QPen( required() ? penRequiredConstraint() : penRedundantConstraint());
 
     if ( showColor()) {
         pen.setColor( altColor() );
@@ -430,8 +428,8 @@ void QCopunctual::paint( QPainter *painter,
     QRectF R = rect();
     if ( !required() ) {
         // enlarge
-        R.adjust( -m_pen_req.widthF(), -m_pen_req.widthF(),
-                   m_pen_req.widthF(),  m_pen_req.widthF());
+        R.adjust( -penRequiredConstraint().widthF(), -penRequiredConstraint().widthF(),
+                   penRequiredConstraint().widthF(),  penRequiredConstraint().widthF());
     }
     painter->drawEllipse( R );
 
@@ -440,10 +438,11 @@ void QCopunctual::paint( QPainter *painter,
 
 QRectF QCopunctual::boundingRect() const
 {
-    return rect().adjusted( -m_pen_req.width(),
-                            -m_pen_req.width(),
-                            +m_pen_req.width(),
-                            +m_pen_req.width());
+    return rect().adjusted(
+        -penRequiredConstraint().width(),
+        -penRequiredConstraint().width(),
+        +penRequiredConstraint().width(),
+        +penRequiredConstraint().width());
 }
 
 std::shared_ptr<QConstraintBase> QCopunctual::doClone() const
@@ -519,10 +518,10 @@ QRectF QParallel::boundingRect() const
 {
     QRectF const R = a.boundingRect().united(b.boundingRect());
     return R.adjusted(
-                -2*m_pen_req.width(),
-                -2*m_pen_req.width(),
-                +2*m_pen_req.width(),
-                +2*m_pen_req.width());
+        -2*penRequiredConstraint().width(),
+        -2*penRequiredConstraint().width(),
+        +2*penRequiredConstraint().width(),
+        +2*penRequiredConstraint().width());
 }
 
 std::shared_ptr<QConstraintBase> QParallel::create()
@@ -535,7 +534,7 @@ void QParallel::paint( QPainter *painter,
                        const QStyleOptionGraphicsItem * option,
                        QWidget * widget)
 {
-    QPen pen = QPen( required() ? m_pen_req : m_pen_red);
+    QPen pen = QPen( required() ? penRequiredConstraint() : penRedundantConstraint());
 
     if ( showColor() ) {
         pen.setColor( altColor() );
