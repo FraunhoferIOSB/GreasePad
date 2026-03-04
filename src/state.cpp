@@ -198,8 +198,6 @@ QDataStream & operator>> ( QDataStream &in, ConstraintBase &c )
 
 //! Implementation details of class 'state' (pImpl idiom)
 class impl {
-private:
-    using VectorXidx = Vector<Index,Dynamic>;
 
 public:
     bool deserialize( QDataStream & in  );        //!< Serialization
@@ -695,7 +693,7 @@ void impl::lookOutForParallelism(const Index c)
     const SparseMatrix<int> WW = Adj*Adj;
 
     // case: straight line segment connects two segments
-    const VectorXidx idx = spfind<int>( Adj.col(c) ); // neighbors of c
+    const Vector<Index,Dynamic> idx = spfind( Adj.col(c).eval() ); // neighbors of c
 
     // Check all pairs of direct neighbors.
     for ( Index i=0; i<idx.rows(); i++) {
@@ -720,7 +718,7 @@ void impl::lookOutForParallelism(const Index c)
 
 
     // Find walks of length 2 between the vertices of the graph.
-    const VectorXidx nbs = spfind<int>( WW.col(c) );
+    const Vector<Index,Dynamic> nbs = spfind( WW.col(c).eval() );
     for ( const auto a : nbs) { // Index n=0; n<nbs.rows()-1; n++) {
         // a is a walk of length 2 away from c.
         if ( !Adj.isSet(a,c) ) {
@@ -738,11 +736,11 @@ void impl::lookOutForCopunctuality( const Index c )
 {
     const SparseMatrix<int> WW = Adj*Adj;
 
-    const VectorXidx nbs = spfind<int>( WW.col(c) );
+    const Vector<Index,Dynamic> nbs = spfind( WW.col(c).eval() );
     for ( const auto a : nbs) {
         // a and c are adjacent and have at least one common neighbor.
         // Find all common neighbors of a and c.
-        const VectorXidx nbnb = spfind<int>( Adj.col(a) ); // neighbors of a.
+        const Vector<Index,Dynamic> nbnb = spfind( Adj.col(a).eval() ); // neighbors of a.
         for ( const auto b : nbnb ) {
             if ( !Adj.isSet( b,c ) ) {
                 continue;   // b is not a common neighbor of a and c.
@@ -1102,7 +1100,7 @@ void impl::remove_constraint( const Index i )
 
     if ( m_constr.at(i)->isInstanceOf<Parallel>() )
     {
-        const VectorXidx idx = spfind<int>( Rel.col(i) );
+        const Vector<Index,Dynamic> idx = spfind( Rel.col(i).eval() );
         Q_ASSERT_X( idx.size() == 2, Q_FUNC_INFO,
                     QStringLiteral("parallel with %1 entities")
                     .arg( QString::number(idx.size())).toUtf8() );
@@ -1296,8 +1294,8 @@ void impl::remove_elements()
 void impl::replaceGraphics() {
 
     // qDebug() << Q_FUNC_INFO;
-    Q_ASSERT( m_constr.size() == m_qConstraint.size() );
-    Q_ASSERT( m_qConstraint.size() == Rel.cols()      );
+    assert( m_constr.size() == m_qConstraint.size() );
+    assert( m_qConstraint.size() == Rel.cols()      );
 
     // *** Check segments. ***
     // If reference count is 1, the segment has been added or modified.
@@ -1314,16 +1312,16 @@ void impl::replaceGraphics() {
     // *** Check constraints. ***
     // If any of the involved segements have been modified,
     // the constraint has to be modified/replaced, too.
-    for( int c=0; c<m_constr.length(); c++)
+    for (Index c=0; c<m_constr.length(); c++)
     {
         bool modified = false;
-        const VectorXidx idxx = spfind<int>( Rel.col(c) );
+        const Vector<Index,Dynamic> idx = spfind( Rel.col(c).eval() );
 
         if ( m_constr.at(c).use_count()==1 ) {
             modified = true; // actually not modified, but added
         }
         else {
-            for ( int s=0; s<idxx.size(); s++) {
+            for (Index s=0; s<idx.size(); s++) {
                 if ( m_segm.at(s).use_count()==1 ) {
                     modified = true;
                     break;
@@ -1333,10 +1331,10 @@ void impl::replaceGraphics() {
 
         if ( modified ) {
             auto q = m_qConstraint.at(c)->clone();
-            Q_ASSERT( idxx.size()>0 && idxx.size()<4 ); // {1,2,3}-ary
+            assert( idx.size()>0 && idx.size()<4 ); // {1,2,3}-ary
             q->setStatus(   m_constr.at(c)->required(),
                             m_constr.at(c)->enforced() );
-            q->setGeometry( m_segm, idxx  );
+            q->setGeometry( m_segm, idx  );
             m_qConstraint.replace( c, q);
         }
     }
