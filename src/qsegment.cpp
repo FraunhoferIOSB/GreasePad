@@ -54,6 +54,8 @@ using Eigen::VectorXd;
 using Uncertain::uStraightLine;
 using Uncertain::uPoint;
 
+using Geometry::skew;
+
 
 namespace QEntity {
 
@@ -68,7 +70,7 @@ QPen QSegment::s_penSelected = QPen();
 namespace {
 QPen & myQPen();
 
-//! Initialized pen upon first call to the function
+//! Initialized pen upon first call to the function (Meyer's singleton pattern)
 QPen & myQPen()
 {
     static QPen p;
@@ -168,7 +170,7 @@ QPolygonF QSegment::toPoly(std::pair<Eigen::VectorXd, Eigen::VectorXd> p)
 {
     const Index N = p.first.size();
     QPolygonF poly( N );
-    for ( int i=0; i<N; i++) {
+    for (Index i=0; i<N; i++) {
         poly[i] = QPointF( p.first(i), p.second(i));
     }
 
@@ -243,10 +245,8 @@ void QSegment::setShape( const uPoint &ux,
     const double bb = ab.second * ab.second;
 
     // m perpendicular to l, passing the center
-    Vector3d m;
-    m(0) = -l(1);
-    m(1) = +l(0);
-    m(2) = -x0.head(2).dot( m.head(2) )/ x0(2);
+    static const Matrix3d G3 = Vector3d(1,1,0).asDiagonal(); // PCV eq. (7.12)
+    Vector3d m = skew(x0)*G3*l;  // PCV eq. (7.16)
 
     // checks before Euclidean normalization
     assert( std::fabs( l.head(2).norm()) > 0 );
@@ -284,7 +284,7 @@ void QSegment::setShape( const uPoint &ux,
     // Ternary conditional operator: A conditional expression can be
     // used as an lvalue, if both x and y are lvalues:
     Vector4d d = Vector4d::Zero();
-    for (int i=0; i<ud.size(); i++) {
+    for (Index i=0; i<ud.size(); i++) {
         if ( lr(i) < 0 ) {
             (ud(i) < 0 ? d(2) : d(3)) = -ud(i);
         }
