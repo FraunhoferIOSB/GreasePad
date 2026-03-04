@@ -25,7 +25,6 @@
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
-#include <QDebug>
 #include <QGraphicsItem>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
@@ -44,6 +43,7 @@
 #include <utility>
 
 
+using Eigen::ArrayXd;
 using Eigen::EigenSolver;
 using Eigen::Index;
 using Eigen::Matrix3d;
@@ -188,7 +188,7 @@ double QSegment::getSelectionOffset(const uPoint &ux, const uPoint &uy)
     const EigenSolver<Eigen::Matrix2d> eig2(u2.Cov().topLeftCorner(2, 2));
     m = std::max( m, eig2.eigenvalues().real().cwiseAbs().maxCoeff() );
 
-    return m_scale*sqrt(m_quantile*m);  // chi2inv(0.9, 2)
+    return m_scale*std::sqrt(m_quantile*m);  // chi2inv(0.9, 2)
 }
 
 
@@ -208,9 +208,6 @@ void QSegment::setShape( const uPoint &ux,
     const Matrix3d TT = Vector3d(m_scale, m_scale, 1).asDiagonal();
     const uPoint ux2 = ux.transformed(TT);
     const uPoint uy2 = uy.transformed(TT);
-
-    assert( ux2.v().norm() > FLT_EPSILON );
-    assert( uy2.v().norm() > FLT_EPSILON );
     assert( ux2.v().cross(uy2.v()).norm() > FLT_EPSILON );
 
     // Points: two ellipses
@@ -235,8 +232,8 @@ void QSegment::setShape( const uPoint &ux,
     std::pair<Vector3d,Vector3d> pair1 = hyp.intersect( lx );
     std::pair<Vector3d,Vector3d> pair2 = hyp.intersect( ly );
 
-    // Hyperbola: Axis and point of symmetry
-    Vector3d symaxis = hyp.centerline();
+    // Hyperbola: Axis l and point of symmetry
+    Vector3d l = hyp.centerline();
     const Vector3d x0 = hyp.center();
     assert( std::fabs(x0(2)) > 0 );
 
@@ -245,37 +242,37 @@ void QSegment::setShape( const uPoint &ux,
     const double aa = ab.first * ab.first;
     const double bb = ab.second * ab.second;
 
-    // perpendicular m, passing the center
+    // m perpendicular to l, passing the center
     Vector3d m;
-    m(0) = -symaxis(1);
-    m(1) = +symaxis(0);
+    m(0) = -l(1);
+    m(1) = +l(0);
     m(2) = -x0.head(2).dot( m.head(2) )/ x0(2);
 
     // checks before Euclidean normalization
-    assert( std::fabs( symaxis.head(2).norm() ) > 0 );
-    assert( std::fabs(       m.head(2).norm() ) > 0 );
+    assert( std::fabs( l.head(2).norm()) > 0 );
+    assert( std::fabs( m.head(2).norm()) > 0 );
     assert( std::fabs( pair1.first(2)  ) > 0 );
     assert( std::fabs( pair1.second(2) ) > 0 );
     assert( std::fabs( pair2.first(2)  ) > 0 );
     assert( std::fabs( pair2.second(2) ) > 0 );
 
     // Euclidean normalizations for efficient distance computations
-    symaxis /= symaxis.head(2).norm();
+    l /= l.head(2).norm();
     m /= m.head(2).norm();
     pair1.first  /= pair1.first(2);
     pair1.second /= pair1.second(2);
     pair2.first  /= pair2.first(2);
     pair2.second /= pair2.second(2);
 
-    // Euclidean distances of tangent points to axis
+    // Euclidean distances of tangent points to axis (left-right)
     const Vector4d lr {
-        symaxis.dot( pair1.first ),
-        symaxis.dot( pair1.second),
-        symaxis.dot( pair2.first ),
-        symaxis.dot( pair2.second)
+        l.dot( pair1.first ),
+        l.dot( pair1.second),
+        l.dot( pair2.first ),
+        l.dot( pair2.second)
     };
 
-    // orthogonal distances of the 4 tangent points
+    // orthogonal distances of the 4 tangent points (up-down)
     const Vector4d ud {
         m.dot( pair1.first),
         m.dot( pair1.second),
@@ -283,39 +280,31 @@ void QSegment::setShape( const uPoint &ux,
         m.dot( pair2.second)
     };
 
+    // Abcissa values for the end-points in the local coordinate system
+    // Ternary conditional operator: A conditional expression can be
+    // used as an lvalue, if both x and y are lvalues:
     Vector4d d = Vector4d::Zero();
     for (int i=0; i<ud.size(); i++) {
-        if ( lr(i) < 0 && ud(i) < 0) {
-            d(2) = -ud(i);
+        if ( lr(i) < 0 ) {
+            (ud(i) < 0 ? d(2) : d(3)) = -ud(i);
         }
-        else
-            if ( lr(i) < 0 && ud(i) > 0) {
-                d(3) = -ud(i);
-            }
-            else {
-                if ( lr(i) > 0 && ud(i) < 0) {
-                    d(0) = -ud(i);
-                }
-                else {
-                    if ( lr(i) > 0 && ud(i) > 0) {
-                        d(1) = -ud(i);
-                    }
-                }
-            }
+        else {
+            (ud(i) < 0 ? d(0) : d(1)) = -ud(i);
+        }
     }
 
     // first branch of hyperbola .................................
     branch_.first.clear();
-    VectorXd xi = VectorXd::LinSpaced( nSupport, d(0),d(1) );
-    VectorXd yi = (xi.array().square() *aa/bb +aa).sqrt();
+    ArrayXd xi = ArrayXd::LinSpaced( nSupport, d(0),d(1) );
+    ArrayXd yi = (xi.square() *aa/bb +aa).sqrt();
     for (Index i=0; i<xi.size(); i++) {
         branch_.first << QPointF(xi(i),yi(i));
     }
 
     // second branch of hyperbola .................................
     branch_.second.clear();
-    xi = VectorXd::LinSpaced( nSupport, d(3), d(2) );
-    yi = -(xi.array().square() *aa/bb +aa).sqrt();
+    xi = ArrayXd::LinSpaced( nSupport, d(3), d(2) );
+    yi = -(xi.square() *aa/bb +aa).sqrt();
     for (Index i=0; i<xi.size(); i++) {
         branch_.second << QPointF(xi(i),yi(i));
     }
