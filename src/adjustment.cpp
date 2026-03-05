@@ -17,6 +17,7 @@
  */
 
 #include "adjustment.h"
+#include "constants.h"
 #include "constraints.h"
 #include "geometry/minrot.h"
 #include "global.h"
@@ -30,11 +31,9 @@
 #include "qcontainerfwd.h"
 #include "qlogging.h"
 
-#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <memory>
-#include <numeric>
 #include <sstream>
 #include <utility>
 
@@ -45,8 +44,10 @@
 using Graph::IncidenceMatrix;
 using Constraint::ConstraintBase;
 
+using Eigen::Array;
 using Eigen::ArrayXi;
 using Eigen::ColMajor;
+using Eigen::Dynamic;
 using Eigen::Index;
 using Eigen::VectorXd;
 using Eigen::Vector3d;
@@ -102,7 +103,9 @@ void AdjustmentFramework::update( const VectorXd &x)
 
 bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<ConstraintBase> > & constr,
                                               const IncidenceMatrix & relsub,
-                                              const ArrayXi & mapc )
+                                              const ArrayXi & mapc,
+                                              Array<Attribute,Dynamic,1> & status,
+                                              Array<bool,Dynamic,1> & enforced)
 {
     //assert( relsub.rows()==maps.size() );
     assert( relsub.cols()==mapc.size() );
@@ -115,8 +118,7 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
     }
 
     // number of required constraints, inclusive hypothesis to be tested
-    const Index numOfRequiredConstraints = std::count_if( mapc.begin(), mapc.end(),
-        [&constr](Index i){ return constr.at(i)->required();} );
+    const Index numOfRequiredConstraints = (status(mapc)==Attribute::Required).count();
 
     if ( verbose ) {
         qDebug().noquote() << QString( numOfConstraints==1 ?
@@ -128,10 +130,10 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
 
     // number of required equations (not constraints!),
     // e.g., two equations for parallelism
-    const int numOfRequiredEquations = std::accumulate(
-        mapc.begin(),  mapc.end(),    0,
-        [&constr](int acc, int i){
-            return acc += constr.at(i)->required() ? constr.at(i)->dof() : 0;} );
+    int numOfRequiredEquations = 0;
+    for (const auto c : mapc) {
+        numOfRequiredEquations += status(c)==Attribute::Required ? constr.at(c)->dof() : 0;
+    }
 
 
     l0_ = l_; // set adjusted observations  l0 := l
@@ -154,7 +156,7 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
             qDebug().noquote() << QStringLiteral("  iteration #%1...").arg(it+1);
         }
 
-        Jacobian( constr, relsub, BBr, g0, mapc);
+        Jacobian( constr, relsub, BBr, g0, mapc, status);
         reduce ( lr, rCov_ll);
 
         // check rank and condition .....................................
@@ -213,7 +215,9 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
     }
 
     // check constraints
-    checkConstraints( constr, relsub, mapc);
+    assert( enforced.size()==status.size() );
+
+    checkConstraints( constr, relsub, mapc, status, enforced);
 
     return true;
 }
@@ -256,7 +260,8 @@ void AdjustmentFramework::Jacobian(
         const IncidenceMatrix & relsub,
         SparseMatrix<double,ColMajor> & BBr,
         VectorXd & g0,
-        const ArrayXi & mapc ) const
+        const ArrayXi & mapc,
+        const Array<Attribute,Dynamic,1> & status ) const
 {
     // assert( relsub.rows()==maps.size() );
     assert( relsub.cols()==mapc.size() );
@@ -270,7 +275,8 @@ void AdjustmentFramework::Jacobian(
 
         // !! not required ==> obsolete or(!) unevaluated
         const auto & con = constr.at( mapc(c) );
-        if ( con->status() != ConstraintBase::REQUIRED )  { // observe the "!="
+
+        if ( status(mapc(c)) != Attribute::Required )  { // observe the "!="
             continue;
         }
 
@@ -295,13 +301,14 @@ void AdjustmentFramework::Jacobian(
 void AdjustmentFramework::checkConstraints(
     const QVector<std::shared_ptr<ConstraintBase> > & constr,
     const IncidenceMatrix & relsub,
-    const ArrayXi & mapc) const
+    const ArrayXi & mapc,
+    const Array<Attribute,Dynamic,1> & status,
+    Array<bool,Eigen::Dynamic,1> & enforced) const
 {
     // assert( relsub.rows()==maps.size() );
     assert( relsub.cols()==mapc.size() );
 
     const Index numOfConstraints = mapc.size();
-
 
     // check intrinsic constraints ..............................
 #ifdef QT_DEBUG
@@ -328,14 +335,15 @@ void AdjustmentFramework::checkConstraints(
     for ( Index c=0; c<numOfConstraints; c++ )
     {
         const auto & con = constr.at( mapc(c) );
-        if ( con->unevaluated() ) {
-            continue;
+        if ( status(mapc(c))==Attribute::Unevaluated ) {
+           continue;
         }
 
         const VectorXidx idx = spfind( relsub.col(c).eval() );
 
         const double d =  con->contradict( idx, l0_ ).norm();
-        con->setEnforced( std::fabs(d) < threshold_numericalCheck()  );
+        assert( enforced.size()==status.size() );
+        enforced( mapc(c)) = ( std::fabs(d) < threshold_numericalCheck() );
 
 #ifdef QT_DEBUG
         if ( verbose ) {
@@ -343,8 +351,8 @@ void AdjustmentFramework::checkConstraints(
             const QString msg2 = QStringLiteral("check = %2, \t").arg(d);
             QDebug deb = qDebug().noquote();
             deb << QStringLiteral("constraint #%1:  ").arg(c+1,3);
-            deb << (con->required() ? green : blue) << msg1 << black;
-            deb << (con->enforced() ? black : red)  << msg2 << black;
+            deb << ( status(c)==Attribute::Required ? green : blue) << msg1 << black;
+            deb << ( enforced(c) ? black : red)  << msg2 << black;
         }
 #endif
     }

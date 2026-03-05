@@ -50,6 +50,7 @@ HEADERS += \
     adjustment.h \
     commands.h \
     conncomp.h \
+    constants.h \
     constraints.h \
     geometry/aabb.h \
     geometry/acute.h \

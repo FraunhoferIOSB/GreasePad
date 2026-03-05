@@ -25,7 +25,6 @@
 #include "qsharedpointer.h"
 #include "qtypes.h"
 
-#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <memory>
@@ -34,6 +33,7 @@
 
 #include "adjustment.h"
 #include "conncomp.h"
+#include "constants.h"
 #include "constraints.h"
 #include "geometry/acute.h"
 #include "global.h"
@@ -64,6 +64,7 @@
 #include <Eigen/SparseCore>
 
 
+using Eigen::Array;
 using Eigen::ArrayXi;
 using Eigen::VectorXd;
 using Eigen::VectorXi;
@@ -76,6 +77,7 @@ using Eigen::SparseMatrix;
 using Eigen::ColMajor;
 using Eigen::indexing::last;
 using Eigen::Dynamic;
+using Eigen::seq;
 
 using Constraint::ConstraintBase;
 using Constraint::Parallel;
@@ -111,7 +113,6 @@ bool State::considerDiagonal_   = false;
 
 Quantiles::Recognition State::recogn_;
 Quantiles::Snapping    State::snap_;
-
 
 
 namespace {
@@ -167,30 +168,36 @@ QDataStream & operator>> (QDataStream & in,  IncidenceMatrix & AA)
 //! Serialization of geometric constraint
 QDataStream & operator<< ( QDataStream & out, const ConstraintBase & c)
 {
-    // qDebug() <<  Q_FUNC_INFO << c.type_name() << c.type_name()[0];
     out << c.type_name()[0]; // first character, {'v','h','d','o','p','c'}
-    out << c.status();    // { UNEVAL=0 | REQUIRED | OBSOLETE };
-    out << c.enforced();
-
     return out;
 }
 
 
-//! Deserialization of geometric constraint
-QDataStream & operator>> ( QDataStream &in, ConstraintBase &c )
+//! Serialization of arrays
+template<typename T>
+QDataStream & operator<< (QDataStream & out, const Array<T,Dynamic,1> & v)
 {
-    // qDebug() << Q_FUNC_INFO;
-    int status = 0;  // underlying type of enum
-    in >> status;
-    c.setStatus( static_cast<ConstraintBase::Status>(status) );
+    out << v.size();
+    for (const auto x : v) {
+        out << x;
+    }
+    return out;
+}
 
-    bool enforced = false;
-    in >> enforced;
-    c.setEnforced( enforced );
+
+template <typename T>
+QDataStream & operator>> (QDataStream & in, Array<T,Dynamic,1> & v)
+{
+    Index sz = 0;
+    in >> sz;
+
+    v.resize(sz);
+    for (Index i=0; i<sz; i++ ) {
+        in >> v(i);
+    }
 
     return in;
 }
-
 
 } // namespace
 
@@ -230,7 +237,7 @@ private:
     // augment
     Index findNewConstraints();
     void findAdjacenciesRecentSegment(const Quantiles::Snapping &snap);
-    void merge_segment ( Index a );
+    void merge_segment ( Index s );
     bool identities_removed();
     void snap_endpoints( Index numNewConstr );
     void update_segments( const ArrayXi & maps, const AdjustmentFramework & a);
@@ -253,30 +260,23 @@ private:
     void lookOutForParallelism( Index c);
     void lookOutForCopunctuality( Index c);
 
-    bool is_vertical(   Index a);
-    bool is_horizontal( Index a);
-    bool is_diagonal(   Index a);
-
+    bool is_vertical(    Index a);
+    bool is_horizontal(  Index a);
+    bool is_diagonal(    Index a);
     bool are_parallel(   Index a, Index b);
     bool are_orthogonal( Index a, Index b);
     bool are_identical(  Index a, Index b);
-
     bool are_copunctual( Index a, Index b, Index c);
 
     void establish_vertical(   Index a);
     void establish_horizontal( Index a);
     void establish_diagonal(   Index a);
-
     void establish_parallel(   Index a, Index b );
     void establish_orthogonal( Index a, Index b );
-
     void establish_copunctual( Index a, Index b, Index c );
 
     [[nodiscard]] std::pair<Eigen::VectorXd, SparseMatrix<double> >
     a_Maker( const ArrayXi & maps_ ) const;
-
-    [[nodiscard]] Index number_of_required_constraints() const; // for statistics only
-
 
     QVector< std::shared_ptr< const uStraightLineSegment> >   m_segm;
     QVector< std::shared_ptr< Constraint::ConstraintBase> >   m_constr;
@@ -285,14 +285,17 @@ private:
     QVector< std::shared_ptr< QEntity::QConstrained> >   m_qConstrained;
     QVector< std::shared_ptr< QConstraint::QConstraintBase> > m_qConstraint;
 
-    Graph::IncidenceMatrix Adj;          // Adjacency of straight line segments
-    Graph::IncidenceMatrix Rel;           // Present relation of segment (row) and constraint (column)
-    Graph::IncidenceMatrix x_touches_l;  // "End-point x touches straight line l."  TODO transpose!?
-    Graph::IncidenceMatrix y_touches_l;  // "End-point y touches straight line l."
-    Graph::IncidenceMatrix PP;           // parallelism
+    IncidenceMatrix Adj;          // adjacency of straight line segments
+    IncidenceMatrix Rel;          // relation of segment (row) and constraint (column)
+    IncidenceMatrix x_touches_l;  // "End-point x touches straight line l."
+    IncidenceMatrix y_touches_l;  // "End-point y touches straight line l."
+    IncidenceMatrix PP;           // parallelism of straight lines
 
-    Eigen::ArrayXi arr_segm;
-    Eigen::ArrayXi arr_constr;
+    ArrayXi arr_segm;   // connected components of the segments, e.g., 0,1,1,0,2,1,2,2
+    ArrayXi arr_constr; // connected components of the constraints, e.g., 0,1,2,2,1
+
+    Array<Attribute,Dynamic,1> m_status;
+    Array<bool,Dynamic,1> m_enforced;
 
     static constexpr double m_scale = 1000;
 };
@@ -314,7 +317,6 @@ State::State() : m_pImpl( std::make_unique<impl>())
 {
     // qDebug() << Q_FUNC_INFO;
 }
-
 
 
 State & State::operator= ( const State & other )
@@ -350,7 +352,6 @@ void State::setAlphaRecognition( const double alpha) {
 //! Set significance level for snapping of end points
 void State::setAlphaSnapping( const double alpha) {
     snap_.setAlpha( Stats::Prob(alpha) );  }
-
 
 
 bool impl::deserialize( QDataStream & in )
@@ -392,10 +393,7 @@ bool impl::deserialize( QDataStream & in )
         if ( c==nullptr ) {
             return false;
         }
-        in >> *c;
-        if ( in.status()!=0) {
-            return false;
-        }
+
         m_constr.append( c );
     }
 
@@ -437,6 +435,10 @@ bool impl::deserialize( QDataStream & in )
         m_qConstrained.append( q);
     }
 
+    qDebug().noquote() << "(4) attributes of constraints...";
+    in >> m_status;
+    in >> m_enforced;
+
     // determine subtasks, i.e., connected components
     identify_subtasks();
 
@@ -450,30 +452,28 @@ void State::graphicItemsAdd( QGraphicsScene *sc) const
 
 void impl::graphicItemsAdd( QGraphicsScene *sc) const
 {
-    // qDebug() << Q_FUNC_INFO;
-
     setAltColors();
+
     for ( const auto & item : m_qStroke)
     {
-        Q_ASSERT( !item->scene() );
+        assert( !item->scene() );
         sc->addItem( item.get() );
     }
     for ( const auto & item : m_qUnconstrained)
     {
-        Q_ASSERT( !item->scene() );
+        assert( !item->scene() );
         sc->addItem( item.get() );
     }
     for ( const auto & item : m_qConstrained)
     {
-        Q_ASSERT( !item->scene() );
+        assert( !item->scene() );
         sc->addItem( item.get() );
     }
     for ( const auto & item : m_qConstraint)
     {
-        Q_ASSERT( !item->scene() );
+        assert( !item->scene() );
         sc->addItem( item.get() );
     }
-    // qDebug() << Q_FUNC_INFO;
 }
 
 
@@ -526,13 +526,15 @@ void impl::serialize( QDataStream &out ) const
         item->serialize( out );
     }
 
+    // (4) evaluations
+    out << m_status;
+    out << m_enforced;
+
     qDebug().noquote() << "Export finished.";
 }
 
 void impl::findAdjacenciesRecentSegment(const Quantiles::Snapping &snap)
 {
-    // qDebug() << Q_FUNC_INFO;
-
     for ( int i=0; i<m_segm.length()-1; i++)
     {
          bool are_adjacent = false;
@@ -542,7 +544,6 @@ void impl::findAdjacenciesRecentSegment(const Quantiles::Snapping &snap)
                  m_segm.last()->bounding_box()) ) {
             continue;
         }
-
 
         if ( m_segm.last()->touchedBy( m_segm.at(i)->ux(),
                                       snap.quantile_stdNormDistr(),
@@ -588,7 +589,6 @@ void impl::findAdjacenciesRecentSegment(const Quantiles::Snapping &snap)
 void impl::remove_segment(const Index i)
 {
     // qDebug() << "removing segment #" << i+1;
-    // qDebug() << Q_FUNC_INFO;
 
     m_segm.removeAt(i);
     Adj.reduce(i,i);     // A(i,:)= []; A(:,i)=[]
@@ -606,8 +606,6 @@ void impl::remove_segment(const Index i)
 
 void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
 {
-    // qDebug() <<  Q_FUNC_INFO ;
-
     // (0) find adjacencies / connectivity
     findAdjacenciesRecentSegment( snap);
     if ( identities_removed() ) {
@@ -642,7 +640,6 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
 
 Index impl::findNewConstraints()
 {
-    // qDebug() <<  Q_FUNC_INFO;
     const Index previously = m_constr.length();
     const Index c = Adj.rows()-1;
 
@@ -690,7 +687,7 @@ void impl::lookOutForOrthogonality( const Index c )
 
 void impl::lookOutForParallelism(const Index c)
 {
-    const SparseMatrix<int> WW = Adj*Adj;
+    const SparseMatrix WW = (Adj*Adj).eval();
 
     // case: straight line segment connects two segments
     const Vector<Index,Dynamic> idx = spfind( Adj.col(c).eval() ); // neighbors of c
@@ -734,7 +731,7 @@ void impl::lookOutForParallelism(const Index c)
 
 void impl::lookOutForCopunctuality( const Index c )
 {
-    const SparseMatrix<int> WW = Adj*Adj;
+    const SparseMatrix WW = (Adj*Adj).eval();
 
     const Vector<Index,Dynamic> nbs = spfind( WW.col(c).eval() );
     for ( const auto a : nbs) {
@@ -763,8 +760,6 @@ void impl::lookOutForCopunctuality( const Index c )
 
 void impl::solve_subtask_greedy( const int cc )
 {
-    // qDebug() << Q_FUNC_INFO;
-
     const ArrayXi maps_ = find(   arr_segm==cc );
     const ArrayXi mapc_ = find( arr_constr==cc );
     assert( mapc_.size()>0 );
@@ -777,35 +772,34 @@ void impl::solve_subtask_greedy( const int cc )
     bool last_constraint_required = false;
     for ( Index c=0; c<mapc_.size(); c++) {
 
-        if ( m_constr.at( mapc_(c) )->unevaluated() )
+        if ( m_status(mapc_(c))==Attribute::Unevaluated )
         {
             qDebug().noquote().nospace() << blue
-                                         << QStringLiteral("Greedy search: adding constraint #%1 (%2) tentatively.")
-                                            .arg(c+1).arg( m_constr.at(mapc_(c))->type_name()) << black;
+                << QStringLiteral("Greedy search: adding constraint #%1 (%2) tentatively.")
+                    .arg(c+1).arg( m_constr.at(mapc_(c))->type_name()) << black;
 
             // add constraint tentative and  check dependency/consistency:
-            m_constr.at( mapc_(c) )->setStatus( ConstraintBase::REQUIRED );
+            m_status(mapc_(c)) = Attribute::Required;
 
             // enforce constraints (adjustment)
-            last_constraint_required =  a.enforceConstraints( m_constr, relsub, mapc_ );
+            last_constraint_required = a.enforceConstraints( m_constr, relsub, mapc_, m_status, m_enforced );
 
             if ( !last_constraint_required ) {
-                m_constr.at( mapc_(c) )->setStatus( ConstraintBase::OBSOLETE );
+                m_status(mapc_(c)) = Attribute::Redundant;
             }
         }
     }
 
     // adjustment with consistent set of constraints ..................
     if ( !last_constraint_required ) {
-        const Index C = number_of_required_constraints();
-        qDebug().noquote() << blue << QStringLiteral("final adjustment with *%1* %2.")
-                              .arg( C)
-                              .arg( C==1 ? "constraint" : "consistent constraints" ) << black;
-        // number of equations (not constraints!):
-        // const int E = number_of_required_equations( mapc_ );  TODO
-        last_constraint_required = a.enforceConstraints( m_constr, relsub, mapc_);
+        const Index C = (m_status==Attribute::Required).count();
+        qDebug().noquote() << blue << QString( C==1 ?
+            "final adjustment with %1 constraint" :
+            "final adjustment with %1 consistent constraints" ).arg( C)
+                           << black;
+        last_constraint_required = a.enforceConstraints( m_constr, relsub, mapc_,m_status, m_enforced);
     }
-    // Q_ASSERT_X( last_constraint_required, "greedy search", "final adjustment with inconsistent set");
+
     if ( !last_constraint_required ) {
         qDebug().noquote() << "-> final adjustment with inconsistent set";
         QMessageBox msg(nullptr);
@@ -841,17 +835,13 @@ void impl::update_segments( const ArrayXi & maps_,
         // qDebug() << QString("subtask: replace segment %1 due to adjustment").arg(s);
         const auto us = std::make_shared<uStraightLineSegment>(ua,ub);
         m_segm.replace( maps_(s), us);
-
     }
 }
 
 
 void impl::snap_endpoints( const Index numNewConstr)
 {
-
-    // qDebug() << Q_FUNC_INFO;
-
-    Eigen::ArrayXi newLabels(numNewConstr+1);
+    ArrayXi newLabels(numNewConstr+1);
     newLabels << arr_constr.tail(numNewConstr), arr_segm.tail(1);
     newLabels = unique(newLabels);
 
@@ -966,8 +956,8 @@ bool impl::are_identical( const Index a, const Index b)
     }
 
     // (2) statistical test
-    return  m_segm.at(a)->ul().isIdenticalTo( m_segm.at(b)->ul(),
-                                              State::recogn_.quantile_chi2_2dof() );
+    return m_segm.at(a)->ul().isIdenticalTo( m_segm.at(b)->ul(),
+                                             State::recogn_.quantile_chi2_2dof() );
 }
 
 
@@ -988,6 +978,12 @@ void impl::establish_parallel( const Index a,
     Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //   append a column
     Rel.set( a, last );
     Rel.set( b, last );
+
+    m_status.conservativeResize(m_status.size()+1);
+    m_status(last) = Attribute::Unevaluated;
+
+    m_enforced.conservativeResize(m_enforced.size()+1);
+    m_enforced(last) = false;
 }
 
 void impl::establish_vertical( const Index a)
@@ -997,6 +993,12 @@ void impl::establish_vertical( const Index a)
 
     Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //  append a column
     Rel.set( a, last );
+
+    m_status.conservativeResize(m_status.size()+1);
+    m_status(last) = Attribute::Unevaluated;
+
+    m_enforced.conservativeResize(m_enforced.size()+1);
+    m_enforced(last) = false;
 }
 
 void impl::establish_horizontal( const Index a)
@@ -1006,6 +1008,12 @@ void impl::establish_horizontal( const Index a)
 
     Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //  append a column
     Rel.set( a, last );
+
+    m_status.conservativeResize(m_status.size()+1);
+    m_status(last) = Attribute::Unevaluated;
+
+    m_enforced.conservativeResize(m_enforced.size()+1);
+    m_enforced(last) = false;
 }
 
 void impl::establish_diagonal( const Index a)
@@ -1015,6 +1023,12 @@ void impl::establish_diagonal( const Index a)
 
     Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //  append a column
     Rel.set( a, last );
+
+    m_status.conservativeResize(m_status.size()+1);
+    m_status(last) = Attribute::Unevaluated;
+
+    m_enforced.conservativeResize(m_enforced.size()+1);
+    m_enforced(last) = false;
 }
 
 void impl::establish_orthogonal( const Index a,
@@ -1023,10 +1037,15 @@ void impl::establish_orthogonal( const Index a,
     m_qConstraint.append( QConstraint::QOrthogonal::create());
     m_constr.append( std::make_shared<Orthogonal>() );
 
-    Rel.conservativeResize( Rel.rows(),
-                           Rel.cols()+1); //  append a column
+    Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //  append a column
     Rel.set( a, last );
     Rel.set( b, last );
+
+    m_status.conservativeResize(m_status.size()+1);
+    m_status(last) = Attribute::Unevaluated;
+
+    m_enforced.conservativeResize(m_enforced.size()+1);
+    m_enforced(last) = false;
 }
 
 
@@ -1041,6 +1060,12 @@ void impl::establish_copunctual( const Index a,
     Rel.set( a, last );
     Rel.set( b, last );
     Rel.set( c, last );
+
+    m_status.conservativeResize(m_status.size()+1);
+    m_status(last) = Attribute::Unevaluated;
+
+    m_enforced.conservativeResize(m_enforced.size()+1);
+    m_enforced(last) = false;
 }
 
 
@@ -1078,7 +1103,7 @@ impl::a_Maker(const ArrayXi &maps_) const
 
         // align signs consistently
         m.head(2).cwiseAbs().maxCoeff(&idx); // [~,idx] = max( abs(l(1:2)) )
-        int const offset3 = 3*s;
+        const int offset3 = 3*s;
         l.segment(offset3,3)  = sign( m(idx) ) * m;   // spherical normalized
 
         for ( int i=0; i<3; i++ ) {
@@ -1094,9 +1119,8 @@ impl::a_Maker(const ArrayXi &maps_) const
 
 void impl::remove_constraint( const Index i )
 {
-
-    Q_ASSERT( i>=0 );
-    Q_ASSERT( i<m_constr.length() );
+    assert( i >= 0 );
+    assert( i < m_constr.length() );
 
     if ( m_constr.at(i)->isInstanceOf<Parallel>() )
     {
@@ -1112,14 +1136,14 @@ void impl::remove_constraint( const Index i )
     Rel.remove_column(i);  // B(:,i)=[];
 
     m_qConstraint.removeAt(i);
+
+    m_status(seq(i,last-1)) = m_status(seq(i+1,last));
+    m_status.conservativeResize(m_status.size()-1);
+
+    m_enforced(seq(i,last-1)) = m_enforced(seq(i+1,last));
+    m_enforced.conservativeResize(m_enforced.size()-1);
 }
 
-
-Index impl::number_of_required_constraints() const
-{
-    auto predicate = []( auto & i){return (*i).required();};
-    return std::count_if( m_constr.begin(), m_constr.end(), predicate);
-}
 
 
 bool impl::identities_removed()
@@ -1150,12 +1174,10 @@ bool impl::identities_removed()
 
 
 // uncertain segment via merged tracks
-void impl::merge_segment( const Index a)
+void impl::merge_segment( const Index s)
 {
-    // qDebug() << Q_FUNC_INFO << a;
-
     const QPolygonF merged_track
-            = m_qStroke.at(a)->polygon()
+            = m_qStroke.at(s)->polygon()
             + m_qStroke.last()->polygon();
 
     m_qStroke.last() = std::make_shared<QEntity::QStroke>( merged_track );
@@ -1176,36 +1198,36 @@ void impl::merge_segment( const Index a)
 
     // inherit adjacencies of [a]
     for ( Index i=0; i<Adj.cols()-1; i++) {
-        if ( Adj.isSet(i,a) ) {    // column "a" fix
+        if ( Adj.isSet(i,s) ) {    // column s fix
             Adj.set( i, last );
             Adj.set( last, i );
         }
     }
 
     // delete constraints of segment [a] to be deleted.
-    for (Index ic = Rel.cols()-1; ic >= 0; ic--) { // hint: Bi is sparse, but *ColMajor*, loop is inefficient...
-        if ( Rel.isSet(a,ic) ) {
-            remove_constraint(ic);
+    for (Index c=Rel.cols()-1; c >= 0; c--) { // hint: Rel is sparse, but *ColMajor*, loop is inefficient...
+        if ( Rel.isSet(s,c) ) {
+            remove_constraint(c);
         }
     }
 
-    for ( Index ii=0; ii<x_touches_l.cols(); ii++ )  { // but *ColMajor*...
-        if ( x_touches_l.isSet( last,ii) ) {
-            x_touches_l.unset( last,ii );  // explicit zero !
+    for ( Index t=0; t<x_touches_l.cols(); t++ )  { // but *ColMajor*...
+        if ( x_touches_l.isSet( last,t) ) {
+            x_touches_l.unset( last,t );  // explicit zero !
         }
-        if ( y_touches_l.isSet( last,ii) ) {
-            y_touches_l.unset( last,ii );
+        if ( y_touches_l.isSet( last,t) ) {
+            y_touches_l.unset( last,t );
         }
-        if ( x_touches_l.isSet(  ii,last) ) {
-            x_touches_l.unset( ii,last );
+        if ( x_touches_l.isSet(  t,last) ) {
+            x_touches_l.unset( t,last );
         }
-        if ( y_touches_l.isSet(  ii,last) ) {
-            y_touches_l.unset( ii,last );
+        if ( y_touches_l.isSet(  t,last) ) {
+            y_touches_l.unset( t,last );
         }
     }
 
-    // remove segment 'a'
-    remove_segment(a);
+    // remove segment s
+    remove_segment(s);
 }
 
 
@@ -1218,7 +1240,7 @@ QString impl::StatusMsg() const
 {
     const Index S = m_segm.length();
     const Index C = m_constr.length();
-    const Index R = number_of_required_constraints();
+    const Index R = (m_status==Attribute::Required).count(); //  number of required_constraints
     const int CC = arr_segm.size()>0 ? arr_segm.maxCoeff()+1 : 0;
 
     const QString s0 = QApplication::tr("%1 connected component%2, ").arg(CC).arg(CC == 1 ? "" : "s");
@@ -1251,11 +1273,11 @@ void impl::reasoning_reduce_and_adjust()
 
         const ArrayXi mapc_ = find( arr_constr==cc );
         for ( auto c : mapc_ ) {
-            if ( m_constr.at( c )->obsolete())  {
+            if ( m_status(c)==Attribute::Redundant )  {
                 greedySearchRequired = true;
                 // replace constraint by unevaluated clone
-                m_constr.replace( c, m_constr.at( c )->clone() );
-                m_constr.at( c )->setStatus( ConstraintBase::UNEVAL );
+                m_constr.replace( c, m_constr.at(c)->clone() );
+                m_status(c) = Attribute::Unevaluated;
             }
         }
 
@@ -1264,38 +1286,33 @@ void impl::reasoning_reduce_and_adjust()
             solve_subtask_greedy(cc);  // reduce
         }
     }
-    // qDebug() <<  Q_FUNC_INFO;
 }
 
 
 void impl::remove_elements()
 {
-    for ( Index i=m_qConstraint.size()-1; i>=0; i--) {
-        if ( m_qConstraint.at(i)->isSelected() ) {
-            remove_constraint( i );
+    for ( Index c=m_qConstraint.size()-1; c>=0; c--) {
+        if ( m_qConstraint.at(c)->isSelected() ) {
+            remove_constraint(c);
         }
     }
-    for ( Index i=m_qConstrained.size()-1; i>=0; i--) {
-        if ( m_qConstrained.at(i)->isSelected()
-             || m_qStroke.at(i)->isSelected()
-             || m_qUnconstrained.at(i)->isSelected() ) {
+    for ( Index s=m_qConstrained.size()-1; s>=0; s--) {
+        if ( m_qConstrained.at(s)->isSelected()
+             || m_qStroke.at(s)->isSelected()
+             || m_qUnconstrained.at(s)->isSelected() ) {
             for (int c=0; c<Rel.cols(); c++) { // Bi is sparse, but ColMajor, loop is inefficient...
-                if ( Rel.isSet(i,c) ) {
+                if ( Rel.isSet(s,c) ) {
                     remove_constraint(c);
                     c--;
                 }
             }
-            remove_segment( i );
+            remove_segment(s);
         }
     }
 }
 
 //! Replace graphics because of adjustment and/or snapping
 void impl::replaceGraphics() {
-
-    // qDebug() << Q_FUNC_INFO;
-    assert( m_constr.size() == m_qConstraint.size() );
-    assert( m_qConstraint.size() == Rel.cols()      );
 
     // *** Check segments. ***
     // If reference count is 1, the segment has been added or modified.
@@ -1332,13 +1349,12 @@ void impl::replaceGraphics() {
         if ( modified ) {
             auto q = m_qConstraint.at(c)->clone();
             assert( idx.size()>0 && idx.size()<4 ); // {1,2,3}-ary
-            q->setStatus(   m_constr.at(c)->required(),
-                            m_constr.at(c)->enforced() );
+            q->setStatus( m_status(c)==Attribute::Required, m_enforced(c));
             q->setGeometry( m_segm, idx  );
             m_qConstraint.replace( c, q);
         }
     }
-
+    assert( m_status.size()==m_enforced.size() );
 }
 
 
@@ -1483,8 +1499,8 @@ std::pair<VectorXd, VectorXd> impl::trackCoords(const QPolygonF &poly)
 std::pair<uPoint,uPoint> impl::uEndPoints(const VectorXd &xi,
                                           const VectorXd &yi)
 {
-    Q_ASSERT( xi.size()>0 );
-    Q_ASSERT( yi.size()==xi.size() );
+    assert( xi.size() > 0 );
+    assert( yi.size() == xi.size() );
 
     const uStraightLine l = uStraightLine::estim(xi,yi);
     const double phi  = l.angle_rad();

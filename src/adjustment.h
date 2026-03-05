@@ -32,6 +32,7 @@
 namespace Constraint {class ConstraintBase;} // namespace Constraint
 namespace Graph {class IncidenceMatrix;} // namespace Graph
 
+enum class Attribute : int;
 
 //! Adjustment framework: observations, Jacobians, optimization...
 class AdjustmentFramework
@@ -59,7 +60,9 @@ public:
     //! Enforce the constraints of a subtask (adjustment)
     bool enforceConstraints(const QVector<std::shared_ptr<Constraint::ConstraintBase> > &constr,
                              const Graph::IncidenceMatrix &relsub,
-                             const Eigen::ArrayXi &mapc);
+                             const Eigen::ArrayXi &mapc,
+                            Eigen::Array<Attribute,Eigen::Dynamic,1> & status,
+                            Eigen::Array<bool,Eigen::Dynamic,1> & enforced);
 
     //! Get s-th entity, i.e., segment, represented by vector of length len
     [[nodiscard]] std::pair<Eigen::Vector3d, Eigen::Matrix3d> getEntity( Eigen::Index s) const;
@@ -77,13 +80,16 @@ private:
                   const Graph::IncidenceMatrix & relsub,
                   Eigen::SparseMatrix<double, Eigen::ColMajor> & BBr,
                   Eigen::VectorXd & g0,
-                  const Eigen::ArrayXi & mapc) const;
+                  const Eigen::ArrayXi & mapc,
+                  const Eigen::Array<Attribute,Eigen::Dynamic,1> & status ) const;
     //! compute reduced coordinates
     void reduce ( Eigen::VectorXd &, Eigen::SparseMatrix<double,Eigen::ColMajor> &) const;
 
     void checkConstraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
                            const Graph::IncidenceMatrix & relsub,
-                           const Eigen::ArrayXi & mapc ) const;
+                           const Eigen::ArrayXi & mapc,
+                           const Eigen::Array<Attribute,Eigen::Dynamic,1> & status,
+                           Eigen::Array<bool,Eigen::Dynamic,1> & enforced                          ) const;
 
     bool verbose = true;
 

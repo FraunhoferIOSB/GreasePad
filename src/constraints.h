@@ -47,24 +47,12 @@ public:
     ConstraintBase (const ConstraintBase & other) = default;
     ConstraintBase & operator= ( const ConstraintBase & other) = delete;
 
-    ConstraintBase();
+    ConstraintBase() = default;
     virtual ~ConstraintBase() = default;
-
-    //! Status: unevaluated, required, obsolete (redundant)
-    enum Status : int { UNEVAL=0, REQUIRED, OBSOLETE };
 
     [[nodiscard]] virtual const char *type_name() const = 0;  //!< Get type name of constraint
     [[nodiscard]] virtual int dof()   const = 0;   //!< Get degrees of freedom for this constraint
     [[nodiscard]] virtual int arity() const = 0;   //!< Get number of involved entities, i.e., straight lines
-
-    [[nodiscard]] Status status() const    { return m_status;   }         //!< Get status (required, obsolete, unevaluated)
-    [[nodiscard]] bool enforced() const    { return m_enforced; }         //!< Constraint is enforced?
-    [[nodiscard]] bool required() const    { return m_status==REQUIRED; } //!< Constraint is required?
-    [[nodiscard]] bool obsolete() const    { return m_status==OBSOLETE; } //!< Constraint is obsolete (redundant)?
-    [[nodiscard]] bool unevaluated() const { return m_status==UNEVAL;   } //!< Constraint is unevaluated?
-
-    void setStatus( const Status s) { m_status = s;   }     //!< Set status (required, obsolete, unevaluated)
-    void setEnforced( const bool b) { m_enforced = b; }     //!< Set status success of enforcement
 
     //! Compute Jacobian w.r.t. observations
     [[nodiscard]] virtual MatrixXd Jacobian(
@@ -85,10 +73,6 @@ public:
 
     //! Clone constraints via nonvirtual interface pattern
     [[nodiscard]] virtual std::shared_ptr<ConstraintBase> clone() const = 0;
-
-private:
-    Status m_status;    // { UNEVAL=0 | REQUIRED | OBSOLETE };
-    bool   m_enforced;
 };
 
 

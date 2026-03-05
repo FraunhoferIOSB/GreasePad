@@ -26,7 +26,8 @@
 
 #include <memory>
 
-class QAction;
+//class QAction;
+#include<QAction>
 class QObject;
 class QString;
 

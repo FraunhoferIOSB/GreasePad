@@ -46,24 +46,6 @@ using Matfun::sign;
 
 namespace Constraint {
 
-ConstraintBase::ConstraintBase()
-    : m_status(UNEVAL)
-    , m_enforced(false)
-{
-    // qDebug().noquote() << Q_FUNC_INFO;
-}
-
-/*std::shared_ptr<ConstraintBase> ConstraintBase::clone() const
-{
-   // qDebug() << Q_FUNC_INFO;
-   std::shared_ptr<ConstraintBase> ptr = doClone();
-   auto & r = *ptr;  // .get();
-   assert( typeid(r) == typeid(*this)
-           && "ConstraintBase: doClone() incorrectly overridden" );
-   return ptr;
-}*/
-
-
 
 MatrixXd Orthogonal::Jacobian( const VectorXidx & idxx,
                                const VectorXd &l0,
