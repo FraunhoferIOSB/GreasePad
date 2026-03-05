@@ -1339,7 +1339,7 @@ void impl::replaceGraphics() {
         }
         else {
             for (Index s=0; s<idx.size(); s++) {
-                if ( m_segm.at(s).use_count()==1 ) {
+                if ( m_segm.at(idx(s)).use_count()==1 ) {
                     modified = true;
                     break;
                 }
