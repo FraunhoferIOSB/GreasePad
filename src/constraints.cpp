@@ -37,7 +37,6 @@ using Eigen::Vector2d;
 using Eigen::Matrix;
 using Eigen::Matrix3d;
 using Eigen::RowVector3d;
-using VectorXidx = Eigen::Vector<Eigen::Index,Eigen::Dynamic>;
 
 using Matfun::null;
 using Matfun::cof3;
@@ -45,6 +44,8 @@ using Matfun::sign;
 
 
 namespace Constraint {
+
+using VectorXidx = Eigen::Vector<Eigen::Index,Eigen::Dynamic>;
 
 
 MatrixXd Orthogonal::Jacobian( const VectorXidx & idxx,
