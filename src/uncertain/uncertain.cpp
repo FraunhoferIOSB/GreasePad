@@ -63,8 +63,8 @@ bool BasicEntity2D::isIdenticalTo( const BasicEntity2D & us,
 
     int idx = 0;                       // visitor
     a.v().cwiseAbs().maxCoeff( &idx ); // [~,idx] = max( abs(a) )
-    a.m_val *= sign( a.v()(idx) );      // a = a*sign( a(idx) );
-    b.m_val *= sign( b.v()(idx) );      // b = b*sign( b(idx) );
+    a.m_val *= sign( a.v(idx) );      // a = a*sign( a(idx) );
+    b.m_val *= sign( b.v(idx) );      // b = b*sign( b(idx) );
 
     const Matrix<double, 3, 2> Jac = null(a.v());         // (A.120)
     const Vector2d d = Jac.adjoint()*( a.v() -b.v() );     // (10.141)

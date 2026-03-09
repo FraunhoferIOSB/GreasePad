@@ -93,8 +93,8 @@ uStraightLineSegment::uStraightLineSegment( const uPoint & ux,
     const Vector3d l = Sx*uy.v();
     assert( l.norm() > FLT_EPSILON && "identical points.");
 
-    const double xh = ux.v()(2);
-    const double yh = uy.v()(2);
+    const double xh = ux.v(2);
+    const double yh = uy.v(2);
 
     m_t.segment( 0, 3) = l;
     m_t.segment( 3, 3) = +sign(yh)*UUx*uy.v();
