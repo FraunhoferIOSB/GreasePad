@@ -45,9 +45,6 @@ using Matfun::sign;
 
 namespace Constraint {
 
-using VectorXidx = Eigen::Vector<Eigen::Index,Eigen::Dynamic>;
-
-
 MatrixXd Orthogonal::Jacobian( const VectorXidx & idxx,
                                const VectorXd &l0,
                                const VectorXd &l) const

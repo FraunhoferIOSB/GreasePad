@@ -98,7 +98,10 @@ private:
     ConstraintCRTP() = default;
     ConstraintCRTP(ConstraintCRTP&&) noexcept = default;
     friend Derived;
+
+    using VectorXidx = Vector<Index,Dynamic>;
 };
+
 
 //! Concurrence constraint (three copunctual straight lines)
 class Copunctual : public ConstraintCRTP<Copunctual>
