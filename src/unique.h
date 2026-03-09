@@ -31,21 +31,11 @@ using Eigen::Array;
 using Eigen::Vector;
 using Eigen::Dynamic;
 
-//! unique values in Eigen::Vector
+//! unique values
+//! in Eigen::Vector or nx1 Eigen::Array
 template <typename T>
-[[nodiscard,maybe_unused]] static Vector<T, Dynamic> unique( Vector<T,Dynamic> u)
-{
-    std::sort( u.begin(), u.end() );
-    // remove consecutive (adjacent) duplicates:
-    const auto last = std::unique( u.begin(), u.end() );
-    const auto n = std::distance( u.begin(), last);
-    return u.head(n);
-}
-
-
-//! unique values in nx1 Eigen::Array
-template <typename T>
-[[nodiscard,maybe_unused]] static Array<T, Dynamic,1> unique( Array<T,Dynamic,1> u)
+[[nodiscard,maybe_unused]] static T
+unique(T u)
 {
     std::sort( u.begin(), u.end() );
     // remove consecutive (adjacent) duplicates:
@@ -57,7 +47,8 @@ template <typename T>
 
 //! unique values in std::vector
 template <typename T>
-[[nodiscard,maybe_unused]] static std::vector<T> unique( std::vector<T> u)
+[[nodiscard,maybe_unused]] static std::vector<T>
+unique( std::vector<T> u)
 {
     std::sort( u.begin(), u.end() );
     // remove consecutive (adjacent) duplicates:
