@@ -21,6 +21,7 @@
 #include "constraints.h"
 #include "geometry/minrot.h"
 #include "global.h"
+#include "kernel.h"
 #include "matfun.h"
 #include "matrix.h"
 
@@ -54,6 +55,7 @@ using Eigen::Vector3d;
 using Eigen::MatrixXd;
 using Eigen::Matrix3d;
 using Eigen::SparseMatrix;
+using Eigen::Matrix;
 
 using Geometry::Rot_ab;
 
@@ -92,7 +94,8 @@ void AdjustmentFramework::update( const VectorXd &x)
         // m.segment(idx3,3).normalize();
 
         // (2) via retraction ......................................................
-        const Vector3d v = null( l0_.segment(idx3, 3) ) * x.segment(2 * s, 2);
+        const Vector3d l0 = l0_.segment(idx3,3);
+        const Vector3d v = null( l0 ) * x.segment(2 * s, 2);
         const double nv = v.norm();
         if ( nv > T_zero ) {
             const Vector3d p = l0_.segment(idx3, 3);
@@ -235,7 +238,8 @@ void AdjustmentFramework::reduce (
         const Index offset3 = 3 * s;
         const Index offset2 = 2 * s;
 
-        const Eigen::Matrix<double, 3, 2> NN = null( l0_.segment(offset3, 3) );
+        const Vector3d l0 = l0_.segment(offset3,3);
+        const Matrix<double, 3, 2> NN = null( l0 );
 
         // (i) reduced coordinates of observations
         lr.segment(offset2,2) = NN.adjoint() * l_.segment(offset3,3);

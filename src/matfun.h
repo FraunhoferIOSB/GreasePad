@@ -27,7 +27,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cmath>
 
 
 namespace Matfun {
@@ -39,35 +38,9 @@ using Eigen::SparseMatrix;
 using Eigen::SparseVector;
 using Eigen::Matrix3d;
 using Eigen::Index;
+using Eigen::Matrix;
 using Eigen::Vector;
 using Eigen::Dynamic;
-using Eigen::placeholders::last;
-
-
-//! Nullspace of row vector
-[[nodiscard,maybe_unused]] static MatrixXd null( const VectorXd & xs )
-{
-    // cf. PCV, eq. (A.120)
-    constexpr double T_zero = 1e-6;
-    assert( std::fabs( xs.norm()-1. ) < T_zero && "vector norm not 1");
-
-    const Index N = xs.size();
-    VectorXd x0 = xs.head(N-1);
-    double   xN = xs(last);
-    if ( xN < 0.0 ) {
-        x0 = -x0;
-        xN = -xN;
-    }
-
-    const MatrixXd JJ = ( MatrixXd(N,N-1)
-         << MatrixXd::Identity(N-1,N-1) -x0*x0.adjoint()/(1.+xN),
-            -x0.adjoint() ).finished();
-
-    const VectorXd check = JJ.adjoint()*xs;
-    assert( check.norm() < T_zero && "not a zero vector");
-
-    return JJ;
-}
 
 
 //! check if the matrix AA is rank-deficient

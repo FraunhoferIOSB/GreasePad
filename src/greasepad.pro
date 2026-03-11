@@ -58,6 +58,7 @@ HEADERS += \
     geometry/minrot.h \
     geometry/skew.h \
     global.h \
+    kernel.h \
     mainwindow.h \
     mainscene.h \
     mainview.h \

@@ -26,7 +26,9 @@
 
 #include "geometry/minrot.h"
 #include "geometry/skew.h"
+#include "kernel.h"
 #include "matfun.h"
+
 
 using Geometry::skew;
 using Geometry::Rot_ab;
