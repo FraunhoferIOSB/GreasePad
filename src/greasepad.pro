@@ -52,6 +52,7 @@ HEADERS += \
     conncomp.h \
     constants.h \
     constraints.h \
+    find.h \
     geometry/aabb.h \
     geometry/acute.h \
     geometry/conics.h \

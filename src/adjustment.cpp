@@ -19,6 +19,7 @@
 #include "adjustment.h"
 #include "constants.h"
 #include "constraints.h"
+#include "find.h"
 #include "geometry/minrot.h"
 #include "global.h"
 #include "kernel.h"
@@ -61,7 +62,7 @@ using Geometry::Rot_ab;
 
 using Matfun::null;
 using Matfun::is_rank_deficient;
-using Matfun::spfind;
+using Matfun::find;
 
 using TextColor::black;
 using TextColor::blue;
@@ -284,7 +285,7 @@ void AdjustmentFramework::Jacobian(
             continue;
         }
 
-        VectorXidx idx = spfind( relsub.col(c).eval() );
+        VectorXidx idx = find( relsub.col(c).eval() );
 
         auto JJ = con->Jacobian( idx, l0_, l_ );
         const int dof = con->dof();
@@ -343,7 +344,7 @@ void AdjustmentFramework::checkConstraints(
            continue;
         }
 
-        const VectorXidx idx = spfind( relsub.col(c).eval() );
+        const VectorXidx idx = find( relsub.col(c).eval() );
 
         const double d =  con->contradict( idx, l0_ ).norm();
         assert( enforced.size()==status.size() );

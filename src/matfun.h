@@ -31,16 +31,8 @@
 
 namespace Matfun {
 
-using Eigen::ArrayXi;
-using Eigen::MatrixXd;
-using Eigen::VectorXd;
-using Eigen::SparseMatrix;
-using Eigen::SparseVector;
 using Eigen::Matrix3d;
-using Eigen::Index;
-using Eigen::Matrix;
-using Eigen::Vector;
-using Eigen::Dynamic;
+using Eigen::SparseMatrix;
 
 
 //! check if the matrix AA is rank-deficient
@@ -75,60 +67,10 @@ using Eigen::Dynamic;
 }
 
 
-// //! Matlab's find(x,1,'first')
-// template <typename T>
-// [[nodiscard]] static Index indexOf(const Eigen::Vector<T,Eigen::Dynamic> &v, const T x)
-// {
-//     for ( Index i=0; i<v.size(); i++) {
-//         if ( v(i)==x ) {
-//             return i;
-//         }
-//     }
-//     return -1;
-//
-//     /* Eigen 3.4.0
-//     auto it = std::find( v.begin(), v.end(), i);
-//     if ( it==v.end() ) {
-//         return -1;
-//     }
-//     return std::distance( v.begin(), it); */
-// }
-
-
 //! signum function with sign(0):=+1
 template <typename T>
 constexpr int sign(T val) noexcept {
     return (T(0) <= val) - (val < T(0));
-}
-
-
-//! Matlab's find
-[[nodiscard,maybe_unused]] static ArrayXi
-find( const Vector<bool,Dynamic> & cond)
-{
-    ArrayXi idx( cond.count() );
-    for (int i=0, k=0; i<cond.size(); i++) {
-        if ( cond(i) ) {
-            idx(k++) = i;
-        }
-    }
-
-    return idx;
-}
-
-
-//! find indices of sparse vectors
-template <typename T>
-[[nodiscard,maybe_unused]] static Vector<Index,Dynamic> spfind( const SparseVector<T> & v)
-{
-    Vector<Index,Dynamic> idx( v.nonZeros() );
-
-    Index i=0;
-    for ( typename SparseVector<T>::InnerIterator it(v); it; ++it) {
-        idx(i++) = it.index();
-    }
-
-    return idx;
 }
 
 } // namespace Matfun

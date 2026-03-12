@@ -35,6 +35,7 @@
 #include "conncomp.h"
 #include "constants.h"
 #include "constraints.h"
+#include "find.h"
 #include "geometry/acute.h"
 #include "global.h"
 #include "mainscene.h"
@@ -98,7 +99,6 @@ using Graph::IncidenceMatrix;
 using Matfun::find;
 using Matfun::sign;
 using Matfun::unique;
-using Matfun::spfind;
 
 using TextColor::black;
 using TextColor::blue;
@@ -690,7 +690,7 @@ void impl::lookOutForParallelism(const Index c)
     const SparseMatrix WW = (Adj*Adj).eval();
 
     // case: straight line segment connects two segments
-    const Vector<Index,Dynamic> idx = spfind( Adj.col(c).eval() ); // neighbors of c
+    const Vector<Index,Dynamic> idx = find( Adj.col(c).eval() ); // neighbors of c
 
     // Check all pairs of direct neighbors.
     for ( Index i=0; i<idx.rows(); i++) {
@@ -715,7 +715,7 @@ void impl::lookOutForParallelism(const Index c)
 
 
     // Find walks of length 2 between the vertices of the graph.
-    const Vector<Index,Dynamic> nbs = spfind( WW.col(c).eval() );
+    const Vector<Index,Dynamic> nbs = find( WW.col(c).eval() );
     for ( const auto a : nbs) { // Index n=0; n<nbs.rows()-1; n++) {
         // a is a walk of length 2 away from c.
         if ( !Adj.isSet(a,c) ) {
@@ -733,11 +733,11 @@ void impl::lookOutForCopunctuality( const Index c )
 {
     const SparseMatrix WW = (Adj*Adj).eval();
 
-    const Vector<Index,Dynamic> nbs = spfind( WW.col(c).eval() );
+    const Vector<Index,Dynamic> nbs = find( WW.col(c).eval() );
     for ( const auto a : nbs) {
         // a and c are adjacent and have at least one common neighbor.
         // Find all common neighbors of a and c.
-        const Vector<Index,Dynamic> nbnb = spfind( Adj.col(a).eval() ); // neighbors of a.
+        const Vector<Index,Dynamic> nbnb = find( Adj.col(a).eval() ); // neighbors of a.
         for ( const auto b : nbnb ) {
             if ( !Adj.isSet( b,c ) ) {
                 continue;   // b is not a common neighbor of a and c.
@@ -1124,7 +1124,7 @@ void impl::remove_constraint( const Index i )
 
     if ( m_constr.at(i)->isInstanceOf<Parallel>() )
     {
-        const Vector<Index,Dynamic> idx = spfind( Rel.col(i).eval() );
+        const Vector<Index,Dynamic> idx = find( Rel.col(i).eval() );
         Q_ASSERT_X( idx.size() == 2, Q_FUNC_INFO,
                     QStringLiteral("parallel with %1 entities")
                     .arg( QString::number(idx.size())).toUtf8() );
@@ -1332,7 +1332,7 @@ void impl::replaceGraphics() {
     for (Index c=0; c<m_constr.length(); c++)
     {
         bool modified = false;
-        const Vector<Index,Dynamic> idx = spfind( Rel.col(c).eval() );
+        const Vector<Index,Dynamic> idx = find( Rel.col(c).eval() );
 
         if ( m_constr.at(c).use_count()==1 ) {
             modified = true; // actually not modified, but added
