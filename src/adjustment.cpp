@@ -37,7 +37,6 @@
 #include <cmath>
 #include <memory>
 #include <sstream>
-#include <utility>
 
 #include <Eigen/Core>
 #include <Eigen/SparseCore>
@@ -68,17 +67,6 @@ using TextColor::black;
 using TextColor::blue;
 using TextColor::green;
 using TextColor::red;
-
-
-std::pair<Vector3d,Matrix3d >
-AdjustmentFramework::getEntity( const Index s) const
-{
-    const Index offset = 3*s;
-    const Matrix3d RR = Rot_ab<double,3>( l_.segment(offset,3),
-                                          l0_.segment(offset,3) );
-    return { l0_.segment(offset,3),
-             RR*Cov_ll_.block(offset,offset,3,3)*RR.adjoint() };
-}
 
 
 //! update of parameters (observations) via retraction

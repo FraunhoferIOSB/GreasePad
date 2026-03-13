@@ -823,7 +823,7 @@ void impl::update_segments( const ArrayXi & maps_,
 {
     for ( Index s=0; s<maps_.size(); s++ ) {
         //  straight line:  s-th 3-vector
-        const std::pair<Vector3d,Matrix3d> p = a.getEntity(s);
+        const std::pair<Vector3d,Matrix3d> p = a.getEntity<3>(s);
         const uStraightLine ul( p.first, p.second );
 
         const uPoint ux = m_segm.at( maps_(s) )->ux();

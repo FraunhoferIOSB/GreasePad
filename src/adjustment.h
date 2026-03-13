@@ -28,6 +28,8 @@
 
 #include "qcontainerfwd.h"
 
+#include "geometry/minrot.h"
+
 
 namespace Constraint {class ConstraintBase;} // namespace Constraint
 namespace Graph {class IncidenceMatrix;} // namespace Graph
@@ -64,8 +66,19 @@ public:
                             Eigen::Array<Attribute,Eigen::Dynamic,1> & status,
                             Eigen::Array<bool,Eigen::Dynamic,1> & enforced);
 
-    //! Get s-th entity, i.e., segment, represented by vector of length len
-    [[nodiscard]] std::pair<Eigen::Vector3d, Eigen::Matrix3d> getEntity( Eigen::Index s) const;
+    //! Get s-th entity represented by vector of length N
+    template <int N>
+    std::pair<Eigen::Vector<double,N>,Eigen::Matrix<double,N,N> >
+    getEntity( const Eigen::Index s) const
+    {
+        const Eigen::Index offset = N*s;
+        const Eigen::Matrix<double,N,N> RR = Geometry::Rot_ab(
+            l_.segment(offset,N).eval(),
+            l0_.segment(offset,N).eval() );
+
+        return { l0_.segment(offset,N),
+                RR*Cov_ll_.block(offset,offset,N,N)*RR.adjoint() };
+    }
 
 private:
     [[nodiscard]] static int nIterMax() { return nIterMax_; }
