@@ -83,11 +83,10 @@ void AdjustmentFramework::update( const VectorXd &x)
         // m.segment(idx3,3).normalize();
 
         // (2) via retraction ......................................................
-        const Vector3d l0 = l0_.segment(idx3,3);
-        const Vector3d v = null( l0 ) * x.segment(2 * s, 2);
+        const Vector3d p = l0_.segment(idx3,3);
+        const Vector3d v = null(p) * x.segment(2 * s, 2);
         const double nv = v.norm();
         if ( nv > T_zero ) {
-            const Vector3d p = l0_.segment(idx3, 3);
             l0_.segment( idx3,3) = cos( nv)*p +sin(nv)*v/nv;
         }
     }
