@@ -72,9 +72,9 @@ public:
     getEntity( const Eigen::Index s) const
     {
         const Eigen::Index offset = N*s;
-        const Eigen::Matrix<double,N,N> RR = Geometry::Rot_ab(
-            l_.segment(offset,N).eval(),
-            l0_.segment(offset,N).eval() );
+        const Eigen::Matrix<double,N,N> RR = Geometry::Rot_ab<double,3>(
+            l_.segment(offset,N),
+            l0_.segment(offset,N) );
 
         return { l0_.segment(offset,N),
                 RR*Cov_ll_.block(offset,offset,N,N)*RR.adjoint() };
