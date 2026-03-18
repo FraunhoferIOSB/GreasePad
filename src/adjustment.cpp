@@ -56,6 +56,7 @@ using Eigen::MatrixXd;
 using Eigen::Matrix3d;
 using Eigen::SparseMatrix;
 using Eigen::Matrix;
+using Eigen::Vector;
 
 using Geometry::Rot_ab;
 
@@ -69,11 +70,27 @@ using TextColor::green;
 using TextColor::red;
 
 
+namespace {
+
+template <int N>
+void retract(Eigen::Ref<Vector<double,N> > p,
+             const Vector<double,N-1> & xr)
+{
+    constexpr double T_zero = 1e-8;
+    // null(p): N-1 basis vectors for the nullspace of the unit-vector p
+    const Vector<double,N> v = null<N>(p) * xr;
+    const double nv = v.norm();
+    if (nv > T_zero) {
+        p = std::cos( nv)*p +std::sin(nv)*v/nv;
+    }
+}
+
+} // namespace
+
+
 //! update of parameters (observations) via retraction
 void AdjustmentFramework::update( const VectorXd &x)
 {
-    constexpr double T_zero = 1e-8;
-
     for (Index s=0; s<x.size()/2; s++) {
         const Index idx3 = 3*s;
 
@@ -83,14 +100,10 @@ void AdjustmentFramework::update( const VectorXd &x)
         // m.segment(idx3,3).normalize();
 
         // (2) via retraction ......................................................
-        const Vector3d p = l0_.segment(idx3,3);
-        const Vector3d v = null(p) * x.segment(2 * s, 2);
-        const double nv = v.norm();
-        if ( nv > T_zero ) {
-            l0_.segment( idx3,3) = cos( nv)*p +sin(nv)*v/nv;
-        }
+        retract<3>(l0_.segment<3>(idx3), x.segment<2>(2*s));
     }
 }
+
 
 bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<ConstraintBase> > & constr,
                                               const IncidenceMatrix & relsub,
@@ -343,8 +356,8 @@ void AdjustmentFramework::checkConstraints(
             const QString msg2 = QStringLiteral("check = %2, \t").arg(d);
             QDebug deb = qDebug().noquote();
             deb << QStringLiteral("constraint #%1:  ").arg(c+1,3);
-            deb << ( status(c)==Attribute::Required ? green : blue) << msg1 << black;
-            deb << ( enforced(c) ? black : red)  << msg2 << black;
+            deb << ( status(mapc(c))==Attribute::Required ? green : blue) << msg1 << black;
+            deb << ( enforced(mapc(c)) ? black : red)  << msg2 << black;
         }
 #endif
     }
