@@ -275,6 +275,8 @@ private:
     void establish_orthogonal( Index a, Index b );
     void establish_copunctual( Index a, Index b, Index c );
 
+    void augment();
+
     [[nodiscard]] std::pair<Eigen::VectorXd, SparseMatrix<double> >
     a_Maker( const ArrayXi & maps_ ) const;
 
@@ -537,13 +539,13 @@ void impl::findAdjacenciesRecentSegment(const Quantiles::Snapping &snap)
 {
     for ( int i=0; i<m_segm.length()-1; i++)
     {
-         bool are_adjacent = false;
-
         // pre-check (culling) via axis-aligned bounding boxes
         if ( !m_segm.at(i)->bounding_box().overlaps(
                  m_segm.last()->bounding_box()) ) {
             continue;
         }
+
+        bool are_adjacent = false;
 
         if ( m_segm.last()->touchedBy( m_segm.at(i)->ux(),
                                       snap.quantile_stdNormDistr(),
@@ -961,6 +963,20 @@ bool impl::are_identical( const Index a, const Index b)
 }
 
 
+// augment state with new, unevaluated constraint
+void impl::augment()
+{
+    // append an empty column
+    Rel.conservativeResize(Rel.rows(), Rel.cols()+1);
+
+    m_status.conservativeResize(m_status.size()+1);
+    m_status(last) = Attribute::Unevaluated;
+
+    m_enforced.conservativeResize(m_enforced.size()+1);
+    m_enforced(last) = false;
+}
+
+
 void impl::establish_parallel( const Index a,
                                const Index b)
 {
@@ -975,61 +991,41 @@ void impl::establish_parallel( const Index a,
     m_qConstraint.append( QConstraint::QParallel::create() );
     m_constr.append( std::make_shared<Parallel>() );
 
-    Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //   append a column
+    augment();
     Rel.set( a, last );
     Rel.set( b, last );
-
-    m_status.conservativeResize(m_status.size()+1);
-    m_status(last) = Attribute::Unevaluated;
-
-    m_enforced.conservativeResize(m_enforced.size()+1);
-    m_enforced(last) = false;
 }
+
 
 void impl::establish_vertical( const Index a)
 {
     m_qConstraint.append( QConstraint::QAligned::create());
     m_constr.append( std::make_shared<Vertical>() );
 
-    Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //  append a column
+    augment();
     Rel.set( a, last );
-
-    m_status.conservativeResize(m_status.size()+1);
-    m_status(last) = Attribute::Unevaluated;
-
-    m_enforced.conservativeResize(m_enforced.size()+1);
-    m_enforced(last) = false;
 }
+
 
 void impl::establish_horizontal( const Index a)
 {
     m_qConstraint.append( QConstraint::QAligned::create());
     m_constr.append( std::make_shared<Horizontal>() );
 
-    Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //  append a column
+    augment();
     Rel.set( a, last );
-
-    m_status.conservativeResize(m_status.size()+1);
-    m_status(last) = Attribute::Unevaluated;
-
-    m_enforced.conservativeResize(m_enforced.size()+1);
-    m_enforced(last) = false;
 }
+
 
 void impl::establish_diagonal( const Index a)
 {
     m_qConstraint.append( QConstraint::QAligned::create());
     m_constr.append( std::make_shared<Diagonal>() );
 
-    Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //  append a column
+    augment();
     Rel.set( a, last );
-
-    m_status.conservativeResize(m_status.size()+1);
-    m_status(last) = Attribute::Unevaluated;
-
-    m_enforced.conservativeResize(m_enforced.size()+1);
-    m_enforced(last) = false;
 }
+
 
 void impl::establish_orthogonal( const Index a,
                                  const Index b)
@@ -1037,15 +1033,9 @@ void impl::establish_orthogonal( const Index a,
     m_qConstraint.append( QConstraint::QOrthogonal::create());
     m_constr.append( std::make_shared<Orthogonal>() );
 
-    Rel.conservativeResize( Rel.rows(), Rel.cols()+1); //  append a column
+    augment();
     Rel.set( a, last );
     Rel.set( b, last );
-
-    m_status.conservativeResize(m_status.size()+1);
-    m_status(last) = Attribute::Unevaluated;
-
-    m_enforced.conservativeResize(m_enforced.size()+1);
-    m_enforced(last) = false;
 }
 
 
@@ -1056,16 +1046,10 @@ void impl::establish_copunctual( const Index a,
     m_qConstraint.append( QConstraint::QCopunctual::create() );
     m_constr.append( std::make_shared<Copunctual>() );
 
-    Rel.conservativeResize( Rel.rows(), Rel.cols()+1) ; // append a column
+    augment();
     Rel.set( a, last );
     Rel.set( b, last );
     Rel.set( c, last );
-
-    m_status.conservativeResize(m_status.size()+1);
-    m_status(last) = Attribute::Unevaluated;
-
-    m_enforced.conservativeResize(m_enforced.size()+1);
-    m_enforced(last) = false;
 }
 
 
