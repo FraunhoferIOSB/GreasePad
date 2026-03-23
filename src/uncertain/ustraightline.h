@@ -21,30 +21,28 @@
 
 #include "Eigen/Core"
 
-#include "uncertain.h"
+#include "uelement.h"
 
 #include <cmath>
 
 
 namespace Uncertain {
 
-using Eigen::VectorXd;
-
 class uPoint;
 
-
 //! Uncertain straight line
-class uStraightLine : public BasicEntity2D
+class uStraightLine : public uElement<3>
 {
 public:
     uStraightLine() = default;
-    uStraightLine( const Vector3d & l, const Matrix3d & Sigma_ll);
+    uStraightLine( const Eigen::Vector3d & l, const Eigen::Matrix3d & Sigma_ll);
 
-    [[nodiscard]] static uStraightLine estim( const VectorXd & xi, const VectorXd & yi);
+    [[nodiscard]] static uStraightLine
+    estim( const Eigen::VectorXd & xi, const Eigen::VectorXd & yi);
 
     [[nodiscard]] uStraightLine euclidean() const;
     [[nodiscard]] uStraightLine sphericalNormalized() const;
-    [[nodiscard]] Matrix3d conicMatrix(double) const;
+    [[nodiscard]] Eigen::Matrix3d conicMatrix(double) const;
 
     //! Angle between this straight line and the x-axis in radians
     [[nodiscard]] double angle_rad()  const { return std::atan2( v(1),v(0) ); }

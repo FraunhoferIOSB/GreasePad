@@ -23,7 +23,7 @@
 
 #include "matfun.h"
 #include "statistics/iscov.h"
-#include "uncertain.h"
+#include "uncertain/uelement.h"
 #include "upoint.h"
 #include "ustraightline.h"
 
@@ -55,7 +55,7 @@ namespace Uncertain {
 //! Uncertain straight line, defined by a 3-vector and its covariance matrix
 uStraightLine::uStraightLine(const Vector3d & l,
                              const Matrix3d & Sigma_ll)
-    : BasicEntity2D( l, Sigma_ll )
+    : uElement( l, Sigma_ll )
 {
     /* check: null(Sigma_ll)
     Eigen::FullPivLU<MatrixXd> lu(Sigma_ll);

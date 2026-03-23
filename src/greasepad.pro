@@ -81,6 +81,7 @@ HEADERS += \
     statistics/uniform.h \
     uncertain/quncertain.h \
     uncertain/udistance.h \
+    uncertain/uelement.h \
     uncertain/uncertain.h \
     uncertain/upoint.h \
     uncertain/usegment.h \

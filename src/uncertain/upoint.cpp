@@ -20,7 +20,7 @@
 #include "matfun.h"
 #include "statistics/iscov.h"
 #include "udistance.h"
-#include "uncertain.h"
+#include "uncertain/uelement.h"
 #include "upoint.h"
 #include "ustraightline.h"
 
@@ -38,7 +38,9 @@
 
 using Eigen::Matrix;
 using Eigen::Matrix2d;
+using Eigen::Matrix3d;
 using Eigen::Vector2d;
+using Eigen::Vector3d;
 
 using Matfun::sign;
 using Matfun::cof3;
@@ -51,7 +53,7 @@ namespace Uncertain {
 
 //! Construction of uncertain point via 3-vector x and its covariance matrix
 uPoint::uPoint( const Vector3d & x, const Matrix3d & Sigma_xx)
-    : BasicEntity2D (x, Sigma_xx)
+    : uElement (x, Sigma_xx)
 {
     // qDebug() << Q_FUNC_INFO;
 }

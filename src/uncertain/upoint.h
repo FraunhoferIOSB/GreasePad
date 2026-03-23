@@ -19,8 +19,10 @@
 #ifndef UPOINT_H
 #define UPOINT_H
 
+#include "Eigen/Core"
+
 #include "geometry/aabb.h"     // axis-aligned bounding box
-#include "uncertain.h"
+#include "uelement.h"
 
 
 namespace Uncertain {
@@ -32,18 +34,18 @@ using Geometry::Aabb;
 
 
 //! Uncertain point
-class uPoint : public BasicEntity2D
+class uPoint : public uElement<3>
 {
 public:
     uPoint() = delete;
-    uPoint( const Vector3d & x,
-            const Matrix3d & Sigma_xx);
+    uPoint( const Eigen::Vector3d & x,
+            const Eigen::Matrix3d & Sigma_xx);
 
     [[nodiscard]] Aabb<double,2> bbox() const;
-    [[nodiscard]] Matrix3d conicMatrix(double) const;
+    [[nodiscard]] Eigen::Matrix3d conicMatrix(double) const;
     [[nodiscard]] uPoint euclidean() const;
     [[nodiscard]] uPoint sphericalNormalized() const;
-    [[nodiscard]] uPoint transformed( const Matrix3d & TT) const;
+    [[nodiscard]] uPoint transformed( const Eigen::Matrix3d & TT) const;
     [[nodiscard]] uStraightLine cross( const uPoint &) const;
     [[nodiscard]] uDistance distanceAlgebraicTo( const uStraightLine & ul) const;
     [[nodiscard]] uDistance distanceEuclideanTo( const uStraightLine & ul) const;
