@@ -47,13 +47,7 @@ public:
     AdjustmentFramework( const AdjustmentFramework &) = delete;
 
     //! Value constructor: vector of observations and covariance matrix
-    explicit AdjustmentFramework( const std::pair<Eigen::VectorXd, Eigen::SparseMatrix<double> > & p)
-        : l_(p.first), Cov_ll_(p.second)
-    {
-        // initialization: approx. adjusted observations := observations
-        l0_ = l_;
-    }
-
+    explicit AdjustmentFramework(const std::pair<Eigen::VectorXd, Eigen::SparseMatrix<double> > & p);
     AdjustmentFramework ( AdjustmentFramework &&) = delete;
     ~AdjustmentFramework() = default;
     void operator= ( const AdjustmentFramework &)  = delete;
@@ -83,11 +77,12 @@ private:
     void Jacobian(const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
                   const Graph::IncidenceMatrix & relsub,
                   Eigen::SparseMatrix<double, Eigen::ColMajor> & BBr,
-                  Eigen::VectorXd & g0,
                   const Eigen::ArrayXi & mapc,
-                  const Eigen::Array<Attribute,Eigen::Dynamic,1> & status ) const;
+                  const Eigen::Array<Attribute,Eigen::Dynamic,1> & status,
+                  Eigen::VectorXd & g0  );
+
     //! compute reduced coordinates
-    void reduce ( Eigen::VectorXd &, Eigen::SparseMatrix<double,Eigen::ColMajor> &) const;
+    void reduce();
 
     void checkConstraints( const QVector<std::shared_ptr<Constraint::ConstraintBase> > & constr,
                            const Graph::IncidenceMatrix & relsub,
@@ -97,9 +92,15 @@ private:
 
     bool verbose = true;
 
+    // observations
     Eigen::VectorXd l0_;             // vector of approximate/estimated observations
     const Eigen::VectorXd l_;        // vector of observations.
-    const Eigen::SparseMatrix<double> Cov_ll_;   // covariance matrix of vector of observations
+    const Eigen::SparseMatrix<double> Sigma_ll_;   // covariance matrix of vector of observations
+
+    // reduced coordinates obervations
+    Eigen::VectorXd lr;
+    Eigen::SparseMatrix<double,Eigen::ColMajor> rSigma_ll;
+
 
     static constexpr int    nIterMax_ = 10;          // maximal number of iterations
     static constexpr double convergence     = 1e-7;  // Threshold convergence
@@ -120,7 +121,7 @@ AdjustmentFramework::getEntity( const Eigen::Index s) const
         l0_.segment(offset,N) );
 
     return { l0_.segment(offset,N),
-             RR*Cov_ll_.block(offset,offset,N,N)*RR.transpose() };
+             RR*Sigma_ll_.block(offset,offset,N,N)*RR.transpose() };
 }
 
 

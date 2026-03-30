@@ -37,6 +37,7 @@
 #include <cmath>
 #include <memory>
 #include <sstream>
+#include <utility>
 
 #include <Eigen/Core>
 #include <Eigen/SparseCore>
@@ -81,26 +82,38 @@ void retract(Eigen::Ref<Vector<double,N> > p,
     const Vector<double,N> v = null<N>(p) * xr;
     const double nv = v.norm();
     if (nv > T_zero) {
-        p = std::cos( nv)*p +std::sin(nv)*v/nv;
+        p = std::cos(nv)*p +std::sin(nv)*v/nv;
     }
 }
 
 } // namespace
 
 
+//! Value constructor: vector of observations and covariance matrix
+AdjustmentFramework::AdjustmentFramework(const std::pair<Eigen::VectorXd, Eigen::SparseMatrix<double> > & p)
+    : l_(p.first), Sigma_ll_(p.second)
+{
+
+    l0_ = l_;      // initialization: approx. adjusted observations := observations
+
+    const Eigen::Index S = l_.size()/3;  // number of segments
+    lr = Eigen::VectorXd::Zero( 2*S );   // reduced coordinates observ.
+    rSigma_ll.resize( 2*S, 2*S );
+    rSigma_ll.reserve(4*S );               // S 2x2 blocks
+}
+
+
 //! update of parameters (observations) via retraction
 void AdjustmentFramework::update( const VectorXd &x)
 {
     for (Index s=0; s<x.size()/2; s++) {
-        const Index idx3 = 3*s;
-
         // (1) via normalization ...................................................
         // l0 := N( l0 + null(l0') * ^Delta l_r )
         // m.segment(idx3,3) += null( m.segment(idx3,3) )*x.segment(2*start,2);
         // m.segment(idx3,3).normalize();
 
         // (2) via retraction ......................................................
-        retract<3>(l0_.segment<3>(idx3), x.segment<2>(2*s));
+        retract<3>(l0_.segment<3>(3*s), x.segment<2>(2*s));
     }
 }
 
@@ -111,7 +124,6 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
                                               Array<Attribute,Dynamic,1> & status,
                                               Array<bool,Dynamic,1> & enforced)
 {
-    //assert( relsub.rows()==maps.size() );
     assert( relsub.cols()==mapc.size() );
 
     const Index numOfConstraints = mapc.size();
@@ -139,18 +151,14 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
         numOfRequiredEquations += status(c)==Attribute::Required ? constr.at(c)->dof() : 0;
     }
 
-
     l0_ = l_; // set adjusted observations  l0 := l
 
     double reciprocalConditionNumber = 0.;
     double normUpdateReducedObserv   = 0.;
 
     // allocation ......................................................
-    SparseMatrix<double,ColMajor> BBr( numOfRequiredEquations, 2*numOfSegments    );
-    SparseMatrix<double,ColMajor> rCov_ll( 2*numOfSegments   , 2*numOfSegments    );
-    rCov_ll.reserve(4*numOfSegments   );                  // S 2x2 blocks
-    VectorXd lr = VectorXd::Zero( 2*numOfSegments    );   // reduced coordinates observ.
-    VectorXd g0 = VectorXd::Zero( numOfRequiredEquations );     // contradictions
+    SparseMatrix<double,ColMajor> BBr(numOfRequiredEquations, 2*numOfSegments);
+    VectorXd g0 = VectorXd::Zero(numOfRequiredEquations);     // contradictions
 
     // iterative adjustment ............................................
     int it = 0;  // verbose output
@@ -160,8 +168,8 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
             qDebug().noquote() << QStringLiteral("  iteration #%1...").arg(it+1);
         }
 
-        Jacobian( constr, relsub, BBr, g0, mapc, status);
-        reduce ( lr, rCov_ll);
+        Jacobian( constr, relsub, BBr, mapc, status, g0);
+        reduce();
 
         // check rank and condition .....................................
 
@@ -174,7 +182,7 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
         }
 
         // rank-revealing decomposition
-        const Eigen::FullPivLU<MatrixXd> lu_decomp(BBr * rCov_ll * BBr.adjoint());
+        const Eigen::FullPivLU<MatrixXd> lu_decomp(BBr * rSigma_ll * BBr.adjoint());
         reciprocalConditionNumber = lu_decomp.rcond();
         if ( reciprocalConditionNumber < threshold_ReciprocalConditionNumber() ) {
             // redundant or contradictory constraint
@@ -187,10 +195,10 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
         }
 
         // contradictions
-        const VectorXd cg = -g0  -BBr*lr;
+        const VectorXd cg = -g0 -BBr*lr;
 
         // estimated update of reduced coordinates observations
-        const VectorXd redl = rCov_ll*BBr.adjoint()*lu_decomp.solve(cg) +lr;
+        const VectorXd redl = rSigma_ll*BBr.adjoint()*lu_decomp.solve(cg) +lr;
 
         // updates adjusted observations, via retraction
         update( redl );
@@ -228,34 +236,32 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
 
 
 
-void AdjustmentFramework::reduce (
-    VectorXd & lr,
-    SparseMatrix<double,ColMajor> & rCov_ll) const
+void AdjustmentFramework::reduce()
 {
     // reduced coordinates: vector and covariance matrix .............
     const Index S = l0_.size()/3;
     for ( Index s=0; s<S; s++ )
     {
-        const Index offset3 = 3 * s;
-        const Index offset2 = 2 * s;
+        const Index offset3 = 3*s;
+        const Index offset2 = 2*s;
 
-        const Vector3d l0 = l0_.segment(offset3,3);
-        const Matrix<double, 3, 2> NN = null( l0 );
+        const Vector3d l0 = l0_.segment<3>(offset3);
+        const Matrix<double,3,2> NN = null(l0);
 
         // (i) reduced coordinates of observations
-        lr.segment(offset2,2) = NN.adjoint() * l_.segment(offset3,3);
+        lr.segment<2>(offset2) = NN.transpose() * l_.segment<3>(offset3);
 
         // (ii) covariance matrix, reduced coordinates
-        const Matrix3d RR = Rot_ab<double,3>( l_.segment(offset3, 3),  l0_.segment(offset3, 3) );
+        const Matrix3d RR = Rot_ab<double,3>( l_.segment<3>(offset3),  l0_.segment<3>(offset3) );
 
-        const Eigen::Matrix<double, 2, 3> JJ = NN.adjoint() * RR;
-        const Eigen::Matrix2d Cov_rr = JJ*Cov_ll_.block( offset3,offset3,3,3)*JJ.adjoint();
+        const Eigen::Matrix<double,2,3> JJ = NN.transpose()*RR;
+        const Eigen::Matrix2d Cov_rr = JJ*Sigma_ll_.block( offset3,offset3,3,3)*JJ.adjoint();
 
         // rCov_ll.block(offset2, offset2, 2, 2) = Cov_rr; // not for sparse matrices
-        rCov_ll.coeffRef( offset2,  offset2  ) = Cov_rr(0,0);
-        rCov_ll.coeffRef( offset2+1,offset2  ) = Cov_rr(1,0);
-        rCov_ll.coeffRef( offset2  ,offset2+1) = Cov_rr(0,1);
-        rCov_ll.coeffRef( offset2+1,offset2+1) = Cov_rr(1,1);
+        rSigma_ll.coeffRef( offset2,  offset2  ) = Cov_rr(0,0);
+        rSigma_ll.coeffRef( offset2+1,offset2  ) = Cov_rr(1,0);
+        rSigma_ll.coeffRef( offset2  ,offset2+1) = Cov_rr(0,1);
+        rSigma_ll.coeffRef( offset2+1,offset2+1) = Cov_rr(1,1);
     }
 }
 
@@ -264,9 +270,9 @@ void AdjustmentFramework::Jacobian(
         const QVector<std::shared_ptr<ConstraintBase> > & constr,
         const IncidenceMatrix & relsub,
         SparseMatrix<double,ColMajor> & BBr,
-        VectorXd & g0,
         const ArrayXi & mapc,
-        const Array<Attribute,Dynamic,1> & status ) const
+        const Array<Attribute,Dynamic,1> & status,
+        VectorXd & g0  )
 {
     // assert( relsub.rows()==maps.size() );
     assert( relsub.cols()==mapc.size() );
