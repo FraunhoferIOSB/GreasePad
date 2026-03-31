@@ -1067,37 +1067,33 @@ void impl::establish_identical( const Index a,  const Index b)
 
 
 std::pair<Eigen::VectorXd, SparseMatrix<double> >
-impl::a_Maker(const ArrayXi &maps_) const
+impl::a_Maker(const ArrayXi & maps) const
 {
-    // qDebug() << Q_FUNC_INFO;
-
-    const Index S = maps_.size();  // number of segments
-    const Index N = 3*S;           // number of observations
+    const Index S = maps.size();  // number of segments
+    const Index N = 3*S;          // number of observations
     assert( S>0 );
     VectorXd l(N);                 // vector of observations
-    SparseMatrix<double,ColMajor> Cov_ll(N,N);         // covariance matrix observations
-    Cov_ll.setZero();
-    Cov_ll.reserve(3*N);
+    SparseMatrix<double,ColMajor> Sigma_ll(N,N);  // covariance matrix observations
+    Sigma_ll.reserve(3*N);
     int idx = 0; // [~,idx] = max( abs(l(1:2)) )
 
-    for (int s = 0; s < S; s++) {
-        uStraightLine const ul = m_segm.at( maps_(s) )->ul().sphericalNormalized();
-
-        Vector3d m = ul.v();
+    for (Index s=0; s<S; s++) {
+        const uStraightLine ul = m_segm.at(maps(s))->ul().sphericalNormalized();
 
         // align signs consistently
-        m.head(2).cwiseAbs().maxCoeff(&idx); // [~,idx] = max( abs(l(1:2)) )
-        const int offset3 = 3*s;
-        l.segment(offset3,3)  = sign( m(idx) ) * m;   // spherical normalized
+        const Vector3d m = ul.v();
+        m.head<2>().cwiseAbs().maxCoeff(&idx); // [~,idx] = max( abs(l(1:2)) )
+        const Index offset3 = 3*s;
+        l.segment<3>(offset3) = sign(m(idx))*m; // spherically normalized
 
-        for ( int i=0; i<3; i++ ) {
-            for ( int j=0; j<3; j++ ) {
-                Cov_ll.insert( offset3+i, offset3+j ) = ul.Cov()(i,j);
+        for (Index i=0; i<3; i++) {
+            for (Index j=0; j<3; j++) {
+                Sigma_ll.insert( offset3+i, offset3+j ) = ul.Cov(i,j);
             }
         }
     }
 
-    return { l, Cov_ll};
+    return {l, Sigma_ll};
 }
 
 

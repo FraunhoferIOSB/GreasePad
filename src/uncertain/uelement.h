@@ -70,6 +70,10 @@ public:
     //! Get covariance matrix
     [[nodiscard]] Matrix<double,N,N> Cov() const {return m_cov;}
 
+    //! Get element (i,j) of covariance matrix
+    [[nodiscard]] double
+    Cov(const Eigen::Index i, const Eigen::Index j) const {return m_cov(i,j);}
+
     //! Get homogeneous N-vector representing the geometric element
     [[nodiscard]] Vector<double,N> v() const {return m_val;}
 
