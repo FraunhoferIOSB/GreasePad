@@ -60,10 +60,10 @@ public:
                             Eigen::Array<Attribute,Eigen::Dynamic,1> & status,
                             Eigen::Array<bool,Eigen::Dynamic,1> & enforced);
 
-    //! Get s-th entity represented by vector of length N and covariance matrix
-    template <int N>
-    std::pair< Eigen::Vector<double,N>, Eigen::Matrix<double,N,N> >
-    getEntity( Eigen::Index s) const;
+    //! Get i-th uncertain entity represented by N-vector and covariance matrix
+    template<typename T,int N>
+    std::pair< Eigen::Vector<T,N>, Eigen::Matrix<T,N,N> >
+    getEntity( Eigen::Index i) const;
 
 private:
     [[nodiscard]] static int nIterMax() { return nIterMax_; }
@@ -110,18 +110,17 @@ private:
 };
 
 
-//! Get s-th entity represented by vector of length N and covariance matrix
-template <int N>
-std::pair< Eigen::Vector<double,N>, Eigen::Matrix<double,N,N> >
-AdjustmentFramework::getEntity( const Eigen::Index s) const
+//! Get i-th uncertain entity represented by N-vector and covariance matrix
+template<typename T,int N>
+std::pair< Eigen::Vector<T,N>, Eigen::Matrix<T,N,N> >
+AdjustmentFramework::getEntity( const Eigen::Index i) const
 {
-    const Eigen::Index offset = N*s;
-    const Eigen::Matrix<double,N,N> RR = Geometry::Rot_ab<double,N>(
-        l_.segment(offset,N),
-        l0_.segment(offset,N) );
+    const Eigen::Index offset = N*i;  // start position
+    const Eigen::Matrix<T,N,N> RR = Geometry::Rot_ab<T,N>(
+        l_.segment<N>(offset), l0_.segment<N>(offset) );
 
-    return { l0_.segment(offset,N),
-             RR*Sigma_ll_.block(offset,offset,N,N)*RR.transpose() };
+    return {l0_.segment<N>(offset),
+            RR*Sigma_ll_.block(offset,offset,N,N)*RR.transpose()};
 }
 
 
