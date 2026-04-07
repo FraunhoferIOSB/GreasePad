@@ -1432,36 +1432,37 @@ std::pair<VectorXd, VectorXd> impl::trackCoords(const QPolygonF &poly)
 
 
 
-std::pair<uPoint,uPoint> impl::uEndPoints(const VectorXd &xi,
-                                          const VectorXd &yi)
+//! uncertain end-points by projection of the extrem points onto the straight line
+std::pair<uPoint,uPoint>
+impl::uEndPoints(const VectorXd & xi, const VectorXd & yi)
 {
     assert( xi.size() > 0 );
     assert( yi.size() == xi.size() );
 
-    const uStraightLine l = uStraightLine::estim(xi,yi);
-    const double phi  = l.angle_rad();
-    const VectorXd zi = sin(phi)*xi -cos(phi)*yi;
+    // (1) uncertain straight line
+    const uStraightLine ul = uStraightLine::estim(xi,yi);
+
+    // (2) end-points with isotropic uncertrainty
+    const double phi = ul.angle_rad();
+    const VectorXd zi = std::sin(phi)*xi -std::cos(phi)*yi;
+
+    static const Matrix3d Zeros = Matrix3d::Zero(3,3);
 
     int argmin = 0;
     zi.minCoeff( &argmin);
-    const Vector3d x1 (xi(argmin), yi(argmin), 1);
+    const Vector3d x( xi(argmin), yi(argmin), 1);
+    const uDistance udx = uPoint(x, Zeros).distanceEuclideanTo(ul);
+    const Matrix3d Sigma_xx = Vector3d( udx.var_d(), udx.var_d(), 0).asDiagonal();
+    const uPoint ux = ul.project(uPoint(x, Sigma_xx));
 
     int argmax = 0;
     zi.maxCoeff( &argmax);
-    const Vector3d x2 (xi(argmax), yi(argmax), 1);
+    const Vector3d y( xi(argmax), yi(argmax), 1);
+    const uDistance udy = uPoint(y, Zeros).distanceEuclideanTo(ul);
+    const Matrix3d Sigma_yy = Vector3d( udy.var_d(), udy.var_d(), 0.).asDiagonal();
+    const uPoint uy = ul.project(uPoint(y, Sigma_yy));
 
-    const Matrix3d Zeros = Matrix3d::Zero(3,3);
-
-    const uDistance ud1 = uPoint(x1, Zeros).distanceEuclideanTo(l);
-    const Matrix3d Cov1_xx = Vector3d( ud1.var_d(), ud1.var_d(), 0).asDiagonal(); // isotropic
-
-    const uDistance ud2 = uPoint(x2, Zeros).distanceEuclideanTo(l);
-    const Matrix3d Cov2_xx = Vector3d( ud2.var_d(), ud2.var_d(), 0.).asDiagonal();
-
-    const uPoint first_  = l.project(uPoint(x1, Cov1_xx));
-    const uPoint second_ = l.project(uPoint(x2, Cov2_xx));
-
-    return { first_, second_};
+    return {ux, uy};
 }
 
 
