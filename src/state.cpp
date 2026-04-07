@@ -275,6 +275,9 @@ private:
     void establish_orthogonal( Index a, Index b );
     void establish_copunctual( Index a, Index b, Index c );
 
+    void snapThisToOthers(Index s);
+    void snapOthersToThis(Index s, Index cc);
+
     void augment();
 
     [[nodiscard]] std::pair<Eigen::VectorXd, SparseMatrix<double> >
@@ -852,55 +855,8 @@ void impl::snap_endpoints( const Index numNewConstr)
             << QString("  snap subtask %1/%2").arg( cc+1 ).arg( newLabels.size() );
 
         for ( const auto s : find( arr_segm==cc) ) {
-
-            // (1) "is touching" ......................................
-            uStraightLineSegment useg( *m_segm.at(s) );
-            bool changed = false;
-
-            for ( Index n=0; n<x_touches_l.cols(); n++) // but ColMajor
-            {
-                if ( x_touches_l.isSet( s, n) && !y_touches_l.isSet( s, n) ) {
-                    if (useg.move_x_to(m_segm.at(n)->hl())) {
-                        changed = true;
-                        break;
-                    }
-                }
-            }
-
-            for ( Index n=0; n<y_touches_l.cols(); n++) {
-                if ( y_touches_l.isSet( s, n) && !x_touches_l.isSet( s, n) ) {
-                    if (useg.move_y_to(m_segm.at(n)->hl())) {
-                        changed = true;
-                        break;
-                    }
-                }
-            }
-
-            if ( changed ) {
-                auto us = std::make_shared<uStraightLineSegment>(useg);
-                m_segm.replace( s, us);
-            }
-
-            // (2) "touched by" ................................
-            for ( SparseMatrix<int,ColMajor>::InnerIterator it( x_touches_l, s) ; it; ++it) {
-                const Index n = it.row(); // neighbor of segment s
-                if ( ( arr_segm(n) != cc) && ( !y_touches_l.isSet(it.index(),s) ) ) {
-                    auto us = std::make_shared<uStraightLineSegment>( *m_segm.at(n) );
-                    if (us->move_x_to(m_segm.at(s)->hl())) {
-                        m_segm.replace( n, us);
-                    }
-                }
-            }
-
-            for (SparseMatrix<int, ColMajor>::InnerIterator it(y_touches_l, s); it; ++it) {
-                const Index n = it.row() ; // neighbor of segment s
-                if ( ( arr_segm(n) != cc) && ( !x_touches_l.isSet(it.index(),s) )) {
-                    auto us = std::make_shared<uStraightLineSegment>( *m_segm.at(n) );
-                    if (us->move_y_to(m_segm.at(s)->hl())) {
-                        m_segm.replace( n, us);
-                    }
-                }
-            }
+            snapThisToOthers(s);   // is touching
+            snapOthersToThis(s, cc); // touched by
         }
     }
 }
@@ -1507,3 +1463,58 @@ std::pair<uPoint,uPoint> impl::uEndPoints(const VectorXd &xi,
 
     return { first_, second_};
 }
+
+
+void impl::snapThisToOthers(const Index s)
+{
+    uStraightLineSegment useg( *m_segm.at(s) );
+    bool changed = false;
+
+    for ( Index n=0; n<x_touches_l.cols(); n++) // but ColMajor
+    {
+        if ( x_touches_l.isSet( s, n) && !y_touches_l.isSet( s, n) ) {
+            if (useg.move_x_to(m_segm.at(n)->hl())) {
+                changed = true;
+                break;
+            }
+        }
+    }
+
+    for ( Index n=0; n<y_touches_l.cols(); n++) {
+        if ( y_touches_l.isSet( s, n) && !x_touches_l.isSet( s, n) ) {
+            if (useg.move_y_to(m_segm.at(n)->hl())) {
+                changed = true;
+                break;
+            }
+        }
+    }
+
+    if ( changed ) {
+        auto us = std::make_shared<uStraightLineSegment>(useg);
+        m_segm.replace( s, us);
+    }
+
+};
+
+void impl::snapOthersToThis(const Index s, const Index cc)
+{
+    for ( SparseMatrix<int,ColMajor>::InnerIterator it( x_touches_l, s) ; it; ++it) {
+        const Index n = it.row(); // neighbor of segment s
+        if ( ( arr_segm(n) != cc) && ( !y_touches_l.isSet(it.index(),s) ) ) {
+            auto us = std::make_shared<uStraightLineSegment>( *m_segm.at(n) );
+            if (us->move_x_to(m_segm.at(s)->hl())) {
+                m_segm.replace( n, us);
+            }
+        }
+    }
+
+    for (SparseMatrix<int, ColMajor>::InnerIterator it(y_touches_l, s); it; ++it) {
+        const Index n = it.row() ; // neighbor of segment s
+        if ( ( arr_segm(n) != cc) && ( !x_touches_l.isSet(it.index(),s) )) {
+            auto us = std::make_shared<uStraightLineSegment>( *m_segm.at(n) );
+            if (us->move_y_to(m_segm.at(s)->hl())) {
+                m_segm.replace( n, us);
+            }
+        }
+    }
+};
