@@ -22,6 +22,7 @@
 #include <Eigen/Core>
 #include <Eigen/SparseCore>
 
+#include <functional>
 
 //! Sparse incidence matrix and connected components
 namespace Graph {
@@ -35,10 +36,37 @@ using Eigen::Vector;
 
 
 //! Matlab's  bins = conncomp( AA, 'outputForm', 'vector')
-[[nodiscard,maybe_unused]] static VectorXi conncomp(const SparseMatrix<int, ColMajor> &AA)
+[[nodiscard,maybe_unused]] static VectorXi
+conncomp(const SparseMatrix<int, ColMajor> &AA)
 {
 
-    static VectorXi m_comp;    // index vector components, 0-based
+    VectorXi component;    // index vector components, 0-based
+    Vector<bool,Dynamic> visited;    // for each vertex: visited?
+
+    const Index V = AA.rows(); // number of vertices
+
+    visited.setConstant( V,false);
+    component.setConstant( V,-1);
+    int num_connected_components = 0;
+
+    std::function<void(Index,Index)> dfs = [&](const int c, const Index v){
+        visited(v) = true;
+        component(v) = c;
+        for ( SparseMatrix<int,ColMajor>::InnerIterator it(AA,v); it; ++it) {
+            if ( !visited(it.index()) ) {
+                dfs( c, it.row() );
+            }
+        }
+    };
+
+    for ( Index v=0; v<V; v++ ) {
+        if ( !visited(v) ) {
+            dfs( num_connected_components++, v );
+        }
+    }
+    return component;
+
+    /*static VectorXi m_comp;    // index vector components, 0-based
     static Vector<bool,Dynamic> m_visited;    // for each vertex: visited?
 
     struct s {
@@ -66,7 +94,7 @@ using Eigen::Vector;
         }
     }
 
-    return m_comp;
+    return m_comp;*/
 }
 
 
