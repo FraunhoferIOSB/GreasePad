@@ -17,7 +17,7 @@
  */
 
 #include "commands.h"
-#include "mainscene.h"
+#include "gui/mainscene.h"
 #include "state.h"
 
 #include <QDebug>

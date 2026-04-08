@@ -38,7 +38,7 @@
 #include "find.h"
 #include "geometry/acute.h"
 #include "global.h"
-#include "mainscene.h"
+#include "gui/mainscene.h"
 #include "matfun.h"
 #include "matrix.h"
 #include "qconstraints.h"

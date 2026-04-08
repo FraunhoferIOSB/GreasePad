@@ -27,15 +27,15 @@ contains(QMAKE_CC, gcc) {
 
 SOURCES += \
     adjustment.cpp \
-    constraints.cpp \
-    main.cpp \
-    mainwindow.cpp \
-    mainscene.cpp \
-    mainview.cpp \
     commands.cpp \
+    constraints.cpp \
+    gui/mainwindow.cpp \
+    gui/mainscene.cpp \
+    gui/mainview.cpp \
+    gui/qformattool.cpp \
+    main.cpp \
     matrix.cpp \
     qconstraints.cpp \
-    qformattool.cpp \
     qsegment.cpp \
     qstroke.cpp \
     quantiles.cpp \
@@ -59,14 +59,14 @@ HEADERS += \
     geometry/minrot.h \
     geometry/skew.h \
     global.h \
+    gui/mainscene.h \
+    gui/mainview.h \
+    gui/mainwindow.h \
+    gui/qformattool.h \
     kernel.h \
-    mainwindow.h \
-    mainscene.h \
-    mainview.h \
     matfun.h \
     matrix.h \
     qconstraints.h \
-    qformattool.h \
     qsegment.h \
     qstroke.h \
     quantiles.h \

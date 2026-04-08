@@ -26,12 +26,12 @@ qt_add_executable(GreasePad
     commands.cpp
     constraints.cpp
     main.cpp
-    mainwindow.cpp
-    mainscene.cpp
-    mainview.cpp
+    gui/mainwindow.cpp
+    gui/mainscene.cpp
+    gui/mainview.cpp
+    gui/qformattool.cpp
     matrix.cpp
     qconstraints.cpp
-    qformattool.cpp
     qsegment.cpp
     qstroke.cpp
     quantiles.cpp
