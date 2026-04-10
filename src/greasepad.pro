@@ -41,7 +41,6 @@ SOURCES += \
     quantiles.cpp \
     state.cpp \
     uncertain/quncertain.cpp \
-    uncertain/uncertain.cpp \
     uncertain/upoint.cpp \
     uncertain/usegment.cpp \
     uncertain/ustraightline.cpp
@@ -82,7 +81,6 @@ HEADERS += \
     uncertain/quncertain.h \
     uncertain/udistance.h \
     uncertain/uelement.h \
-    uncertain/uncertain.h \
     uncertain/upoint.h \
     uncertain/usegment.h \
     uncertain/ustraightline.h \

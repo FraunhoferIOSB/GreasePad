@@ -19,7 +19,6 @@
 
 #include "matfun.h"
 #include "udistance.h"
-#include "uncertain.h"
 #include "upoint.h"
 #include "usegment.h"
 #include "ustraightline.h"
@@ -39,10 +38,11 @@ using Eigen::Vector3d;
 using Eigen::VectorXd;
 using Eigen::Vector;
 
-using Matfun::sign;
-
 
 namespace Uncertain {
+
+using Geometry::skew;
+using Matfun::sign;
 
 //! Get uncertain endpoint x=S(l)*m in homogeneous coordinates
 uPoint uStraightLineSegment::ux() const
