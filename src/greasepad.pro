@@ -29,15 +29,15 @@ SOURCES += \
     adjustment.cpp \
     commands.cpp \
     constraints.cpp \
+    graphics/qconstraints.cpp \
+    graphics/qsegment.cpp \
+    graphics/qstroke.cpp \
     gui/mainwindow.cpp \
     gui/mainscene.cpp \
     gui/mainview.cpp \
     gui/qformattool.cpp \
     main.cpp \
     matrix.cpp \
-    qconstraints.cpp \
-    qsegment.cpp \
-    qstroke.cpp \
     quantiles.cpp \
     state.cpp \
     uncertain/quncertain.cpp \
@@ -59,6 +59,9 @@ HEADERS += \
     geometry/minrot.h \
     geometry/skew.h \
     global.h \
+    graphics/qconstraints.h \
+    graphics/qsegment.h \
+    graphics/qstroke.h \
     gui/mainscene.h \
     gui/mainview.h \
     gui/mainwindow.h \
@@ -66,9 +69,6 @@ HEADERS += \
     kernel.h \
     matfun.h \
     matrix.h \
-    qconstraints.h \
-    qsegment.h \
-    qstroke.h \
     quantiles.h \
     state.h \
     statistics.h \

@@ -17,17 +17,17 @@
  */
 
 #include "commands.h"
+#include "graphics/qconstraints.h"
+#include "graphics/qsegment.h"
+#include "graphics/qstroke.h"
 #include "mainscene.h"
 #include "mainview.h"
 #include "mainwindow.h"
 #include "qconfig.h"         // QT_VERSION_STR
-#include "qconstraints.h"
 #include "qformattool.h"
 #include "qgraphicsitem.h"
 #include "qlogging.h"
 #include "qnamespace.h"
-#include "qsegment.h"
-#include "qstroke.h"
 #include "qtdeprecationdefinitions.h"
 #include "qtpreprocessorsupport.h"
 #include "qtypes.h"

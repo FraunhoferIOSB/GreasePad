@@ -31,9 +31,9 @@ qt_add_executable(GreasePad
     gui/mainview.cpp
     gui/qformattool.cpp
     matrix.cpp
-    qconstraints.cpp
-    qsegment.cpp
-    qstroke.cpp
+    graphics/qconstraints.cpp
+    graphics/qsegment.cpp
+    graphics/qstroke.cpp
     quantiles.cpp
     state.cpp
     uncertain/quncertain.cpp
