@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2023 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 
 #include "statistics/chisquared.h"
 #include "statistics/exponential.h"
+#include "statistics/normal.h"
 #include "statistics/prob.h"
 
 //! Quantiles for recognition and snapping
@@ -35,7 +36,12 @@ public:
 
     //! Get quantile of chi-square distribution with two degree of freedom
     [[nodiscard]] double quantile_chi2_1dof() const { return quantile_chi2_1_; }
-    void setAlpha( Stats::Prob alpha );  //!< Set significance level alpha
+
+    //! Set significance level alpha
+    void setAlpha( Stats::Prob alpha ) {
+        quantile_snd_    = Stats::StandardNormal::icdf( alpha.complement() );
+        quantile_chi2_1_ = distr_chi2_1_.icdf( alpha.complement() );
+    }
 
 private:
     double quantile_snd_{};     // Quantile of standard normal distribution N(0,1)
@@ -55,7 +61,12 @@ public:
 
     //! Get quantile of chi-square distribution with two degree of freedom
     [[nodiscard]] double quantile_chi2_2dof() const { return quantile_chi2_2dof_; }
-    void setAlpha( Stats::Prob alpha );  //!< Set significance level alpha
+
+    //! Set significance level alpha
+    void setAlpha( Stats::Prob alpha ) {
+        quantile_chi2_1dof_ =  distr_chi2_1_.icdf( alpha.complement() );
+        quantile_chi2_2dof_ = distr_Exp_0p5_.icdf( alpha.complement() );
+    }
 
 private:
     double quantile_chi2_1dof_{};

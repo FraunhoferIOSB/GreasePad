@@ -38,7 +38,6 @@ SOURCES += \
     gui/qformattool.cpp \
     main.cpp \
     matrix.cpp \
-    quantiles.cpp \
     state.cpp \
     uncertain/quncertain.cpp \
     uncertain/upoint.cpp \
