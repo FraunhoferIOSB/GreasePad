@@ -24,7 +24,6 @@
 #include <Eigen/Dense>
 
 #include <cassert>
-#include <utility>
 
 #include "geometry/skew.h"
 #include "matfun.h"
@@ -53,15 +52,15 @@ class uElement
 
 public:
     //! Construct geometric element with N-vector and its covariance matrix
-    uElement( Vector<double,N> z, Matrix<double,N,N> Sigma_zz)
-        : m_val(std::move(z)), m_cov(std::move(Sigma_zz))
+    uElement( const Vector<double,N> & z, const Matrix<double,N,N> & Sigma_zz)
+        : m_val(z), m_cov(Sigma_zz)
     {
         assert( m_val.size()==m_cov.cols() );
         assert( isCovMat( m_cov) );
     }
     uElement ( const uElement &) = default;  //!< Copy constructor
     uElement( uElement &&) = default;        //!< Move constructor
-    uElement & operator= ( const uElement &&) = delete;  //!< Move assignment
+    uElement & operator= (uElement &&) = delete;  //!< Move assignment
 
     ~uElement() = default;
 
