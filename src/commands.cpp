@@ -18,7 +18,7 @@
 
 #include "commands.h"
 #include "gui/mainscene.h"
-#include "state.h"
+#include "reasoning/state.h"
 
 #include <QDebug>
 #include <QGraphicsItem>

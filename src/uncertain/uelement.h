@@ -27,8 +27,8 @@
 #include <utility>
 
 #include "geometry/skew.h"
-#include "kernel.h"
 #include "matfun.h"
+#include "reasoning/kernel.h"
 #include "statistics/iscov.h"
 
 

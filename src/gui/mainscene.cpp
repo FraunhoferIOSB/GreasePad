@@ -18,7 +18,7 @@
 
 #include "mainscene.h"
 #include "qtypes.h"
-#include "state.h"
+#include "reasoning/state.h"
 
 #include <QAction>
 #include <QApplication>
