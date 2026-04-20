@@ -40,10 +40,10 @@
 
 #include <memory>
 
-#include "mainscene.h"
 #include "graphics/qconstraints.h"
 #include "graphics/qsegment.h"
 #include "graphics/qstroke.h"
+#include "mainscene.h"
 #include "qformattool.h"
 
 namespace GUI {

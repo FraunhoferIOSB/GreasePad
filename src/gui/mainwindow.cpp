@@ -16,7 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "commands.h"
+#include "reasoning/commands.h"
 #include "graphics/qconstraints.h"
 #include "graphics/qsegment.h"
 #include "graphics/qstroke.h"

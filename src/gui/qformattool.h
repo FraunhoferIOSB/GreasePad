@@ -1,6 +1,6 @@
 /*
  * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
- * Copyright (c) 2022-2025 Jochen Meidow, Fraunhofer IOSB
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,6 @@
 
 #ifndef QFORMATTOOL_H
 #define QFORMATTOOL_H
-
-#include "global.h"
 
 #include <QDialog>
 #include <QObject>
@@ -84,8 +82,6 @@ public Q_SLOTS:
     void updateLineWidth( int w) {  Q_EMIT signalLineWidthChanged(w);  } //!< Update line widt
     void updateLineStyle( int s) {  Q_EMIT signalLineStyleChanged(s);  } //!< Update line style
     void updateMarkerSize( int s) { Q_EMIT signalMarkerSizeChanged(s); } //!< Update marker size
-
-    // void slotDiscard()  {   } //!< slot discard dialog
     void slotApply();         //!< slot apply selection
 };
 

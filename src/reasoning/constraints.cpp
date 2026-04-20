@@ -22,7 +22,6 @@
 
 #include <cassert>
 #include <cmath>
-#include <cstdlib>
 
 #include "geometry/minrot.h"
 #include "geometry/skew.h"

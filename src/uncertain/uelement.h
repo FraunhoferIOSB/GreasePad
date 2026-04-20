@@ -26,8 +26,8 @@
 #include <cassert>
 
 #include "geometry/skew.h"
-#include "matfun.h"
 #include "reasoning/kernel.h"
+#include "reasoning/matfun.h"
 #include "statistics/iscov.h"
 
 

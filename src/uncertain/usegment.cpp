@@ -17,7 +17,7 @@
  */
 
 
-#include "matfun.h"
+#include "reasoning/matfun.h"
 #include "udistance.h"
 #include "upoint.h"
 #include "usegment.h"

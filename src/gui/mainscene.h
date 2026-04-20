@@ -19,18 +19,17 @@
 #ifndef MAINSCENE_H
 #define MAINSCENE_H
 
-#include <QGraphicsPathItem>
-#include <QGraphicsScene>
 
 #include "qtmetamacros.h"
 
+#include <QGraphicsPathItem>
+#include <QGraphicsScene>
+
 #include <memory>
 
-//class QAction;
-#include<QAction>
+class QAction;
 class QObject;
 class QString;
-
 class State;
 
 

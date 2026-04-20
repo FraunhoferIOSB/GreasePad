@@ -17,7 +17,7 @@
  */
 
 
-#include "matfun.h"
+#include "reasoning/matfun.h"
 #include "statistics/iscov.h"
 #include "udistance.h"
 #include "uncertain/uelement.h"

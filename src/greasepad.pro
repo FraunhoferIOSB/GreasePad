@@ -26,7 +26,6 @@ contains(QMAKE_CC, gcc) {
 
 
 SOURCES += \
-    commands.cpp \
     graphics/qconstraints.cpp \
     graphics/qsegment.cpp \
     graphics/qstroke.cpp \
@@ -35,7 +34,8 @@ SOURCES += \
     gui/mainview.cpp \
     gui/qformattool.cpp \
     main.cpp \
-    matrix.cpp \
+    reasoning/commands.cpp \
+    reasoning/matrix.cpp \
     reasoning/adjustment.cpp \
     reasoning/constraints.cpp \
     reasoning/state.cpp \
@@ -45,15 +45,24 @@ SOURCES += \
     uncertain/ustraightline.cpp
 
 HEADERS += \
-    commands.h \
-    conncomp.h \
-    find.h \
     geometry/aabb.h \
     geometry/acute.h \
     geometry/conics.h \
     geometry/minrot.h \
     geometry/skew.h \
-    global.h \
+    reasoning/adjustment.h \
+    reasoning/commands.h \
+    reasoning/conncomp.h \
+    reasoning/constants.h \
+    reasoning/constraints.h \
+    reasoning/find.h \
+    reasoning/global.h \
+    reasoning/kernel.h \
+    reasoning/matfun.h \
+    reasoning/matrix.h \
+    reasoning/quantiles.h \
+    reasoning/state.h \
+    reasoning/unique.h \
     graphics/qconstraints.h \
     graphics/qsegment.h \
     graphics/qstroke.h \
@@ -61,14 +70,6 @@ HEADERS += \
     gui/mainview.h \
     gui/mainwindow.h \
     gui/qformattool.h \
-    matfun.h \
-    matrix.h \
-    reasoning/adjustment.h \
-    reasoning/constants.h \
-    reasoning/constraints.h \
-    reasoning/kernel.h \
-    reasoning/quantiles.h \
-    reasoning/state.h \
     statistics/chisquared.h \
     statistics/exponential.h \
     statistics/gamma.h \
@@ -81,8 +82,7 @@ HEADERS += \
     uncertain/uelement.h \
     uncertain/upoint.h \
     uncertain/usegment.h \
-    uncertain/ustraightline.h \
-    unique.h
+    uncertain/ustraightline.h
 
 FORMS +=
 

@@ -1,8 +1,25 @@
+/*
+ * This file is part of the GreasePad distribution (https://github.com/FraunhoferIOSB/GreasePad).
+ * Copyright (c) 2022-2026 Jochen Meidow, Fraunhofer IOSB
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef UNIFORM_H
 #define UNIFORM_H
 
 #include <cassert>
-#include <cstdlib>
 #include <random>
 
 #include "statistics/prob.h"
@@ -21,12 +38,12 @@ public:
 
     ~ContinuousUniform() = default;
 
-    [[nodiscard]] double pdf(  double x ) const;    //!< Probability density function
-    [[nodiscard]] Prob cdf(  double x ) const;    //!< Cumulative distribution function
-    [[nodiscard]] double icdf( Prob P) const;     //!< Inverse cumulative distribution function
-    [[nodiscard]] double mean()   const { return (a+b)/2; }  //!< Mean
-    [[nodiscard]] double var()    const { return (b-a)*(b-a)/12.; }  //!< Variance
-    [[nodiscard]] double rnd()    const;            //!< Random number
+    [[nodiscard]] inline double pdf(  double x ) const;    //!< Probability density function
+    [[nodiscard]] inline Prob cdf(  double x ) const;    //!< Cumulative distribution function
+    [[nodiscard]] inline double icdf( Prob P) const;     //!< Inverse cumulative distribution function
+    [[nodiscard]] double mean() const { return (a+b)/2; }  //!< Mean
+    [[nodiscard]] double var() const { return (b-a)*(b-a)/12.; }  //!< Variance
+    [[nodiscard]] inline double rnd() const;            //!< Random number
 
 private:
     const double a;
@@ -80,7 +97,6 @@ inline ContinuousUniform::ContinuousUniform( const double a, const double b) : a
 {
     assert( b>a );
 }
-
 
 
 } // namespace Stats

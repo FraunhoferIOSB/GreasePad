@@ -21,7 +21,7 @@
 #include <cfloat>
 #include <cmath>
 
-#include "matfun.h"
+#include "reasoning/matfun.h"
 #include "statistics/iscov.h"
 #include "uncertain/uelement.h"
 #include "upoint.h"
