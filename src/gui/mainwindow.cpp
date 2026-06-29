@@ -66,10 +66,18 @@
 #include <QToolBar>
 #include <QWheelEvent>
 
+#include <QGridLayout>
+//#include <QTextEdit>
+#include <QPlainTextEdit>
+#include <QDockWidget>
+
+#include "logger.h"
 
 #include <memory>
 
 #include <Eigen/Version>
+
+
 
 namespace GUI {
 
@@ -162,6 +170,21 @@ void MainWindow::createSceneAndView()
 
     m_view  = std::make_unique<MainView>( m_scene.get(), this );
     setCentralWidget( m_view.get() );
+
+
+    auto * outputWidget = new QPlainTextEdit(this);
+    outputWidget->setReadOnly(true);
+    auto * logs = new QDockWidget("log",this);
+    logs->setWidget(outputWidget);
+
+    addDockWidget( Qt::BottomDockWidgetArea, logs);
+    connect( Logger::instance(), &Logger::messageLogged,
+             outputWidget,       &QPlainTextEdit::appendPlainText);
+    outputWidget->appendPlainText( QApplication::applicationName()
+                                   + " " + QApplication::applicationVersion());
+    QCoreApplication::processEvents();
+
+
     showMaximized();     // after 'setCentralWidget'
 }
 
@@ -848,7 +871,7 @@ void MainWindow::slotCmdTabulaRasa()
 // invoked by MainScene:signalCmdAddStroke:
 void MainWindow::slotCmdAddStroke( QPainterPath *path)
 {
-    // qDebug() << Q_FUNC_INFO;
+    Logger::log(Q_FUNC_INFO);
 
     // convert path to polyline
     QPolygonF poly( path->elementCount()) ;
@@ -865,6 +888,7 @@ void MainWindow::slotCmdAddStroke( QPainterPath *path)
     // try...
     std::unique_ptr<State> next_state_
             = std::make_unique<State>( curr_state);
+
     if ( next_state_->augment( poly ) )
     {
         std::unique_ptr<State> prev_state_

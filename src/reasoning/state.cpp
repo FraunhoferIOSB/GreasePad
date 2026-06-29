@@ -337,7 +337,8 @@ State & State::operator= ( const State & other )
 
 bool State::augment( const QPolygonF &track)
 {
-    // qDebug() << Q_FUNC_INFO;
+    qDebug() << Q_FUNC_INFO;
+    //te
     pImpl()->append( track);
     pImpl()->reasoning_augment_and_adjust( snap_ );
     pImpl()->replaceGraphics();

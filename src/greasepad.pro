@@ -50,6 +50,7 @@ HEADERS += \
     geometry/conics.h \
     geometry/minrot.h \
     geometry/skew.h \
+    gui/logger.h \
     reasoning/adjustment.h \
     reasoning/commands.h \
     reasoning/conncomp.h \

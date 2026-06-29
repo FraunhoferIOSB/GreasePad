@@ -21,6 +21,7 @@
 
 #include <QMainWindow>
 #include <QWidget>
+#include <QPlainTextEdit>
 
 #include "qtmetamacros.h"
 
