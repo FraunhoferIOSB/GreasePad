@@ -20,8 +20,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QWidget>
 #include <QPlainTextEdit>
+#include <QWidget>
 
 #include "qtmetamacros.h"
 
@@ -78,6 +78,8 @@ private:
     std::unique_ptr<MainView>   m_view;
     std::unique_ptr<MainScene>  m_scene;
     std::unique_ptr<QUndoStack> m_undoStack;
+    std::unique_ptr<QDockWidget> m_infoConsole;
+    std::unique_ptr<QPlainTextEdit> m_outputWidget;
 
     enum {UndoLimit = 5};
 
@@ -126,6 +128,7 @@ private:
     std::unique_ptr<QAction>   actionToggleShowStrokes;
     std::unique_ptr<QAction>   actionToggleShowUnconstrained;
     std::unique_ptr<QAction>   actionToggleShowUncertainty;
+    std::unique_ptr<QAction>   actionToggleShowInfoConsole;
     std::unique_ptr<QAction>   actionUndo;
 
     std::unique_ptr<QMenu>     menuConstr;
@@ -188,6 +191,7 @@ private:
     void slotToggleShowConstrained();
     void slotToggleShowConstraints();
     void slotToggleShowColored();
+    void slotToggleShowInfoConsole();
     void slotToggleShowStrokes();
     void slotToggleShowUnconstrained();
     void slotToggleShowUncertainty();

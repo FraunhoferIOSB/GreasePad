@@ -338,7 +338,6 @@ State & State::operator= ( const State & other )
 bool State::augment( const QPolygonF &track)
 {
     qDebug() << Q_FUNC_INFO;
-    //te
     pImpl()->append( track);
     pImpl()->reasoning_augment_and_adjust( snap_ );
     pImpl()->replaceGraphics();
@@ -1443,7 +1442,7 @@ impl::uEndPoints(const VectorXd & xi, const VectorXd & yi)
     // (1) uncertain straight line
     const uStraightLine ul = uStraightLine::estim(xi,yi);
 
-    // (2) end-points with isotropic uncertrainty
+    // (2) end-points with isotropic uncertainty
     const double phi = ul.angle_rad();
     const VectorXd zi = std::sin(phi)*xi -std::cos(phi)*yi;
 

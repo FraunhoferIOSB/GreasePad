@@ -21,6 +21,9 @@
 
 #include <QObject>
 
+#include "qtmetamacros.h"
+
+
 class Logger : public QObject {
     Q_OBJECT
 

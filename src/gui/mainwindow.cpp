@@ -20,6 +20,7 @@
 #include "graphics/qconstraints.h"
 #include "graphics/qsegment.h"
 #include "graphics/qstroke.h"
+#include "logger.h"
 #include "mainscene.h"
 #include "mainview.h"
 #include "mainwindow.h"
@@ -38,6 +39,7 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
+#include <QDockWidget>
 #include <QDoubleSpinBox>
 #include <QFile>
 #include <QFileDialog>
@@ -57,6 +59,7 @@
 #include <QObject>
 #include <QOverload>
 #include <QPdfWriter>
+#include <QPlainTextEdit>
 #include <QSizePolicy>
 #include <QStatusBar>
 #include <QStringLiteral>
@@ -65,13 +68,6 @@
 #include <QSvgGenerator>
 #include <QToolBar>
 #include <QWheelEvent>
-
-#include <QGridLayout>
-//#include <QTextEdit>
-#include <QPlainTextEdit>
-#include <QDockWidget>
-
-#include "logger.h"
 
 #include <memory>
 
@@ -108,7 +104,6 @@ MainWindow::MainWindow(QWidget *parent)
     State::setAlphaSnapping(    defaultAlpha );
 
     createSceneAndView();
-    // createUndoView();
     createActions();
     createMenus();
     createBoxes();
@@ -172,16 +167,16 @@ void MainWindow::createSceneAndView()
     setCentralWidget( m_view.get() );
 
 
-    auto * outputWidget = new QPlainTextEdit(this);
-    outputWidget->setReadOnly(true);
-    auto * logs = new QDockWidget("log",this);
-    logs->setWidget(outputWidget);
+    m_outputWidget = std::make_unique<QPlainTextEdit>(this);
+    m_outputWidget->setReadOnly(true);
+    m_infoConsole = std::make_unique<QDockWidget>("Info Console",this);
+    m_infoConsole->setWidget(m_outputWidget.get());
 
-    addDockWidget( Qt::BottomDockWidgetArea, logs);
-    connect( Logger::instance(), &Logger::messageLogged,
-             outputWidget,       &QPlainTextEdit::appendPlainText);
-    outputWidget->appendPlainText( QApplication::applicationName()
-                                   + " " + QApplication::applicationVersion());
+    addDockWidget( Qt::BottomDockWidgetArea, m_infoConsole.get());
+    connect( Logger::instance(),    &Logger::messageLogged,
+             m_outputWidget.get(),  &QPlainTextEdit::appendPlainText);
+    m_outputWidget->appendPlainText( QApplication::applicationName()
+                                    + " " + QApplication::applicationVersion());
     QCoreApplication::processEvents();
 
 
@@ -310,6 +305,15 @@ void MainWindow::createActions()
     actionToggleShowUncertainty->setChecked(   QEntity::QSegment::showUncertainty() );
     actionToggleShowUncertainty->setIcon(      QPixmap( ":/icons/show_uncertain.svg" ));
     actionToggleShowUncertainty->setIconVisibleInMenu(false);
+
+    actionToggleShowInfoConsole = std::make_unique<QAction>( "Show info console" );
+    actionToggleShowInfoConsole->setShortcut(  QKeySequence( "F8" ) );
+    actionToggleShowInfoConsole->setToolTip(   QStringLiteral("Show info console") );
+    actionToggleShowInfoConsole->setCheckable( true );
+    actionToggleShowInfoConsole->setChecked( true );
+    // actionToggleShowInfoConsole->setIcon(      QPixmap( ...
+    actionToggleShowInfoConsole->setIconVisibleInMenu(false);
+
 
     actionToggleShowConstraints = std::make_unique<QAction>( "Show constraints" );
     actionToggleShowConstraints->setToolTip(   QStringLiteral("Show constraints") );
@@ -531,6 +535,7 @@ void MainWindow::createMenus()
     menuShow->addAction( actionToggleShowColoration.get()    );
     menuShow->addAction( m_view->actionToggleShowBackgroundTiles.get() );
     menuShow->addAction( actionBackgroundImageToggleShow.get() );
+    menuShow->addAction( actionToggleShowInfoConsole.get()     );
     menuBar()->addMenu( menuShow.get());
 
     // help .........................................................
@@ -701,6 +706,8 @@ void MainWindow::establishConnections()
              this,                               &MainWindow::slotToggleShowConstraints);
     connect( actionToggleShowColoration.get(),   &QAction::triggered,
              this,                               &MainWindow::slotToggleShowColored);
+    connect( actionToggleShowInfoConsole.get(),  &QAction::triggered,
+            this,                                &MainWindow::slotToggleShowInfoConsole);
 
     connect( actionBinaryRead.get(),   &QAction::triggered,
              this,                     &MainWindow::slotFileOpen);
@@ -1166,12 +1173,14 @@ void MainWindow::slotToggleShowUncertainty()
     m_scene->update();
 }
 
-
-
+void MainWindow::slotToggleShowInfoConsole()
+{
+    m_infoConsole->setVisible( !m_infoConsole->isVisible() );
+}
 
 void MainWindow::slotToggleShowColored()
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     QEntity::QConstrained::toggleShowColor();
     QConstraint::QConstraintBase::toggleShowColor();
     m_scene->update();
@@ -1179,7 +1188,7 @@ void MainWindow::slotToggleShowColored()
 
 void MainWindow::slotUndoLastAction()
 {
-    qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
     if ( m_undoStack->index() == m_undoStack->count() ) {
         m_undoStack->undo();
     }
