@@ -177,6 +177,14 @@ void MainWindow::createSceneAndView()
              m_outputWidget.get(),  &QPlainTextEdit::appendPlainText);
     m_outputWidget->appendPlainText( QApplication::applicationName()
                                     + " " + QApplication::applicationVersion());
+
+    // context menu
+    m_outputWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_outputWidget.get(), &QPlainTextEdit::customContextMenuRequested,
+            this, &MainWindow::slotShowCustomContextMenu);
+
+
+
     QCoreApplication::processEvents();
 
 
@@ -1495,6 +1503,25 @@ void MainWindow::slotToggleConsiderDiagonal() {
     else {
         statusBar()->showMessage( QStringLiteral("constraint 'diagonal' disabled."));
     }
+}
+
+
+void MainWindow::slotShowCustomContextMenu(const QPoint &pos)
+{
+    // custom context menu
+    const std::unique_ptr<QMenu> menu (m_outputWidget->createStandardContextMenu());
+    menu->addSeparator();
+    QAction *clearAction = menu->addAction("clear console output");
+    // disable the action when there's nothing to clear:
+    clearAction->setEnabled( !m_outputWidget->document()->isEmpty());
+    clearAction->setIcon( QIcon::fromTheme(QIcon::ThemeIcon::EditDelete));
+
+    // trigger the clearing
+    connect( clearAction,          &QAction::triggered,
+             m_outputWidget.get(), &QPlainTextEdit::clear);
+
+    // show the menu at the cursor position
+    menu->exec( m_outputWidget->mapToGlobal(pos));
 }
 
 } // namespace GUI

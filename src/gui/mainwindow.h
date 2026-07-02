@@ -40,6 +40,7 @@ class QGraphicsPixmapItem;
 class QDoubleSpinBox;
 class QLabel;
 class QPainterPath;
+class QPoint;
 
 
 //! Graphical user interface
@@ -180,6 +181,7 @@ private:
     void slotItemMoveToTop();
     void slotSelectionChanged();
     void slotSetFont();
+    void slotShowCustomContextMenu(const QPoint &pos);
     void slotShowStatus( const QString & s);
     void slotStackIndexChanged();
     void slotToggleConsiderOrthogonal();
