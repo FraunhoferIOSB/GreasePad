@@ -19,8 +19,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QAction>
 #include <QMainWindow>
 #include <QPlainTextEdit>
+#include <QPointer>
 #include <QWidget>
 
 #include "qtmetamacros.h"
@@ -128,7 +130,7 @@ private:
     std::unique_ptr<QAction>   actionToggleShowStrokes;
     std::unique_ptr<QAction>   actionToggleShowUnconstrained;
     std::unique_ptr<QAction>   actionToggleShowUncertainty;
-    std::unique_ptr<QAction>   actionToggleShowInfoConsole;
+    QPointer<QAction>          actionToggleShowInfoConsole;
     std::unique_ptr<QAction>   actionUndo;
 
     std::unique_ptr<QMenu>     menuConstr;

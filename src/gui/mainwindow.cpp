@@ -306,13 +306,17 @@ void MainWindow::createActions()
     actionToggleShowUncertainty->setIcon(      QPixmap( ":/icons/show_uncertain.svg" ));
     actionToggleShowUncertainty->setIconVisibleInMenu(false);
 
-    actionToggleShowInfoConsole = std::make_unique<QAction>( "Show info console" );
+
+    // !! getter method toggleViewAction() returns a non-owning pointer.
+    actionToggleShowInfoConsole = m_infoConsole->toggleViewAction(); // std::make_unique<QAction>( "Show info console" );
+    actionToggleShowInfoConsole->setText("Show info console");
     actionToggleShowInfoConsole->setShortcut(  QKeySequence( "F8" ) );
     actionToggleShowInfoConsole->setToolTip(   QStringLiteral("Show info console") );
     actionToggleShowInfoConsole->setCheckable( true );
     actionToggleShowInfoConsole->setChecked( true );
     // actionToggleShowInfoConsole->setIcon(      QPixmap( ...
     actionToggleShowInfoConsole->setIconVisibleInMenu(false);
+
 
 
     actionToggleShowConstraints = std::make_unique<QAction>( "Show constraints" );
@@ -535,7 +539,7 @@ void MainWindow::createMenus()
     menuShow->addAction( actionToggleShowColoration.get()    );
     menuShow->addAction( m_view->actionToggleShowBackgroundTiles.get() );
     menuShow->addAction( actionBackgroundImageToggleShow.get() );
-    menuShow->addAction( actionToggleShowInfoConsole.get()     );
+    menuShow->addAction( actionToggleShowInfoConsole.get()   );
     menuBar()->addMenu( menuShow.get());
 
     // help .........................................................
@@ -706,18 +710,14 @@ void MainWindow::establishConnections()
              this,                               &MainWindow::slotToggleShowConstraints);
     connect( actionToggleShowColoration.get(),   &QAction::triggered,
              this,                               &MainWindow::slotToggleShowColored);
-    connect( actionToggleShowInfoConsole.get(),  &QAction::triggered,
-            this,                                &MainWindow::slotToggleShowInfoConsole);
 
+    // file
     connect( actionBinaryRead.get(),   &QAction::triggered,
              this,                     &MainWindow::slotFileOpen);
     connect( actionBinarySave.get(),   &QAction::triggered,
              this,                     &MainWindow::fileSave);
-
     connect( actionExportSaveAs.get(), &QAction::triggered,
              this,                     &MainWindow::slotExportSaveAs);
-
-
     connect( actionExit.get(),       &QAction::triggered,
              this,                   &MainWindow::close);
 
@@ -734,7 +734,7 @@ void MainWindow::establishConnections()
     connect( actionFitInView.get(),  &QAction::triggered,
              this,                   &MainWindow::slotFitInView);
 
-    //edit
+    // edit
     connect( actionItemMoveToTop.get(), &QAction::triggered,
              this,                      &MainWindow::slotItemMoveToTop);
     connect( actionItemMoveToBottom.get(), &QAction::triggered,
@@ -744,7 +744,6 @@ void MainWindow::establishConnections()
              this,                          &MainWindow::slotValueChangedAlphaRecognition);
     connect( spinBoxAlphaSnap.get(), QOverload<double>::of(&QDoubleSpinBox::valueChanged),
              this,                   &MainWindow::slotValueChangedAlphaSnap);
-
 
 
     connect( spinBoxOpacity.get(), QOverload<double>::of(&QDoubleSpinBox::valueChanged),

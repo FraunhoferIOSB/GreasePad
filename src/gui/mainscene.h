@@ -22,12 +22,13 @@
 
 #include "qtmetamacros.h"
 
+#include <QAction>
 #include <QGraphicsPathItem>
 #include <QGraphicsScene>
 
 #include <memory>
 
-class QAction;
+// class QAction;
 class QObject;
 class QString;
 class State;
