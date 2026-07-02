@@ -1083,8 +1083,8 @@ void MainWindow::slotFileOpen()
     // qDebug() << Q_FUNC_INFO;
     if (maybeSave()) {
         QString const fileName = QFileDialog::getOpenFileName(
-                    this,                 QStringLiteral("GReasePad file"),
-                    QDir::currentPath(),  QStringLiteral("GReasePad files (*.grp)") );
+                    this,                 QStringLiteral("GreasePad file"),
+                    QDir::currentPath(),  QStringLiteral("GreasePad files (*.grp)") );
 
         if ( fileName.isEmpty() ) {
             return;
@@ -1098,7 +1098,7 @@ bool MainWindow::fileSaveAs()
     // qDebug() << Q_FUNC_INFO;
     QString const fileName = QFileDialog::getSaveFileName(
                 this,                 QStringLiteral("Save file"),
-                QDir::currentPath(),  QStringLiteral("GReasePad files (*.grp)"));
+                QDir::currentPath(),  QStringLiteral("GreasePad files (*.grp)"));
 
     if ( fileName.isEmpty() ) {
         return false;
@@ -1260,7 +1260,7 @@ void MainWindow::slotAbout()
                         // "<li>J. Meidow and L. Lucks (2019) Draw and Order - Modeless Interactive Acquisition of Outlines, ISPRS - Annals of Photogrammetry, Remote Sensing and Spatial Information Sciences, vol. IV-2/W7, pp. 103-110.</li>"
                         // "<li>J. Meidow, H. Hammer and L. Lucks (2020) Delineation and Construction of 2D Geometries by Freehand Drawing and Geometric Reasoning, ISPRS - Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences, vol. V-5-2020, pp. 77-84.</li>"
                         "</blockquote>"
-                        "Please cite this papers when using %1 or parts of it in an academic publication.")
+                        "Please cite these papers when using %1 or parts of it in an academic publication.")
                     .arg( QApplication::applicationName() )
                     .arg( QApplication::applicationVersion())
                     .arg( QApplication::organizationName())

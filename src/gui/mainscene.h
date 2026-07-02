@@ -46,15 +46,15 @@ public:
 
 protected:
     void mousePressEvent(   QGraphicsSceneMouseEvent *event) override; //!< Handle mouse press event
-    void mouseMoveEvent(    QGraphicsSceneMouseEvent *event) override; //!< Handle mouse moce event
+    void mouseMoveEvent(    QGraphicsSceneMouseEvent *event) override; //!< Handle mouse move event
     void mouseReleaseEvent( QGraphicsSceneMouseEvent *event) override; //!< Handle mouse release event
     void keyPressEvent(     QKeyEvent *event) override; //!< Handle key press event
 
 public:
-    void removeAllItems();       //!< Remove all graphics from the scene but not an optional background imge
+    void removeAllItems();       //!< Remove all graphics from the scene but not an optional background image
     void addGraphicItems( const State *s);  //!< Add graphics from state to scene
 
-    void export_view_as_svg( QString &fileName);  //!< Export the current view as scalabel vector graphics
+    void export_view_as_svg( QString &fileName);  //!< Export the current view as scalable vector graphics
     void export_view_as_pdf( QString &fileName);  //!< Export the current view in portable document format
 
     static QPen scribblePen() { return s_scribblePen; }                 //!< Get the scribble pen
