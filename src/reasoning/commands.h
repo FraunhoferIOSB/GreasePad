@@ -41,7 +41,8 @@ public:
     Undo & operator= (const Undo & other) = delete; //!< Copy assignment operator
     Undo & operator= (Undo && other) = delete;      //!< Move assignment operator
 
-    explicit Undo(QUndoCommand *parent,
+    explicit Undo(QUndoStack *stack,
+                  QUndoCommand *parent,
                   std::unique_ptr<State> &p,
                   std::unique_ptr<State> &n,
                   State *st); //!< Standard constructor
@@ -53,10 +54,16 @@ public:
     //! Get pointer to scene
     static GUI::MainScene * scene() { return s_scene;  }
 
+    /* ! get the index of the current command
+    [[nodiscard]] int stackIndex() const {
+        return m_stack!=nullptr ? m_stack->index() : -1;
+    }*/
+
 private:
     std::unique_ptr<State> next_state_;  //!< Pointer to next state (redo)
     std::unique_ptr<State> prev_state_;  //!< Pointer to previous state (undo)
     State *current_state_{};             //!< Pointer to current state
+    QUndoStack *m_stack = nullptr;
 
     static GUI::MainScene *s_scene;
 
@@ -70,7 +77,8 @@ class AddStroke : public Undo
 {
 public:
     //! Value constructor
-    AddStroke( State *curr,
+    AddStroke( QUndoStack *,
+               State *curr,
                std::unique_ptr<State> & p,
                std::unique_ptr<State> & n,
                QUndoCommand *parent);
@@ -87,7 +95,7 @@ class DeleteSelection : public Undo
 {
 public:
     //! Value constructor
-    DeleteSelection(State *st,
+    DeleteSelection(QUndoStack* stack, State *st,
                     std::unique_ptr<State> &p,
                     std::unique_ptr<State> &n,
                     QUndoCommand *parent);
@@ -99,7 +107,7 @@ class TabulaRasa : public Undo
 {
 public:
     //! Value constructor
-    TabulaRasa( State *st,
+    TabulaRasa( QUndoStack*stack, State *st,
                 std::unique_ptr<State> &p,
                 std::unique_ptr<State> &n,
                 QUndoCommand *parent);
@@ -111,7 +119,7 @@ class ReplaceStateWithFileContent : public Undo
 {
 public:
     //! Value constructor (filename)
-    ReplaceStateWithFileContent( const QString &fileName,
+    ReplaceStateWithFileContent( QUndoStack* stack, const QString &fileName,
                                  State *curr,
                                  std::unique_ptr<State> &p,
                                  std::unique_ptr<State> &n,

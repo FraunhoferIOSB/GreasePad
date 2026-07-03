@@ -17,6 +17,7 @@
  */
 
 #include "commands.h"
+#include "gui/logger.h"
 #include "gui/mainscene.h"
 #include "reasoning/state.h"
 
@@ -32,13 +33,15 @@ namespace Cmd {
 
 GUI::MainScene * Undo::s_scene = nullptr;
 
-Undo::Undo( QUndoCommand *parent,
+Undo::Undo( QUndoStack *stack,
+            QUndoCommand *parent,
             std::unique_ptr<State> &p,
             std::unique_ptr<State> &n, State *st)
-    : QUndoCommand(parent),
-      next_state_(std::move(n)),
-      prev_state_(std::move(p)),
-      current_state_(st)
+    :  QUndoCommand(parent),
+    next_state_(std::move(n)),
+    prev_state_(std::move(p)),
+    current_state_(st),
+    m_stack(stack)
 {
     // qDebug() << Q_FUNC_INFO;
 }
@@ -46,7 +49,8 @@ Undo::Undo( QUndoCommand *parent,
 
 void Undo::undo()
 {
-    //qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
+    Logger::log("[interaction] undo: " + text());
 
     *current_state_ = *prev_state_;  // set
     auto *scn = scene();
@@ -60,7 +64,10 @@ void Undo::undo()
 
 void Undo::redo()
 {
-    //qDebug() << Q_FUNC_INFO;
+    // qDebug() << Q_FUNC_INFO;
+    if ( m_stack->index() != m_stack->count() ) {
+        Logger::log("[interaction] redo: " + text());
+    }
 
     *current_state_ = *next_state_;    // copy content
     auto *scn = scene();
@@ -72,20 +79,23 @@ void Undo::redo()
 }
 
 
-AddStroke::AddStroke( State *curr,
+AddStroke::AddStroke( QUndoStack *stack,
+                      State *curr,
                       std::unique_ptr<State> &p,
                       std::unique_ptr<State> &n,
-                      QUndoCommand *parent) : Undo(parent, p, n, curr)
+                      QUndoCommand *parent) : Undo(stack, parent, p, n, curr)
 {
     // qDebug() << Q_FUNC_INFO;
-    setText( "add stroke" );
+    setText( "add a segment" );
+    Logger::log("[interaction] " + text());
 }
 
 
-DeleteSelection::DeleteSelection( State *st,
+DeleteSelection::DeleteSelection( QUndoStack* stack,
+                                  State *st,
                                   std::unique_ptr<State> & p,
                                   std::unique_ptr<State> & n,
-                                  QUndoCommand *parent) : Undo(parent, p,n, st)
+                                  QUndoCommand *parent) : Undo(stack, parent, p,n, st)
 {
     // qDebug() << Q_FUNC_INFO ;
     auto *scn = scene();
@@ -95,29 +105,33 @@ DeleteSelection::DeleteSelection( State *st,
 
     setText( QString( scn->selectedItems().size()==1 ?
                         "delete selected item" : "delete selected items") );
+    Logger::log("[interaction] " + text());
 }
 
 
-TabulaRasa::TabulaRasa( State *st,
+TabulaRasa::TabulaRasa( QUndoStack*stack,
+                        State *st,
                         std::unique_ptr<State> &p,
                         std::unique_ptr<State> &n,
                         QUndoCommand *parent )
-    : Undo(parent, p,n,  st)
+    : Undo(stack, parent, p,n,  st)
 {
     // qDebug() << Q_FUNC_INFO ;
-    setText( "clear all" );
+    setText( "tabula rasa" );
+    Logger::log("[interaction] " + text());
 }
 
 
-ReplaceStateWithFileContent::ReplaceStateWithFileContent( const QString & fileName,
+ReplaceStateWithFileContent::ReplaceStateWithFileContent( QUndoStack *stack, const QString & fileName,
                                                           State *curr,
                                                           std::unique_ptr<State> & p,
                                                           std::unique_ptr<State> & n,
                                                           QUndoCommand *parent)
-    : Undo(parent, p,n, curr)
+    : Undo(stack, parent, p,n, curr)
 {
     // qDebug() << Q_FUNC_INFO;
     setText( fileName );
+    Logger::log("[interaction] " + text());
 }
 
 } // namespace Cmd

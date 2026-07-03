@@ -84,15 +84,12 @@ MainWindow::MainWindow(QWidget *parent)
     qDebug() <<  Q_FUNC_INFO;
 
     setWindowIcon( QIcon( QPixmap( ":/icons/Tango/preferences-desktop-peripherals.svg" )));
-
-
-    penTool = std::make_unique<FormatTool>("Properties", this);
-
     setAttribute( Qt::WA_StaticContents);
     setAttribute( Qt::WA_AcceptTouchEvents);
-
     setSizePolicy( QSizePolicy::Expanding,
                    QSizePolicy::Expanding);
+
+    penTool = std::make_unique<FormatTool>("Properties", this);
 
     // create undo stack .............................................
     m_undoStack = std::make_unique<QUndoStack>(this);
@@ -175,10 +172,10 @@ void MainWindow::createSceneAndView()
     addDockWidget( Qt::BottomDockWidgetArea, m_infoConsole.get());
     connect( Logger::instance(),    &Logger::messageLogged,
              m_outputWidget.get(),  &QPlainTextEdit::appendPlainText);
-    m_outputWidget->appendPlainText( QApplication::applicationName()
-                                    + " " + QApplication::applicationVersion());
+    Logger::log("[app] Start "
+                + QApplication::applicationName() + " "
+                + QApplication::applicationVersion());
 
-    // context menu
     m_outputWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_outputWidget.get(), &QPlainTextEdit::customContextMenuRequested,
             this, &MainWindow::slotShowCustomContextMenu);
@@ -189,6 +186,9 @@ void MainWindow::createSceneAndView()
 
 
     showMaximized();     // after 'setCentralWidget'
+    Logger::log("[app] Ready. Draw a stroke..."); // QApplication::applicationName()
+                                  //  + " " + QApplication::applicationVersion());
+
 }
 
 
@@ -857,7 +857,7 @@ void MainWindow::readBinaryFile( const QString & fileName)
 
     m_undoStack->push(
                 new Cmd::ReplaceStateWithFileContent (
-                    fileInfo.fileName(),
+                    m_undoStack.get(), fileInfo.fileName(),
                     &curr_state,
                     prev_state,
                     next_state,
@@ -871,12 +871,11 @@ void MainWindow::readBinaryFile( const QString & fileName)
 
 void MainWindow::slotCmdTabulaRasa()
 {
-
     std::unique_ptr<State> p = std::make_unique<State>(curr_state);
     std::unique_ptr<State> n = std::make_unique<State>();
 
     m_undoStack->push(
-                new Cmd::TabulaRasa( &curr_state, p, n, nullptr )
+                new Cmd::TabulaRasa( m_undoStack.get(), &curr_state, p, n, nullptr )
                 );
 
     setWindowModified( true );
@@ -885,8 +884,6 @@ void MainWindow::slotCmdTabulaRasa()
 // invoked by MainScene:signalCmdAddStroke:
 void MainWindow::slotCmdAddStroke( QPainterPath *path)
 {
-    Logger::log(Q_FUNC_INFO);
-
     // convert path to polyline
     QPolygonF poly( path->elementCount()) ;
     for ( int i=0; i<path->elementCount(); i++ ) {
@@ -908,7 +905,7 @@ void MainWindow::slotCmdAddStroke( QPainterPath *path)
         std::unique_ptr<State> prev_state_
                 = std::make_unique<State>(curr_state);
         m_undoStack->push(
-                    new Cmd::AddStroke( &curr_state,
+                    new Cmd::AddStroke( m_undoStack.get(), &curr_state,
                                         prev_state_,
                                         next_state_,
                                nullptr)
@@ -933,7 +930,8 @@ void MainWindow::slotCmdDeleteSelection()
             = std::make_unique<State>(curr_state);
 
         m_undoStack->push(
-                    new Cmd::DeleteSelection( &curr_state,
+                    new Cmd::DeleteSelection( m_undoStack.get(),
+                                              &curr_state,
                                               prev_state_,
                                               next_state_, nullptr)
                     );
@@ -1447,62 +1445,56 @@ void MainWindow::slotItemMoveToTop()
 
 void MainWindow::slotToggleConsiderOrthogonal() {
     State::toggleConsiderOrthogonal();
-    if ( State::considerOrthogonal() ) {
-        statusBar()->showMessage(QStringLiteral("constraint 'orthogonal' enabled."));
-    }
-    else {
-        statusBar()->showMessage(QStringLiteral("constraint 'orthogonal' disabled."));
-    }
+    const QString msg = State::considerOrthogonal()
+                      ? "[interaction] constraint 'orthogonal': enabled"
+                      : "[interaction] constraint 'orthogonal': disabled";
+    statusBar()->showMessage(msg);
+    Logger::log(msg);
 }
 
 void MainWindow::slotToggleConsiderParallel()   {
     State::toggleConsiderParallel();
-    if ( State::considerParallel() ) {
-        statusBar()->showMessage(QStringLiteral("constraint 'parallel' enabled."));
-    }
-    else {
-        statusBar()->showMessage(QStringLiteral("constraint 'parallel' disabled."));
-    }
+    const QString msg = State::considerParallel()
+                            ? "[interaction] constraint 'parallel': enabled"
+                            : "[interaction] constraint 'parallel': disabled";
+    statusBar()->showMessage(msg);
+    Logger::log(msg);
 }
 
 void MainWindow::slotToggleConsiderCopunctual() {
     State::toggleConsiderCopunctual();
-    if ( State::considerCopunctual() ) {
-        statusBar()->showMessage(QStringLiteral("constraint 'copunctual' enabled."));
-    }
-    else {
-        statusBar()->showMessage(QStringLiteral("constraint 'copunctual' disabled."));
-    }
+    const QString msg = State::considerCopunctual()
+                            ? "[interaction] constraint 'copunctual': enabled"
+                            : "[interaction] constraint 'copunctual': disabled";
+    statusBar()->showMessage(msg);
+    Logger::log(msg);
 }
 
 void MainWindow::slotToggleConsiderVertical()   {
     State::toggleConsiderVertical();
-    if ( State::considerVertical() ) {
-        statusBar()->showMessage(QStringLiteral("constraint 'vertical' enabled."));
-    }
-    else {
-        statusBar()->showMessage(QStringLiteral("constraint 'vertical' disabled."));
-    }
+    const QString msg = State::considerVertical()
+                            ? "[interaction] constraint 'vertical': enabled"
+                            : "[interaction] constraint 'vertical': disabled";
+    statusBar()->showMessage(msg);
+    Logger::log(msg);
 }
 
 void MainWindow::slotToggleConsiderHorizontal() {
     State::toggleConsiderHorizontal();
-    if ( State::considerHorizontal() ) {
-        statusBar()->showMessage(QStringLiteral("constraint 'horizontal' enabled."));
-    }
-    else {
-        statusBar()->showMessage(QStringLiteral("constraint 'horizontal' disabled."));
-    }
+    const QString msg = State::considerHorizontal()
+                            ? "[interaction] constraint 'horizontal': enabled"
+                            : "[interaction] constraint 'horizontal': disabled";
+    statusBar()->showMessage(msg);
+    Logger::log(msg);
 }
 
 void MainWindow::slotToggleConsiderDiagonal() {
     State::toggleConsiderDiagonal();
-    if ( State::considerDiagonal() ) {
-        statusBar()->showMessage( QStringLiteral("constraint 'diagonal' enabled."));
-    }
-    else {
-        statusBar()->showMessage( QStringLiteral("constraint 'diagonal' disabled."));
-    }
+    const QString msg = State::considerDiagonal()
+                            ? "[interaction] constraint 'diagonal': enabled"
+                            : "[interaction] constraint 'diagonal': disabled";
+    statusBar()->showMessage(msg);
+    Logger::log(msg);
 }
 
 
