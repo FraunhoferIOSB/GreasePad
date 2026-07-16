@@ -68,6 +68,7 @@ protected:
 private:
     State curr_state;
 
+    void createOutputConsole();
     void createSceneAndView();
     void createActions();
     void createMenus();

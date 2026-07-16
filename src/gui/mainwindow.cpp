@@ -101,6 +101,7 @@ MainWindow::MainWindow(QWidget *parent)
     State::setAlphaSnapping(    defaultAlpha );
 
     createSceneAndView();
+    createOutputConsole();
     createActions();
     createMenus();
     createBoxes();
@@ -108,9 +109,11 @@ MainWindow::MainWindow(QWidget *parent)
     createToolBars();
     createStatusBar();
     setPens();
-
     setCurrentFileName( QString());
+
+    Logger::log("[app] Ready. Draw a stroke...");
 }
+
 
 void MainWindow::setPens() {
 
@@ -155,15 +158,9 @@ MainWindow::~MainWindow()
     qDebug() << "Bye bye.";
 }
 
-void MainWindow::createSceneAndView()
+
+void MainWindow::createOutputConsole()
 {
-    m_scene = std::make_unique<MainScene>( this );
-    Cmd::Undo::setScene( m_scene.get());
-
-    m_view  = std::make_unique<MainView>( m_scene.get(), this );
-    setCentralWidget( m_view.get() );
-
-
     m_outputWidget = std::make_unique<QPlainTextEdit>(this);
     m_outputWidget->setReadOnly(true);
     m_infoConsole = std::make_unique<QDockWidget>("Info Console",this);
@@ -178,17 +175,21 @@ void MainWindow::createSceneAndView()
 
     m_outputWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_outputWidget.get(), &QPlainTextEdit::customContextMenuRequested,
-            this, &MainWindow::slotShowCustomContextMenu);
-
-
+            this,                 &MainWindow::slotShowCustomContextMenu);
 
     QCoreApplication::processEvents();
+}
 
+
+void MainWindow::createSceneAndView()
+{
+    m_scene = std::make_unique<MainScene>( this );
+    Cmd::Undo::setScene( m_scene.get());
+
+    m_view  = std::make_unique<MainView>( m_scene.get(), this );
+    setCentralWidget( m_view.get() );
 
     showMaximized();     // after 'setCentralWidget'
-    Logger::log("[app] Ready. Draw a stroke..."); // QApplication::applicationName()
-                                  //  + " " + QApplication::applicationVersion());
-
 }
 
 
