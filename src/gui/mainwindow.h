@@ -34,6 +34,7 @@
 
 class MainScene;
 
+class QBrush;
 class QColor;
 class QUndoStack;
 class QGraphicsPixmapItem;
@@ -41,6 +42,7 @@ class QDoubleSpinBox;
 class QLabel;
 class QPainterPath;
 class QPoint;
+class QTextCharFormat;
 
 
 //! Graphical user interface
@@ -48,6 +50,7 @@ namespace GUI {
 
 class FormatTool;
 class MainView;
+class PlainTextOutput;
 
 
 //! Main window
@@ -83,7 +86,7 @@ private:
     std::unique_ptr<MainScene>  m_scene;
     std::unique_ptr<QUndoStack> m_undoStack;
     std::unique_ptr<QDockWidget> m_infoConsole;
-    std::unique_ptr<QPlainTextEdit> m_outputWidget;
+    std::unique_ptr<PlainTextOutput> m_outputWidget;
 
     enum {UndoLimit = 5};
 
@@ -208,6 +211,19 @@ private:
     static void slotValueChangedAlphaSnap( double);
     void slotValueChangedOpacity(double);
     static void slotValueChangedAlphaRecognition( double );
+};
+
+
+class PlainTextOutput: public QPlainTextEdit
+{
+    Q_OBJECT
+public:
+    void setTextColor(const QColor &c)
+    {
+        QTextCharFormat fmt;
+        fmt.setForeground(QBrush(c));
+        this->mergeCurrentCharFormat(fmt);
+    }
 };
 
 } // namespace GUI

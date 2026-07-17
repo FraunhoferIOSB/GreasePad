@@ -161,22 +161,24 @@ MainWindow::~MainWindow()
 
 void MainWindow::createOutputConsole()
 {
-    m_outputWidget = std::make_unique<QPlainTextEdit>(this);
+    m_outputWidget = std::make_unique<PlainTextOutput>();//this);
     m_outputWidget->setReadOnly(true);
+    m_outputWidget->setTextColor(Qt::darkGreen);
+    m_outputWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+
     m_infoConsole = std::make_unique<QDockWidget>("Info Console",this);
     m_infoConsole->setWidget(m_outputWidget.get());
 
     addDockWidget( Qt::BottomDockWidgetArea, m_infoConsole.get());
-    connect( Logger::instance(),    &Logger::messageLogged,
-             m_outputWidget.get(),  &QPlainTextEdit::appendPlainText);
+
+    connect( Logger::instance(),   &Logger::messageLogged,
+             m_outputWidget.get(), &QPlainTextEdit::appendPlainText);
+    connect( m_outputWidget.get(), &QPlainTextEdit::customContextMenuRequested,
+             this,                 &MainWindow::slotShowCustomContextMenu);
+
     Logger::log("[app] Start "
                 + QApplication::applicationName() + " "
                 + QApplication::applicationVersion());
-
-    m_outputWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(m_outputWidget.get(), &QPlainTextEdit::customContextMenuRequested,
-            this,                 &MainWindow::slotShowCustomContextMenu);
-
     QCoreApplication::processEvents();
 }
 
@@ -1447,55 +1449,55 @@ void MainWindow::slotItemMoveToTop()
 void MainWindow::slotToggleConsiderOrthogonal() {
     State::toggleConsiderOrthogonal();
     const QString msg = State::considerOrthogonal()
-                      ? "[interaction] constraint 'orthogonal': enabled"
-                      : "[interaction] constraint 'orthogonal': disabled";
-    statusBar()->showMessage(msg);
-    Logger::log(msg);
+                      ? "constraint 'orthogonal' enabled"
+                      : "constraint 'orthogonal' disabled";
+    statusBar()->showMessage( msg);
+    Logger::log( "[interaction] " + msg);
 }
 
 void MainWindow::slotToggleConsiderParallel()   {
     State::toggleConsiderParallel();
     const QString msg = State::considerParallel()
-                            ? "[interaction] constraint 'parallel': enabled"
-                            : "[interaction] constraint 'parallel': disabled";
+                            ? "constraint 'parallel' enabled"
+                            : "constraint 'parallel' disabled";
     statusBar()->showMessage(msg);
-    Logger::log(msg);
+    Logger::log( "[interaction] " + msg);
 }
 
 void MainWindow::slotToggleConsiderCopunctual() {
     State::toggleConsiderCopunctual();
     const QString msg = State::considerCopunctual()
-                            ? "[interaction] constraint 'copunctual': enabled"
-                            : "[interaction] constraint 'copunctual': disabled";
+                            ? "constraint 'copunctual' enabled"
+                            : "constraint 'copunctual' disabled";
     statusBar()->showMessage(msg);
-    Logger::log(msg);
+    Logger::log( "[interaction] " + msg);
 }
 
 void MainWindow::slotToggleConsiderVertical()   {
     State::toggleConsiderVertical();
     const QString msg = State::considerVertical()
-                            ? "[interaction] constraint 'vertical': enabled"
-                            : "[interaction] constraint 'vertical': disabled";
+                            ? "constraint 'vertical' enabled"
+                            : "constraint 'vertical' disabled";
     statusBar()->showMessage(msg);
-    Logger::log(msg);
+    Logger::log( "[interaction] " + msg);
 }
 
 void MainWindow::slotToggleConsiderHorizontal() {
     State::toggleConsiderHorizontal();
     const QString msg = State::considerHorizontal()
-                            ? "[interaction] constraint 'horizontal': enabled"
-                            : "[interaction] constraint 'horizontal': disabled";
+                            ? "constraint 'horizontal' enabled"
+                            : "constraint 'horizontal' disabled";
     statusBar()->showMessage(msg);
-    Logger::log(msg);
+    Logger::log( "[interaction] " + msg);
 }
 
 void MainWindow::slotToggleConsiderDiagonal() {
     State::toggleConsiderDiagonal();
     const QString msg = State::considerDiagonal()
-                            ? "[interaction] constraint 'diagonal': enabled"
-                            : "[interaction] constraint 'diagonal': disabled";
+                            ? "constraint 'diagonal' enabled"
+                            : "constraint 'diagonal' disabled";
     statusBar()->showMessage(msg);
-    Logger::log(msg);
+    Logger::log( "[interaction] " + msg);
 }
 
 
