@@ -41,6 +41,7 @@
 #include "graphics/qconstraints.h"
 #include "graphics/qsegment.h"
 #include "graphics/qstroke.h"
+#include "gui/logger.h"
 #include "gui/mainscene.h"
 #include "matfun.h"
 #include "matrix.h"
@@ -59,6 +60,7 @@
 #include <QMessageBox>
 #include <QPolygonF>
 #include <QStringLiteral>
+#include <QTextCharFormat>
 #include <QtCompilerDetection>
 
 #include <Eigen/Core>
@@ -623,6 +625,12 @@ void impl::reasoning_augment_and_adjust( const Quantiles::Snapping & snap)
 
     qDebug().noquote() << QString( num_new_constraints_==1 ?
         "%1 new constraint found." : "%1 new constraints found.").arg(num_new_constraints_);
+
+    const QString msg = QString( num_new_constraints_==1 ?
+        "%1 new constraint" : "%1 new constraints").arg(num_new_constraints_);
+
+    // qDebug() << Q_FUNC_INFO;
+    Logger::log( Logger::Category::Testing, msg);
 
     // (2) check for independence and consistency ...............
     identify_subtasks();  // connected components

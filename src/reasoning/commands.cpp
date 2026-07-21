@@ -24,12 +24,14 @@
 #include <QDebug>
 #include <QGraphicsItem>
 #include <QStringLiteral>
+#include <QTextCharFormat>
 #include <QUndoCommand>
 
 #include <memory>
 #include <utility>
 
 namespace Cmd {
+
 
 GUI::MainScene * Undo::s_scene = nullptr;
 
@@ -50,7 +52,7 @@ Undo::Undo( QUndoStack *stack,
 void Undo::undo()
 {
     // qDebug() << Q_FUNC_INFO;
-    Logger::log("[interaction] undo: " + text());
+    Logger::log( Logger::Category::Interaction, "undo: " + text());
 
     *current_state_ = *prev_state_;  // set
     auto *scn = scene();
@@ -66,7 +68,7 @@ void Undo::redo()
 {
     // qDebug() << Q_FUNC_INFO;
     if ( m_stack->index() != m_stack->count() ) {
-        Logger::log("[interaction] redo: " + text());
+        Logger::log( Logger::Category::Interaction, "redo: " + text());
     }
 
     *current_state_ = *next_state_;    // copy content
@@ -87,7 +89,7 @@ AddStroke::AddStroke( QUndoStack *stack,
 {
     // qDebug() << Q_FUNC_INFO;
     setText( "add a segment" );
-    Logger::log("[interaction] " + text());
+    // Logger::log( Logger::Interaction, text());
 }
 
 
@@ -105,7 +107,7 @@ DeleteSelection::DeleteSelection( QUndoStack* stack,
 
     setText( QString( scn->selectedItems().size()==1 ?
                         "delete selected item" : "delete selected items") );
-    Logger::log("[interaction] " + text());
+    Logger::log( Logger::Category::Interaction, text());
 }
 
 
@@ -118,7 +120,7 @@ TabulaRasa::TabulaRasa( QUndoStack*stack,
 {
     // qDebug() << Q_FUNC_INFO ;
     setText( "tabula rasa" );
-    Logger::log("[interaction] " + text());
+    Logger::log( Logger::Category::Interaction, text());
 }
 
 
@@ -131,7 +133,7 @@ ReplaceStateWithFileContent::ReplaceStateWithFileContent( QUndoStack *stack, con
 {
     // qDebug() << Q_FUNC_INFO;
     setText( fileName );
-    Logger::log("[interaction] " + text());
+    Logger::log( Logger::Category::Interaction, text());
 }
 
 } // namespace Cmd

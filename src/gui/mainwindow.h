@@ -25,6 +25,8 @@
 #include <QPointer>
 #include <QWidget>
 
+#include "logger.h"
+
 #include "qtmetamacros.h"
 
 #include <memory>
@@ -218,11 +220,18 @@ class PlainTextOutput: public QPlainTextEdit
 {
     Q_OBJECT
 public:
-    void setTextColor(const QColor &c)
+    [[maybe_unused]] void setTextColor(const QColor &c)
     {
         QTextCharFormat fmt;
         fmt.setForeground(QBrush(c));
         this->mergeCurrentCharFormat(fmt);
+    }
+
+    void appendText (Logger::Category cat, const QString & msg, const QTextCharFormat & fmt)
+    {
+        setCurrentCharFormat(fmt);
+        const QString prefixed = QString("[%1] %2").arg(Logger::name(cat)).arg(msg);
+        appendPlainText(prefixed);
     }
 };
 

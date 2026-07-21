@@ -111,7 +111,7 @@ MainWindow::MainWindow(QWidget *parent)
     setPens();
     setCurrentFileName( QString());
 
-    Logger::log("[app] Ready. Draw a stroke...");
+    Logger::log( Logger::Category::Application, "Ready. Draw a stroke...");
 }
 
 
@@ -163,7 +163,6 @@ void MainWindow::createOutputConsole()
 {
     m_outputWidget = std::make_unique<PlainTextOutput>();//this);
     m_outputWidget->setReadOnly(true);
-    m_outputWidget->setTextColor(Qt::darkGreen);
     m_outputWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
     m_infoConsole = std::make_unique<QDockWidget>("Info Console",this);
@@ -172,11 +171,11 @@ void MainWindow::createOutputConsole()
     addDockWidget( Qt::BottomDockWidgetArea, m_infoConsole.get());
 
     connect( Logger::instance(),   &Logger::messageLogged,
-             m_outputWidget.get(), &QPlainTextEdit::appendPlainText);
+            m_outputWidget.get(),  &PlainTextOutput::appendText);
     connect( m_outputWidget.get(), &QPlainTextEdit::customContextMenuRequested,
              this,                 &MainWindow::slotShowCustomContextMenu);
 
-    Logger::log("[app] Start "
+    Logger::log( Logger::Category::Application, "Start "
                 + QApplication::applicationName() + " "
                 + QApplication::applicationVersion());
     QCoreApplication::processEvents();
@@ -899,6 +898,8 @@ void MainWindow::slotCmdAddStroke( QPainterPath *path)
                 .arg( poly.last().y() ); */
 
 
+    Logger::log( Logger::Category::Interaction, "add a segment");
+
     // try...
     std::unique_ptr<State> next_state_
             = std::make_unique<State>( curr_state);
@@ -1452,7 +1453,7 @@ void MainWindow::slotToggleConsiderOrthogonal() {
                       ? "constraint 'orthogonal' enabled"
                       : "constraint 'orthogonal' disabled";
     statusBar()->showMessage( msg);
-    Logger::log( "[interaction] " + msg);
+    Logger::log( Logger::Category::Interaction, msg);
 }
 
 void MainWindow::slotToggleConsiderParallel()   {
@@ -1461,7 +1462,7 @@ void MainWindow::slotToggleConsiderParallel()   {
                             ? "constraint 'parallel' enabled"
                             : "constraint 'parallel' disabled";
     statusBar()->showMessage(msg);
-    Logger::log( "[interaction] " + msg);
+    Logger::log( Logger::Category::Interaction, msg);
 }
 
 void MainWindow::slotToggleConsiderCopunctual() {
@@ -1470,7 +1471,7 @@ void MainWindow::slotToggleConsiderCopunctual() {
                             ? "constraint 'copunctual' enabled"
                             : "constraint 'copunctual' disabled";
     statusBar()->showMessage(msg);
-    Logger::log( "[interaction] " + msg);
+    Logger::log( Logger::Category::Interaction, msg);
 }
 
 void MainWindow::slotToggleConsiderVertical()   {
@@ -1479,7 +1480,7 @@ void MainWindow::slotToggleConsiderVertical()   {
                             ? "constraint 'vertical' enabled"
                             : "constraint 'vertical' disabled";
     statusBar()->showMessage(msg);
-    Logger::log( "[interaction] " + msg);
+    Logger::log( Logger::Category::Interaction, msg);
 }
 
 void MainWindow::slotToggleConsiderHorizontal() {
@@ -1488,7 +1489,7 @@ void MainWindow::slotToggleConsiderHorizontal() {
                             ? "constraint 'horizontal' enabled"
                             : "constraint 'horizontal' disabled";
     statusBar()->showMessage(msg);
-    Logger::log( "[interaction] " + msg);
+    Logger::log( Logger::Category::Interaction, msg);
 }
 
 void MainWindow::slotToggleConsiderDiagonal() {
@@ -1497,7 +1498,7 @@ void MainWindow::slotToggleConsiderDiagonal() {
                             ? "constraint 'diagonal' enabled"
                             : "constraint 'diagonal' disabled";
     statusBar()->showMessage(msg);
-    Logger::log( "[interaction] " + msg);
+    Logger::log( Logger::Category::Interaction, msg);
 }
 
 

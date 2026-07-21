@@ -20,7 +20,10 @@
 #define LOGGER_H
 
 #include <QObject>
+#include <QStringLiteral>
+#include <QTextCharFormat>
 
+#include "qnamespace.h"
 #include "qtmetamacros.h"
 
 
@@ -28,20 +31,56 @@ class Logger : public QObject {
     Q_OBJECT
 
 public:
+    enum class Category {
+        Application,
+        Interaction,
+        Testing
+    };
+    Q_ENUM(Category)
+
     static Logger* instance() {
         static Logger logger;
         return &logger;
     }
 
-    static void log(const QString & text) {
-        Q_EMIT instance()->messageLogged(text);
+    static void log(Category cat, const QString & message)
+    {
+        Q_EMIT instance()->messageLogged(cat,message,formatFor(cat));
+    }
+
+    static QString name(Category cat) {
+        switch (cat) {
+        case Category::Application: return QStringLiteral("app");
+        case Category::Interaction: return QStringLiteral("interaction");
+        case Category::Testing:     return QStringLiteral("testing");
+        default:                    return QStringLiteral("unknown");
+        }
     }
 
 Q_SIGNALS:
-    void messageLogged(const QString &text);
+    void messageLogged(Category cat, const QString &msg, const QTextCharFormat &fmt);
 
 private:
     Logger() = default;
+
+    static QTextCharFormat formatFor(Category cat) {
+        QTextCharFormat fmt;
+        switch (cat) {
+        case Category::Application:
+            fmt.setForeground(Qt::black);
+            break;
+        case Category::Interaction:
+            fmt.setForeground(Qt::darkGreen);
+            // fmt.setFontWeight(QFont::Bold);
+            break;
+        case Category::Testing:
+            fmt.setForeground(Qt::darkRed);
+            break;
+        default:
+            fmt.setForeground(Qt::black);
+        }
+        return fmt;
+    }
 };
 
 #endif // LOGGER_H
