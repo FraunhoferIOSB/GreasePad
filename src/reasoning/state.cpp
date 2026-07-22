@@ -781,7 +781,12 @@ void impl::solve_subtask_greedy( const int cc )
 
     AdjustmentFramework a{ a_Maker( maps_)};
 
-    //qDebug().noquote().nospace() << red << "greedy search..." << black;
+    // qDebug().noquote().nospace() << red << "greedy search..." << black;
+
+    Logger::log( Logger::Category::Reasoning,
+        QString("subtask #%1/%2....").arg(cc+1).arg(arr_segm.maxCoeff()+1)
+                );
+
     bool last_constraint_required = false;
     for ( Index c=0; c<mapc_.size(); c++) {
 
@@ -790,7 +795,8 @@ void impl::solve_subtask_greedy( const int cc )
             qDebug().noquote().nospace() << blue
                 << QStringLiteral("Greedy search: adding constraint #%1 (%2) tentatively.")
                     .arg(c+1).arg( m_constr.at(mapc_(c))->type_name()) << black;
-
+            Logger::log( Logger::Category::Reasoning,
+                        QStringLiteral("checking constraint #%1 (%2) greedily").arg(c+1).arg(m_constr.at(mapc_(c))->type_name()));
             // add constraint tentative and  check dependency/consistency:
             m_status(mapc_(c)) = Attribute::Required;
 

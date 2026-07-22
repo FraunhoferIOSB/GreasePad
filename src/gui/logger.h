@@ -34,7 +34,8 @@ public:
     enum class Category {
         Application,
         Interaction,
-        Testing
+        Testing,
+        Reasoning
     };
     Q_ENUM(Category)
 
@@ -53,6 +54,7 @@ public:
         case Category::Application: return QStringLiteral("app");
         case Category::Interaction: return QStringLiteral("interaction");
         case Category::Testing:     return QStringLiteral("testing");
+        case Category::Reasoning:   return QStringLiteral("reasoning");
         default:                    return QStringLiteral("unknown");
         }
     }
@@ -71,10 +73,14 @@ private:
             break;
         case Category::Interaction:
             fmt.setForeground(Qt::darkGreen);
-            // fmt.setFontWeight(QFont::Bold);
+
             break;
         case Category::Testing:
             fmt.setForeground(Qt::darkRed);
+            break;
+        case Category::Reasoning:
+            fmt.setForeground(Qt::black);
+            // fmt.setFontWeight(QFont::Bold);
             break;
         default:
             fmt.setForeground(Qt::black);

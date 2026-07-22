@@ -163,12 +163,13 @@ void MainWindow::createOutputConsole()
 {
     m_outputWidget = std::make_unique<PlainTextOutput>();//this);
     m_outputWidget->setReadOnly(true);
+    m_outputWidget->setLineWrapMode(QPlainTextEdit::NoWrap);
     m_outputWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
     m_infoConsole = std::make_unique<QDockWidget>("Info Console",this);
     m_infoConsole->setWidget(m_outputWidget.get());
 
-    addDockWidget( Qt::BottomDockWidgetArea, m_infoConsole.get());
+    addDockWidget( Qt::RightDockWidgetArea, m_infoConsole.get());
 
     connect( Logger::instance(),   &Logger::messageLogged,
             m_outputWidget.get(),  &PlainTextOutput::appendText);
@@ -202,8 +203,11 @@ void MainWindow::slotShowStatus( const QString & s)
 
 void MainWindow::slotStackIndexChanged()
 {
-    statusBar()->showMessage( curr_state.StatusMsg() );
+    const QString msg = curr_state.StatusMsg();
+    Logger::log( Logger::Category::Reasoning, msg );
+    statusBar()->showMessage( msg );
 }
+
 
 void MainWindow::slotToggleShowUnconstrained()
 {
@@ -925,6 +929,10 @@ void MainWindow::slotCmdDeleteSelection()
     if ( m_scene->selectedItems().isEmpty() ) {
         return;
     }
+
+    Logger::log( Logger::Category::Interaction,
+        QString( m_scene->selectedItems().size() ==1 ? "%1 item deleted" : "%1 items deleted").arg(m_scene->selectedItems().size())
+                );
 
     std::unique_ptr<State> next_state_
             = std::make_unique<State>(curr_state);

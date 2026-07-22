@@ -107,7 +107,6 @@ DeleteSelection::DeleteSelection( QUndoStack* stack,
 
     setText( QString( scn->selectedItems().size()==1 ?
                         "delete selected item" : "delete selected items") );
-    Logger::log( Logger::Category::Interaction, text());
 }
 
 
