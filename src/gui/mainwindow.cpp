@@ -161,9 +161,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::createOutputConsole()
 {
-    m_outputWidget = std::make_unique<PlainTextOutput>();//this);
+    m_outputWidget = std::make_unique<PlainTextOutput>();
     m_outputWidget->setReadOnly(true);
     m_outputWidget->setLineWrapMode(QPlainTextEdit::NoWrap);
+    m_outputWidget->setMaximumBlockCount(1000); // limit
     m_outputWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
     m_infoConsole = std::make_unique<QDockWidget>("Info Console",this);
