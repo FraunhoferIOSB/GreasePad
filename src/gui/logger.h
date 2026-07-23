@@ -20,17 +20,17 @@
 #define LOGGER_H
 
 #include <QObject>
-#include <QStringLiteral>
-#include <QTextCharFormat>
 
 #include "qtmetamacros.h"
+
+class QTextCharFormat;
 
 
 class Logger : public QObject {
     Q_OBJECT
 
 public:
-    enum class Category {
+    enum class Category : int {
         Application,
         Interaction,
         Testing,

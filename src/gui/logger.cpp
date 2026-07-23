@@ -19,12 +19,13 @@
 #include "logger.h"
 
 #include <QStringLiteral>
+#include <QTextCharFormat>
 
 #include "qnamespace.h"  // Qt::black, ...
 #include "qtmetamacros.h"  // Q_EMIT
 
 class QString;
-class QTextCharFormat;
+
 
 
 Logger* Logger::instance()
@@ -34,9 +35,9 @@ Logger* Logger::instance()
 }
 
 
-void Logger::log(Category cat, const QString & message)
+void Logger::log(Category cat, const QString & msg)
 {
-    Q_EMIT instance()->messageLogged(cat,message,formatFor(cat));
+    Q_EMIT instance()->messageLogged(cat, msg, formatFor(cat));
 }
 
 
