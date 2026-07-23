@@ -1,73 +1,117 @@
 cmake_minimum_required(VERSION 3.30.0)
 
 # set the project name
-project(GreasePad VERSION 1.2.1 LANGUAGES CXX)
-
+project(GreasePad
+  VERSION 1.2.1
+  LANGUAGES CXX
+)
 
 # CONFIG  specify the C++ standard
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# my installation directories
-set(Qt6_DIR "C:/Qt/6.10.0/msvc2022_64/lib/cmake/Qt6")
+# Qt6
+find_package(Qt6 REQUIRED COMPONENTS
+  Core
+  Widgets
+  Gui
+  # PrintSupport
+  Svg
+)
 
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Profile")
-set(CMAKE_INSTALL_PREFIX "D:/Dev")
-#set(CMAKE_BUILD_TYPE "Debug")
-
-
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Svg)
+# Eigen
+find_package(Eigen3 5.0 REQUIRED NO_MODULE)
 
 qt_standard_project_setup()
 
-# add the executable
-qt_add_executable(GreasePad
-    adjustment.cpp
-    commands.cpp
-    constraints.cpp
-    main.cpp
-    gui/mainwindow.cpp
-    gui/mainscene.cpp
-    gui/mainview.cpp
-    gui/qformattool.cpp
-    matrix.cpp
-    graphics/qconstraints.cpp
-    graphics/qsegment.cpp
-    graphics/qstroke.cpp
-    quantiles.cpp
-    state.cpp
-    uncertain/quncertain.cpp
-    uncertain/uncertain.cpp
-    uncertain/upoint.cpp
-    uncertain/usegment.cpp
-    uncertain/ustraightline.cpp
+set(SOURCES
+  graphics/qconstraints.cpp
+  graphics/qsegment.cpp
+  graphics/qstroke.cpp
+  gui/mainwindow.cpp
+  gui/mainscene.cpp
+  gui/mainview.cpp
+  gui/qformattool.cpp
+  main.cpp
+  reasoning/commands.cpp
+  reasoning/matrix.cpp
+  reasoning/adjustment.cpp
+  reasoning/constraints.cpp
+  reasoning/state.cpp
+  uncertain/quncertain.cpp
+  uncertain/upoint.cpp
+  uncertain/usegment.cpp
+  uncertain/ustraightline.cpp
 )
 
-qt_add_resources(GreasePad "images"
-        PREFIX "/"
-	FILES icons/Tango/preferences-desktop-peripherals.svg icons/Tango/Edit-clear.svg
+set(HEADERS
+  geometry/aabb.h
+  geometry/acute.h
+  geometry/conics.h
+  geometry/minrot.h
+  geometry/skew.h
+  gui/logger.h
+  reasoning/adjustment.h
+  reasoning/commands.h
+  reasoning/conncomp.h
+  reasoning/constants.h
+  reasoning/constraints.h
+  reasoning/find.h
+  reasoning/global.h
+  reasoning/kernel.h
+  reasoning/matfun.h
+  reasoning/matrix.h
+  reasoning/quantiles.h
+  reasoning/state.h
+  reasoning/unique.h
+  graphics/qconstraints.h
+  graphics/qsegment.h
+  graphics/qstroke.h
+  gui/mainscene.h
+  gui/mainview.h
+  gui/mainwindow.h
+  gui/qformattool.h
+  statistics/chisquared.h
+  statistics/exponential.h
+  statistics/gamma.h
+  statistics/iscov.h
+  statistics/normal.h
+  statistics/prob.h
+  statistics/uniform.h
+  uncertain/quncertain.h
+  uncertain/udistance.h
+  uncertain/uelement.h
+  uncertain/upoint.h
+  uncertain/usegment.h
+  uncertain/ustraightline.h
+)
+
+# relative paths
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  # D:/Dev/clone/eigen/
 )
 
 
-# INCLUDEPATH
-target_include_directories(GreasePad PUBLIC "D:/Dev/clone/eigen/")
-target_include_directories(GreasePad PUBLIC "D:/Dev/clone/GreasePad/src")
-target_include_directories(GreasePad PUBLIC "C:/Qt/6.10.0/msvc2022_64/include/QtCore")
-target_include_directories(GreasePad PUBLIC "C:/Qt/6.10.0/msvc2022_64/include/QtGui")
-target_include_directories(GreasePad PUBLIC "C:/Qt/6.10.0/msvc2022_64/include/QtWidgets")
-target_include_directories(GreasePad PUBLIC "C:/Qt/6.10.0/msvc2022_64/include/QtSvg")
-target_include_directories(GreasePad PUBLIC "C:/Qt/6.10.0/msvc2022_64/include")
+# variable-based approach
+set(RCFILE greasepad.qrc)
+message(STATUS "RCFILE:: ${RCFILE}")
+qt_add_resources(RESOURCES ${RCFILE})
 
-
-
-
-
-target_link_libraries(GreasePad PRIVATE Qt6::Widgets Qt6::Svg)
-
-
-install(TARGETS GreasePad DESTINATION bin 
-  CONFIGURATIONS Release Debug
+add_executable(${PROJECT_NAME}
+  ${SOURCES}
+  ${HEADERS}
+#  ${GENERATED_MOCS}
+  ${RESOURCES}
 )
 
-# in Eingabeaufforderung (not PowerShell)
-# set PATH=C:\Qt\6.10.0\msvc2022_64\bin;%PATH%
+target_link_libraries(${PROJECT_NAME} PRIVATE
+  Eigen3::Eigen
+  Qt6::Core
+  Qt6::Widgets
+  Qt6::Gui
+  #Qt6::PrintSupport
+  Qt6::Svg
+  #Threads::Threads
+)
