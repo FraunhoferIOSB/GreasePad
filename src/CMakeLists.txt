@@ -104,6 +104,7 @@ add_executable(${PROJECT_NAME}
   ${HEADERS}
 #  ${GENERATED_MOCS}
   ${RESOURCES}
+  gui/logger.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
