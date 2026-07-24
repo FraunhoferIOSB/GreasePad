@@ -34,7 +34,8 @@ public:
         Application,
         Interaction,
         Testing,
-        Reasoning
+        Reasoning,
+        IO
     };
     Q_ENUM(Category)
 

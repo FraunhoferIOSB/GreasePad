@@ -48,6 +48,7 @@ QString Logger::name(Category cat)
     case Category::Interaction: return QStringLiteral("Interaction");
     case Category::Testing:     return QStringLiteral("Testing");
     case Category::Reasoning:   return QStringLiteral("Reasoning");
+    case Category::IO:          return QStringLiteral("IO");
     default:                    return QStringLiteral("unknown");
     }
 }
@@ -69,6 +70,9 @@ QTextCharFormat Logger::formatFor(Category cat)
     case Category::Reasoning:
         fmt.setForeground(Qt::black);
         // fmt.setFontWeight(QFont::Bold);
+        break;
+    case Category::IO:
+        fmt.setForeground(Qt::darkBlue);
         break;
     default:
         fmt.setForeground(Qt::black);

@@ -111,7 +111,9 @@ MainWindow::MainWindow(QWidget *parent)
     setPens();
     setCurrentFileName( QString());
 
-    Logger::log( Logger::Category::Application, "Ready. Draw a stroke...");
+    const QString msg("Ready. Draw a straight stroke (press-draw-release) or load a file");
+    Logger::log( Logger::Category::Application, msg);
+    statusBar()->showMessage(msg);
 }
 
 
@@ -1149,8 +1151,11 @@ bool MainWindow::fileSave()
     curr_state.serialize( out );
     file.close();
 
-    statusBar()->showMessage( "File <"+ fileName_ + "> saved.");
+    const QString msg = QString("File <%1> saved.").arg(fileName_);
+    statusBar()->showMessage( msg); // "File <"+ fileName_ + "> saved.");
     setWindowModified( false);
+
+    Logger::log( Logger::Category::IO, msg);
 
     return true;
 }

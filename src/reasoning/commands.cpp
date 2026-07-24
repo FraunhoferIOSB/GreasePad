@@ -132,7 +132,8 @@ ReplaceStateWithFileContent::ReplaceStateWithFileContent( QUndoStack *stack, con
 {
     // qDebug() << Q_FUNC_INFO;
     setText( fileName );
-    Logger::log( Logger::Category::Interaction, text());
+    const QString msg = QString("file <%1> read.").arg(fileName);
+    Logger::log( Logger::Category::IO, msg);
 }
 
 } // namespace Cmd
