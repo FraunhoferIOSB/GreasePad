@@ -83,9 +83,9 @@ private:
     void establishConnections();
     static void setPens();
 
-    std::unique_ptr<QGraphicsPixmapItem> m_pixmap;  // optional background
     std::unique_ptr<MainView>   m_view;
     std::unique_ptr<MainScene>  m_scene;
+    std::unique_ptr<QGraphicsPixmapItem> m_pixmap;  // optional background, will be destroyed before m_scene
     std::unique_ptr<QUndoStack> m_undoStack;
     std::unique_ptr<QDockWidget> m_infoConsole;
     std::unique_ptr<PlainTextOutput> m_outputWidget;
@@ -230,7 +230,7 @@ public:
     void appendText (Logger::Category cat, const QString & msg, const QTextCharFormat & fmt)
     {
         setCurrentCharFormat(fmt);
-        const QString prefixed = QString("[%1] %2").arg(Logger::name(cat)).arg(msg);
+        const QString prefixed = QString("[%1] %2").arg(Logger::name(cat), msg);
         appendPlainText(prefixed);
     }
 };

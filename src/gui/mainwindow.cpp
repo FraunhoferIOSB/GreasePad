@@ -89,10 +89,10 @@ MainWindow::MainWindow(QWidget *parent)
     setSizePolicy( QSizePolicy::Expanding,
                    QSizePolicy::Expanding);
 
-    penTool = std::make_unique<FormatTool>("Properties", this);
+    penTool = std::make_unique<FormatTool>("Properties", nullptr);
 
     // create undo stack .............................................
-    m_undoStack = std::make_unique<QUndoStack>(this);
+    m_undoStack = std::make_unique<QUndoStack>();
     m_undoStack->setUndoLimit( UndoLimit );
 
 
@@ -229,19 +229,11 @@ void MainWindow::slotToggleShowConstrained()
 }
 
 
-
 void MainWindow::closeEvent( QCloseEvent * event)
 {
-    Q_UNUSED( event )
-    // qDebug() << Q_FUNC_INFO;
-    // TODO(meijoc)  event->setAccepted( maybeSave() ); //? true : false);
-    /* if ( maybeSave() ) {
-        // writeSettings();
-        event->accept();
-    } else {
-        event->ignore();
-    }*/
+    event->setAccepted( maybeSave());
 }
+
 
 void MainWindow::createActions()
 {
@@ -449,7 +441,7 @@ void MainWindow::createBoxes()
 {
     qDebug() << Q_FUNC_INFO;
 
-    spinBoxAlphaRecognition = std::make_unique<QDoubleSpinBox>( this );
+    spinBoxAlphaRecognition = std::make_unique<QDoubleSpinBox>();
     spinBoxAlphaRecognition->setRange(      alphaBox.min,alphaBox.max);
     spinBoxAlphaRecognition->setSingleStep( alphaBox.step);
     spinBoxAlphaRecognition->setDecimals(   alphaBox.decimals);
@@ -462,7 +454,7 @@ void MainWindow::createBoxes()
     font.setPointSize( font.pointSize()+1 );
     spinBoxAlphaRecognition->setFont(font);
 
-    spinBoxAlphaSnap = std::make_unique<QDoubleSpinBox>( this );
+    spinBoxAlphaSnap = std::make_unique<QDoubleSpinBox>();
     spinBoxAlphaSnap->setRange(      alphaBox.min,alphaBox.max);
     spinBoxAlphaSnap->setSingleStep( alphaBox.step);
     spinBoxAlphaSnap->setDecimals(   alphaBox.decimals);
@@ -472,7 +464,7 @@ void MainWindow::createBoxes()
     spinBoxAlphaSnap->setToolTip(    QStringLiteral("significance level") );
     spinBoxAlphaSnap->setFont( font );
 
-    spinBoxOpacity = std::make_unique<QDoubleSpinBox>( this );
+    spinBoxOpacity = std::make_unique<QDoubleSpinBox>();
     spinBoxOpacity->setRange(       opacityBox.min, opacityBox.max);
     spinBoxOpacity->setSingleStep(  opacityBox.step);
     spinBoxOpacity->setDecimals(    opacityBox.decimals);
@@ -855,8 +847,7 @@ void MainWindow::readBinaryFile( const QString & fileName)
     }
 
     file.close();
-    QFileInfo const fileInfo( file.fileName() );
-
+    QFileInfo const fileInfo(fileName);
 
     std::unique_ptr<State> next_state
             =  std::make_unique<State>(newState);
@@ -1169,7 +1160,9 @@ void MainWindow::slotSelectionChanged()
 
 void MainWindow::slotToggleShowBackgroundImage()
 {
-    m_pixmap->setVisible( !m_pixmap->isVisible() );
+    if (m_pixmap) {
+        m_pixmap->setVisible( !m_pixmap->isVisible() );
+    }
     barBackground->setEnabled( !barBackground->isEnabled() );
 }
 
@@ -1351,7 +1344,7 @@ void MainWindow::slotUpdateColor( const QColor & col)
             i->setColor( col );
             break;
         }
-        case QGraphicsPolygonItem::Type: {
+        case QEntity::QStroke::Type: {
             auto *i = qgraphicsitem_cast<QEntity::QStroke*>(item);
             i->setColor( col );
             break;
