@@ -30,7 +30,6 @@
 #include "qlogging.h"
 #include "qnamespace.h"
 #include "qtdeprecationdefinitions.h"
-#include "qtpreprocessorsupport.h"
 #include "qtypes.h"
 
 #include <QApplication>
@@ -76,6 +75,21 @@
 
 
 namespace GUI {
+
+    std::unique_ptr<QAction> makeAction( const QString & name, const QString & toolTip,
+        QKeySequence shortCut, QIcon icon,
+        bool isEnabled, bool isCheckable, bool isChecked, bool iconIsVisibleInMenu)
+    {
+        std::unique_ptr<QAction> a = std::make_unique<QAction>(name);
+        a->setShortcut(shortCut);
+        a->setIcon(icon);
+        a->setEnabled(isEnabled);
+        a->setCheckable(isCheckable);
+        a->setChecked(isChecked);
+        a->setIconVisibleInMenu(iconIsVisibleInMenu);
+        return a;
+    }
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -235,89 +249,92 @@ void MainWindow::closeEvent( QCloseEvent * event)
 }
 
 
-void MainWindow::createActions()
+ void MainWindow::createActions()
 {
-    actionUndo = std::unique_ptr<QAction>( m_undoStack->createUndoAction( this, QStringLiteral("Undo")) );
+    actionUndo = std::unique_ptr<QAction>( m_undoStack->createUndoAction( nullptr, QStringLiteral("Undo")) );
     actionUndo->setShortcuts( QKeySequence::Undo );
     // actionUndo->setIcon( style()->standardIcon( QStyle::SP_ArrowBack) );
-    actionUndo->setIcon( QPixmap(":/icons/Tango/Edit-undo.svg" ) );
+    actionUndo->setIcon( QPixmap(":/icons/Tango/Edit-undo.svg") );
 
-    actionRedo = std::unique_ptr<QAction>( m_undoStack->createRedoAction( this, QStringLiteral("Redo")) );
+    actionRedo = std::unique_ptr<QAction>( m_undoStack->createRedoAction( nullptr, QStringLiteral("Redo")) );
     actionRedo->setShortcuts( QKeySequence::Redo );
     // actionRedo->setIcon( style()->standardIcon( QStyle::SP_ArrowForward) );
-    actionRedo->setIcon( QPixmap(":/icons/Tango/Edit-redo.svg" ) );
+    actionRedo->setIcon( QPixmap(":/icons/Tango/Edit-redo.svg") );
 
-    actionExit = std::make_unique<QAction>( "Exit" );
-    actionExit->setShortcut( QKeySequence( QStringLiteral("Ctrl+Q") ) );
-    actionExit->setIcon( style()->standardIcon( QStyle::SP_BrowserStop));
+    actionExit = makeAction(
+        "Exit", "exit",
+        QKeySequence( QStringLiteral("Ctrl+Q") ),
+        style()->standardIcon(QStyle::SP_BrowserStop),
+        true, false, false, true);
 
-    actionTabulaRasa = std::make_unique<QAction>( "Delete all" );
-    actionTabulaRasa->setToolTip(  QStringLiteral("Make a clean sweep (blank state)") );
-    actionTabulaRasa->setIcon( QPixmap(":/icons/Tango/Edit-clear.svg" ) );
-    // actionTabulaRasa->setIcon( style()->standardIcon( QStyle::SP_DialogResetButton ) );
+    actionTabulaRasa = makeAction(
+        "Delete all", "Make a clean sweep (blank state)",
+        QKeySequence(),
+        QPixmap(":/icons/Tango/Edit-clear.svg"),
+        true, false, false, true);
 
-    actionDeleteSelection = std::make_unique<QAction>( "Delete selected items" );
-    actionDeleteSelection->setShortcut( QKeySequence::Delete );
-    actionDeleteSelection->setEnabled( false );
-    actionDeleteSelection->setIcon( style()->standardIcon( QStyle::SP_DialogCancelButton) );
+    actionDeleteSelection = makeAction(
+        "Delete selected items", "",
+        QKeySequence::Delete,
+        style()->standardIcon(QStyle::SP_DialogCancelButton),
+        false, false, false, true);
 
-    actionToggleSelection = std::make_unique<QAction>( "Select all" );
-    actionToggleSelection->setToolTip(  QStringLiteral("Select all visible items") );
-    actionToggleSelection->setShortcut( QKeySequence::SelectAll);
+    actionToggleSelection = makeAction(
+        "Select all", "Select all visible items",
+        QKeySequence::SelectAll,
+        QIcon(),
+        true, false, false, false);
 
-    actionDeselectAll = std::make_unique<QAction>( "Deselect all" );
-    actionDeselectAll->setToolTip(  QStringLiteral("Deselect all items") );
-    actionDeselectAll->setShortcut( QKeySequence( QStringLiteral("Ctrl+Shift+A")) );
+    actionDeselectAll = makeAction(
+        "Deselect all", "Deselect all items",
+        QKeySequence( QStringLiteral("Ctrl+Shift+A")),
+        QIcon(),
+        true, false, false, false);
 
-    actionBackgroundImageLoad = std::make_unique<QAction>( "Load background image..." );
-    actionBackgroundImageLoad->setToolTip( QStringLiteral("Load background image from file") );
-    actionBackgroundImageLoad->setIcon( QIcon( QPixmap( ":/icons/Tango/Image-x-generic.svg" )));
+    actionBackgroundImageLoad = makeAction(
+        "Load background image...", "Load background image from file",
+        QKeySequence(),
+        QIcon( QPixmap(":/icons/Tango/Image-x-generic.svg")),
+        true, false, false, true);
 
-    actionBackgroundImageRemove = std::make_unique<QAction>( "Remove background image");
-    actionBackgroundImageRemove->setToolTip(  QStringLiteral("Remove loaded background image") );
-    actionBackgroundImageRemove->setDisabled( true );
-    actionBackgroundImageRemove->setIcon( style()->standardIcon( QStyle::SP_DialogCancelButton ) );
+    actionBackgroundImageRemove = makeAction(
+        "Remove background image", "Remove loaded background image",
+        QKeySequence(),
+        style()->standardIcon(QStyle::SP_DialogCancelButton),
+        false, false, false, true);
 
-    actionBackgroundImageToggleShow = std::make_unique<QAction>( "Show background image");
-    actionBackgroundImageToggleShow->setToolTip(   QStringLiteral("Show/hide loaded background image") );
-    actionBackgroundImageToggleShow->setIcon(      QPixmap( ":/icons/Tango/Image-x-generic.svg" ));
-    actionBackgroundImageToggleShow->setCheckable( true );
-    actionBackgroundImageToggleShow->setDisabled(  true );
-    actionBackgroundImageToggleShow->setChecked(   false );
-    actionBackgroundImageToggleShow->setIconVisibleInMenu( false );
+    actionBackgroundImageToggleShow = makeAction(
+        "Show background image", "Show/hide loaded background image",
+        QKeySequence(),
+        QPixmap(":/icons/Tango/Image-x-generic.svg"),
+        false, true, false, false);
 
-    actionToggleShowStrokes = std::make_unique<QAction>( "Show strokes" );
-    actionToggleShowStrokes->setToolTip(   QStringLiteral("Show pen strokes (mouse tracks)") );
-    actionToggleShowStrokes->setCheckable( true );
-    actionToggleShowStrokes->setIcon(      QPixmap( ":/icons/show_strokes.svg") );
-    actionToggleShowStrokes->setChecked(   QEntity::QStroke::show() );
-    actionToggleShowStrokes->setIconVisibleInMenu( false );
+    actionToggleShowStrokes = makeAction(
+        "Show strokes", "Show pen strokes (mouse tracks)",
+        QKeySequence(),
+        QPixmap(":/icons/show_strokes.svg") ,
+        true, true, QEntity::QStroke::show(), false);
 
-    actionToggleShowUnconstrained = std::make_unique<QAction>( "Show unconstrained segments" );
-    actionToggleShowUnconstrained->setToolTip(   QStringLiteral("Show unconstrained segments") );
-    actionToggleShowUnconstrained->setCheckable( true );
-    actionToggleShowUnconstrained->setChecked(   QEntity::QUnconstrained::show() );
-    actionToggleShowUnconstrained->setIcon(      QPixmap(":/icons/show_unconstrained.svg") );
-    actionToggleShowUnconstrained->setIconVisibleInMenu( false );
+    actionToggleShowUnconstrained = makeAction(
+        "Show unconstrained segments", "Show unconstrained segments",
+        QKeySequence(),
+        QPixmap(":/icons/show_unconstrained.svg") ,
+        true, true, QEntity::QUnconstrained::show(), false);
 
-    actionToggleShowConstrained = std::make_unique<QAction>( "Show constrained segments" );
-    actionToggleShowConstrained->setToolTip(   QStringLiteral("Show constrained segments") );
-    actionToggleShowConstrained->setCheckable( true );
-    actionToggleShowConstrained->setChecked(   QEntity::QConstrained::show() );
-    actionToggleShowConstrained->setIcon(      QPixmap(":/icons/show_constrained.svg"));
-    actionToggleShowConstrained->setIconVisibleInMenu( false );
+    actionToggleShowConstrained = makeAction(
+        "Show constrained segments", "Show constrained segments",
+        QKeySequence(),
+        QPixmap(":/icons/show_constrained.svg") ,
+        true, true, QEntity::QConstrained::show(), false);
 
-    actionToggleShowUncertainty = std::make_unique<QAction>( "Show uncertainty" );
-    actionToggleShowUncertainty->setShortcut(  QKeySequence( "Ctrl+U" ) );
-    actionToggleShowUncertainty->setToolTip(   QStringLiteral("Show confidence regions") );
-    actionToggleShowUncertainty->setCheckable( true );
-    actionToggleShowUncertainty->setChecked(   QEntity::QSegment::showUncertainty() );
-    actionToggleShowUncertainty->setIcon(      QPixmap( ":/icons/show_uncertain.svg" ));
-    actionToggleShowUncertainty->setIconVisibleInMenu(false);
-
+    actionToggleShowUncertainty = makeAction(
+        "Show uncertainty", "Show confidence regions",
+        QKeySequence("Ctrl+U"),
+        QPixmap(":/icons/show_uncertain.svg"),
+        true, true, QEntity::QSegment::showUncertainty(), false);
 
     // !! getter method toggleViewAction() returns a non-owning pointer.
-    actionToggleShowInfoConsole = m_infoConsole->toggleViewAction(); // std::make_unique<QAction>( "Show info console" );
+    actionToggleShowInfoConsole = m_infoConsole->toggleViewAction();
     actionToggleShowInfoConsole->setText("Show info console");
     actionToggleShowInfoConsole->setShortcut(  QKeySequence( "F8" ) );
     actionToggleShowInfoConsole->setToolTip(   QStringLiteral("Show info console") );
@@ -326,116 +343,120 @@ void MainWindow::createActions()
     // actionToggleShowInfoConsole->setIcon(      QPixmap( ...
     actionToggleShowInfoConsole->setIconVisibleInMenu(false);
 
+    actionToggleShowConstraints = makeAction(
+        "Show constraints", "Show constraints",
+        QKeySequence(), QPixmap(":/icons/show_constraints.svg"),
+        true, true, QConstraint::QConstraintBase::show(), false);
 
+    actionToggleShowColoration = makeAction(
+        "Colorize connected components", "Colorize connected components, i.e., subtasks",
+        QKeySequence(),
+        QPixmap( ":/icons/show_cc.svg" ),
+        true, true, QEntity::QConstrained::showColor(), false);
 
-    actionToggleShowConstraints = std::make_unique<QAction>( "Show constraints" );
-    actionToggleShowConstraints->setToolTip(   QStringLiteral("Show constraints") );
-    actionToggleShowConstraints->setCheckable( true );
-    actionToggleShowConstraints->setChecked(   QConstraint::QConstraintBase::show() );
-    actionToggleShowConstraints->setIcon(      QPixmap( ":/icons/show_constraints.svg" ));
-    actionToggleShowConstraints->setIconVisibleInMenu( false );
+    actionExportSaveAs = makeAction(
+        "Export graphics as...", "Export entire scene as SVG or in PDF.",
+        QKeySequence(),
+        style()->standardIcon(QStyle::SP_FileIcon),
+        true, false, false, true);
 
-    actionToggleShowColoration = std::make_unique<QAction>( "Colorize connected components" );
-    actionToggleShowColoration->setToolTip(   QStringLiteral("Colorize connected components, i.e., subtasks") );
-    actionToggleShowColoration->setCheckable( true );
-    actionToggleShowColoration->setChecked(   QEntity::QConstrained::showColor() );
-    actionToggleShowColoration->setIcon(      QPixmap( ":/icons/show_cc.svg" ));
-    actionToggleShowColoration->setIconVisibleInMenu( false );
+    actionBinaryRead = makeAction(
+        "Open...", "load file content",
+        QKeySequence::Open,
+        style()->standardIcon(QStyle::SP_DialogOpenButton),
+        true, false, false, true);
 
-    actionExportSaveAs = std::make_unique<QAction>( "Export as..." );
-    actionExportSaveAs->setDisabled( false );
-    actionExportSaveAs->setToolTip(  QStringLiteral("Export entire scene as SVG or in PDF.") );
-    actionExportSaveAs->setIcon(     style()->standardIcon( QStyle::SP_FileIcon) );
+    actionBinarySave = makeAction(
+        "Save", "",
+        QKeySequence(QStringLiteral("Ctrl+S")),
+        style()->standardIcon(QStyle::SP_DialogSaveButton),
+        false, false, false, true);
 
-    actionBinaryRead = std::make_unique<QAction>( "Open..." );
-    actionBinaryRead->setShortcut( QKeySequence::Open );
-    actionBinaryRead->setToolTip(  QStringLiteral("load file content"));
-    actionBinaryRead->setIcon(     style()->standardIcon( QStyle::SP_DialogOpenButton) );
-    actionBinaryRead->setDisabled( false);
+    actionFitInView = makeAction(
+        "Fit in view", "",
+        QKeySequence(),
+        QPixmap(":/icons/Tango/view-fullscreen.svg"),
+        true, false, false, true);
 
-    actionBinarySave = std::make_unique<QAction>( "Save" );
-    actionBinarySave->setDisabled( true );
-    actionBinarySave->setIcon( style()->standardIcon( QStyle::SP_DialogSaveButton) );
-    actionBinarySave->setShortcut( QKeySequence(QStringLiteral("Ctrl+S")) );
+    actionBasicDocumentation = makeAction(
+        "Getting Started...", "Basic Documentation",
+        QKeySequence(),
+        style()->standardIcon(QStyle::SP_MessageBoxQuestion),
+        true, false, false, true);
 
-    actionFitInView = std::make_unique<QAction>( "Fit in view" );
-    // actionFitInView->setIcon( QIcon(QPixmap( ":/icons/fit_in_view.svg" )));
-    actionFitInView->setIcon( QIcon(QPixmap( ":/icons/Tango/view-fullscreen.svg")));
-    actionFitInView->setIconVisibleInMenu(   true );
-    actionFitInView->setToolTip(             QStringLiteral("Scale scene to fit in view") );
+    actionAbout = makeAction(
+        "About GreasePad", "",
+        QKeySequence(),
+        style()->standardIcon(QStyle::SP_MessageBoxInformation),
+        true, false, false, true);
 
-    actionBasicDocumentation = std::make_unique<QAction>( "Getting Started..." );
-    actionBasicDocumentation->setToolTip( QStringLiteral("Basic Documentation") );
-    actionBasicDocumentation->setIcon( style()->standardIcon( QStyle::SP_MessageBoxQuestion ));
+    actionAboutQt = makeAction(
+        "About Qt", "",
+        QKeySequence(),
+        style()->standardIcon(QStyle::SP_TitleBarMenuButton),
+        true, false, false, true);
 
-    actionAbout = std::make_unique<QAction>( "About GreasePad" );
-    actionAbout->setIcon( style()->standardIcon( QStyle::SP_MessageBoxInformation )); // _FileDialogInfoView) );
+    actionToggleConsiderOrthogonal = makeAction(
+        "Consider orthogonal", "Consider orthogonal",
+        QKeySequence(QStringLiteral("o")),
+        QPixmap(":/icons/consider_orthogonality.svg"),
+        true, true, State::considerOrthogonal(), false);
 
-    actionAboutQt = std::make_unique<QAction>( "About Qt" );
-    actionAboutQt->setIcon( style()->standardIcon( QStyle::SP_TitleBarMenuButton) );
+    actionToggleConsiderParallel = makeAction(
+        "Consider parallel", "Consider parallel",
+        QKeySequence(QStringLiteral("p")),
+        QPixmap(":/icons/consider_parallelism.svg"),
+        true, true, State::considerParallel(), false);
 
-    actionToggleConsiderOrthogonal = std::make_unique<QAction>( "Consider orthogonal" );
-    actionToggleConsiderOrthogonal->setToolTip(   QStringLiteral("Consider orthogonal") );
-    actionToggleConsiderOrthogonal->setCheckable( true );
-    actionToggleConsiderOrthogonal->setChecked(   State::considerOrthogonal() );
-    actionToggleConsiderOrthogonal->setIconVisibleInMenu( false );
-    actionToggleConsiderOrthogonal->setIcon( QPixmap( ":/icons/consider_orthogonality.svg" ));
-    actionToggleConsiderOrthogonal->setShortcut( QKeySequence(QStringLiteral("o")) );
+    actionToggleConsiderCopunctual = makeAction(
+        "Consider copunctual", "Consider copunctual",
+        QKeySequence(QStringLiteral("c")),
+        QPixmap(":/icons/consider_concurrence.svg"),
+        true, true, State::considerCopunctual(), false);
 
-    actionToggleConsiderParallel = std::make_unique<QAction>( "Consider parallel" );
-    actionToggleConsiderParallel->setToolTip(   QStringLiteral("Consider parallel") );
-    actionToggleConsiderParallel->setCheckable( true );
-    actionToggleConsiderParallel->setChecked(   State::considerParallel() );
-    actionToggleConsiderParallel->setIconVisibleInMenu( false );
-    actionToggleConsiderParallel->setIcon( QPixmap( ":/icons/consider_parallelism.svg" ));
-    actionToggleConsiderParallel->setShortcut( QKeySequence(QStringLiteral("p")) );
+    actionToggleConsiderVertical = makeAction(
+        "Consider vertical", "Consider vertical",
+        QKeySequence(QStringLiteral("v")),
+        QPixmap(":/icons/consider_vert.svg"),
+        true, true, State::considerVertical(), false);
 
-    actionToggleConsiderCopunctual = std::make_unique<QAction>( "Consider copunctual" );
-    actionToggleConsiderCopunctual->setToolTip( QStringLiteral("Consider copunctual") );
-    actionToggleConsiderCopunctual->setCheckable( true );
-    actionToggleConsiderCopunctual->setChecked( State::considerCopunctual() );
-    actionToggleConsiderCopunctual->setIconVisibleInMenu( false );
-    actionToggleConsiderCopunctual->setIcon( QPixmap( ":/icons/consider_concurrence.svg" ));
-    actionToggleConsiderCopunctual->setShortcut( QKeySequence("c") );
+    actionToggleConsiderHorizontal = makeAction(
+        "Consider horizontal", "Consider horizontal",
+        QKeySequence(QStringLiteral("h")),
+        QPixmap(":/icons/consider_horiz.svg"),
+        true, true, State::considerHorizontal(), false);
 
-    actionToggleConsiderVertical = std::make_unique<QAction>( "Consider vertical" );
-    actionToggleConsiderVertical->setToolTip( QStringLiteral("Consider vertical") );
-    actionToggleConsiderVertical->setCheckable( true );
-    actionToggleConsiderVertical->setChecked( State::considerVertical() );
-    actionToggleConsiderVertical->setIconVisibleInMenu( false );
-    actionToggleConsiderVertical->setIcon( QPixmap( ":/icons/consider_vert.svg" ));
-    actionToggleConsiderVertical->setShortcut( QKeySequence(QStringLiteral("v")) );
+    actionToggleConsiderDiagonal = makeAction(
+        "Consider diagonal", "Consider diagonal",
+        QKeySequence(QStringLiteral("d")),
+        QPixmap(":/icons/consider_diag.svg"),
+        true, true, State::considerDiagonal(), false);
 
-    actionToggleConsiderHorizontal = std::make_unique<QAction>( "Consider horizontal" );
-    actionToggleConsiderHorizontal->setToolTip( QStringLiteral("Consider horizontal") );
-    actionToggleConsiderHorizontal->setCheckable( true );
-    actionToggleConsiderHorizontal->setChecked( State::considerHorizontal() );
-    actionToggleConsiderHorizontal->setIconVisibleInMenu( false );
-    actionToggleConsiderHorizontal->setIcon( QPixmap( ":/icons/consider_horiz.svg" ));
-    actionToggleConsiderHorizontal->setShortcut( QKeySequence(QStringLiteral("h")) );
+    actionItemMoveToBottom = makeAction(
+        "Move selected items to bottom", "Send items to back (visual stacking)",
+        QKeySequence(QStringLiteral("Ctrl+-")),
+        QIcon(),
+        true, false, false, false);
 
-    actionToggleConsiderDiagonal = std::make_unique<QAction>( "Consider diagonal" );
-    actionToggleConsiderDiagonal->setToolTip( QStringLiteral("Consider diagonal") );
-    actionToggleConsiderDiagonal->setCheckable( true );
-    actionToggleConsiderDiagonal->setChecked( State::considerDiagonal() );
-    actionToggleConsiderDiagonal->setIconVisibleInMenu( false );
-    actionToggleConsiderDiagonal->setIcon( QPixmap( ":/icons/consider_diag.svg" ));
-    actionToggleConsiderDiagonal->setShortcut( QKeySequence(QStringLiteral("d")) );
+    actionItemMoveToTop = makeAction(
+        "Move selected items to top", "Bring items to front (visual stacking)",
+        QKeySequence(QStringLiteral("Ctrl++")),
+        QIcon(),
+        true, false, false, false);
 
-    actionItemMoveToBottom = std::make_unique<QAction>( QStringLiteral("Move selected items to bottom") );
-    actionItemMoveToBottom->setToolTip( QStringLiteral("Send items to back (visual stacking)") );
-    actionItemMoveToBottom->setShortcut( QKeySequence(QStringLiteral("Ctrl+-")) );
+    actionChangeFormat = makeAction(
+        "Format selected entities", "Format selected entities",
+        QKeySequence(QStringLiteral("Ctrl+F")),
+        QIcon(),
+        true, false, false, false);
 
-    actionItemMoveToTop = std::make_unique<QAction>( QStringLiteral("Move selected items to top") );
-    actionItemMoveToTop->setToolTip( QStringLiteral("Bring items to front (visual stacking)") );
-    actionItemMoveToTop->setShortcut( QKeySequence(QStringLiteral("Ctrl++")) );
-
-    actionChangeFormat = std::make_unique<QAction>( "Format selected entities", this);
-    actionChangeFormat->setToolTip( QStringLiteral("Format selected entities") );
-    actionChangeFormat->setShortcut( QKeySequence(QStringLiteral("Ctrl+F")));
-
-    actionSetFont = std::make_unique<QAction>( "Set GUI Font...", this);
+    actionSetFont = makeAction(
+        "Set GUI font...", "",
+        QKeySequence(),
+        QIcon(),
+        true, false, false, false);
 }
+
 
 void MainWindow::createBoxes()
 {
@@ -480,28 +501,19 @@ void MainWindow::createMenus()
 {
     // qDebug() << Q_FUNC_INFO;
 
-    // set font size ................................................
-    //QFont f = this->font();
-    // f.setPointSize(FONT_SIZE_IN_PT);
-    //this->setFont(f);
-
     menuFile = std::make_unique<QMenu>( tr("File") );
     menuFile->addAction( actionBinaryRead.get()   );
     menuFile->addAction( actionBinarySave.get() );
     menuFile->addAction( tr("Save As..."), QKeySequence(QStringLiteral("Ctrl+Shift+S")),
                         this, &MainWindow::fileSaveAs );
     menuFile->addAction( actionExportSaveAs.get() );
-
     menuFile->addSeparator();
     menuFile->addAction( actionBackgroundImageLoad.get() );
     menuFile->addAction( actionSetFont.get());
-    menuFile->addSeparator();  // .............................................
+    menuFile->addSeparator();
     menuFile->addAction( actionExit.get() );
-
-
     menuBar()->addMenu( menuFile.get() );
 
-    // edit ....................................................................
     menuEdit = std::make_unique<QMenu>( tr("&Edit") );
     menuEdit->addAction( actionUndo.get());
     menuEdit->addAction( actionRedo.get());
@@ -511,29 +523,21 @@ void MainWindow::createMenus()
     menuEdit->addAction( m_view->actionCopySvgToClipboard.get() );
     menuEdit->addAction( m_view->actionCopyPdfToClipboard.get() );
     menuEdit->addAction( m_view->actionCopyScreenshotToClipboard.get() );
-
     menuEdit->addAction( actionBackgroundImageRemove.get() );
     menuEdit->addAction( actionFitInView.get() );
     menuEdit->addSeparator();
-
     menuEdit->addAction( actionItemMoveToTop.get() );
     menuEdit->addAction( actionItemMoveToBottom.get() );
     menuEdit->addAction( actionToggleSelection.get() );
     menuEdit->addAction( actionDeselectAll.get() );
-
     menuEdit->addAction( actionChangeFormat.get() );
-
-
     menuBar()->addMenu( menuEdit.get() );
-
-
-
 
     menuConstr = std::make_unique<QMenu>( tr("&Constraints") );
     menuConstr->addAction( actionToggleConsiderOrthogonal.get() );
     menuConstr->addAction( actionToggleConsiderParallel.get()   );
     menuConstr->addAction( actionToggleConsiderCopunctual.get() );
-    menuConstr->addSeparator(); // -----------------------------------
+    menuConstr->addSeparator();
     menuConstr->addAction( actionToggleConsiderVertical.get()   );
     menuConstr->addAction( actionToggleConsiderHorizontal.get() );
     menuConstr->addAction( actionToggleConsiderDiagonal.get() );
@@ -551,13 +555,13 @@ void MainWindow::createMenus()
     menuShow->addAction( actionToggleShowInfoConsole.get()   );
     menuBar()->addMenu( menuShow.get());
 
-    // help .........................................................
     menuHelp = std::make_unique<QMenu>( tr("Help") );
     menuHelp->addAction( actionBasicDocumentation.get() );
     menuHelp->addAction( actionAbout.get()  );
     menuHelp->addAction( actionAboutQt.get());
     menuBar()->addMenu( menuHelp.get() );
 }
+
 
 void MainWindow::createStatusBar()
 {
