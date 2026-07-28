@@ -44,7 +44,7 @@ public:
     static QString name(Category cat);
 
 Q_SIGNALS:
-    void messageLogged(Category cat, const QString &msg, const QTextCharFormat &fmt);
+    void messageLogged(Logger::Category cat, const QString &msg, const QTextCharFormat &fmt);
 
 private:
     Logger() = default;
