@@ -61,7 +61,7 @@ public:
     static void setScribblePen( const QPen & p) { s_scribblePen = p; }  //!< Set the scribble pen
 
 private:
-    std::unique_ptr<QAction>   actionExportSaveAs;
+    std::unique_ptr<QAction> actionExportSaveAs;
 
     bool m_scribbling;              // tracking the point positions
     QGraphicsPathItem m_path_item;  // point set (stroke) as graphics item

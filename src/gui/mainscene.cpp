@@ -16,6 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "gui/helper.h"
 #include "mainscene.h"
 #include "qtypes.h"
 #include "reasoning/state.h"
@@ -46,7 +47,6 @@
 #include <Eigen/Dense>
 
 #include <cassert>
-#include <memory>
 #include <utility>
 
 namespace GUI {
@@ -64,12 +64,12 @@ MainScene::MainScene(QObject *parent)
 
     setSceneRect( 0,0,  full_HD_width, full_HD_height );
 
-    actionExportSaveAs = std::make_unique<QAction>( "Export as..." );
-    actionExportSaveAs->setDisabled( false );
-    actionExportSaveAs->setToolTip( QStringLiteral( "export entire scene" ) );
+    actionExportSaveAs = makeAction(
+        QStringLiteral("Export as..."), QStringLiteral("export entire scene"),
+        {}, {},
+        true, false, false, false);
 }
 
-// MainScene::~MainScene() {  qDebug() << Q_FUNC_INFO;}
 
 bool MainScene::isaStraightStroke(const double T, const QPainterPath &pa)
 {
