@@ -17,6 +17,7 @@
  */
 
 #include "helper.h"
+#include "logger.h"
 #include "mainview.h"
 
 #include "qgraphicsscene.h"
@@ -40,10 +41,10 @@
 #include <QSvgGenerator>
 #include <QWheelEvent>
 
-
 #include <memory>
 
 namespace GUI {
+
 
 bool MainView::s_showBackgroundTiles = false;
 
@@ -159,7 +160,8 @@ void MainView::slotToggleShowBackgroundTiles()
     }
 }
 
-void MainView::slotCopyScreenshotToClipboard()
+
+bool MainView::slotCopyScreenshotToClipboard()
 {
     // qDebug() << Q_FUNC_INFO;
 
@@ -178,44 +180,57 @@ void MainView::slotCopyScreenshotToClipboard()
     cb->setPixmap(pixmap);
 
     // qDebug() << QApplication::clipboard()->mimeData()->formats();
-    Q_EMIT signalShowStatus( QStringLiteral("Image data copied to clipboard (%1)" )
-            .arg(QApplication::clipboard()->mimeData()->formats().first()) );
+    const QString msg = QStringLiteral("Image data copied to clipboard (%1)")
+                            .arg(QApplication::clipboard()->mimeData()->formats().first()) ;
+    Q_EMIT signalShowStatus(msg);
+    Logger::log( Logger::Category::IO, msg);
+
+    return true;
 }
 
-void MainView::slotCopyPdfToClipboard()
+
+bool MainView::slotCopyPdfToClipboard()
 {
     // qDebug() << Q_FUNC_INFO << QApplication::clipboard()->mimeData()->formats();
 
-    QBuffer b;
-    b.open(QBuffer::ReadWrite);
+    QBuffer buffer;
+    if (!buffer.open(QIODevice::ReadWrite)) {
+        return false;
+    }
+    QPdfWriter pdfWriter( &buffer );
+    {
+        QPainter painter( &pdfWriter );
+        painter.setRenderHint( QPainter::Antialiasing );
+        render( &painter );
+    }
+    buffer.seek(0);   // qDebug() << buffer.readAll();
 
-    QPdfWriter pdfwriter( &b );
-    QPainter painter( &pdfwriter );
-    painter.begin( &pdfwriter );
-    painter.setRenderHint( QPainter::Antialiasing );
-    render( &painter );
-    painter.end();
-
-    b.seek(0);   // qDebug() << b.readAll();
-
-    const QString type = QStringLiteral("application.pdf");
-    auto *d = new QMimeData();    // auto d = QSharedPointer<QMimeData>();
-    d->setData( type, b.buffer());
-    QApplication::clipboard()->setMimeData( d, QClipboard::Clipboard );
-    // delete  d; // No!
+    const QString type = QStringLiteral("application/pdf");
+    auto *mime = new QMimeData();    // auto d = QSharedPointer<QMimeData>();
+    mime->setData( type, buffer.buffer());
+    QApplication::clipboard()->setMimeData( mime, QClipboard::Clipboard );
+    // delete mime; // No!
     // QApplication::clipboard()->mimeData()->formats().first()
-    Q_EMIT signalShowStatus( QStringLiteral("Media type '%1' copied to clipboard." ).arg( type ) );
+
+    const QString msg = QStringLiteral("Figure copied to clipboard (%1)." ).arg( type );
+    Q_EMIT signalShowStatus(msg);
+    Logger::log( Logger::Category::IO, msg);
+
+    return true;
 }
 
-void MainView::slotCopySvgToClipboard()
+
+bool MainView::slotCopySvgToClipboard()
 {
     // qDebug() << Q_FUNC_INFO;
-    // TODO(meijoc) set width/heigth?
 
     QSvgGenerator generator;
 
     QBuffer b;
-    b.open(QBuffer::ReadWrite);
+    if (!b.open(QBuffer::ReadWrite)) {
+        return false;
+    }
+
     generator.setOutputDevice( &b);
     generator.setSize(         QSize( width(), height() )         );
     generator.setViewBox(      QRect(0, 0, width(), height())   );
@@ -231,13 +246,18 @@ void MainView::slotCopySvgToClipboard()
     // b.seek(0);
 
     const QString type = QStringLiteral("image/svg+xml");
-    auto *d = new QMimeData();
-    d->setData( type, b.buffer() );
-    QApplication::clipboard()->setMimeData( d, QClipboard::Clipboard);
-    // delete  d; // No!
+    auto *mime = new QMimeData();
+    mime->setData( type, b.buffer() );
+    QApplication::clipboard()->setMimeData( mime, QClipboard::Clipboard);
+    // delete mime; // No!
 
-    Q_EMIT signalShowStatus( QStringLiteral( "Media type '%1' copied to clipboard." ).arg( type));
+    const QString msg = QStringLiteral("Figure copied to clipboard (%1)." ).arg( type);
+    Q_EMIT signalShowStatus(msg);
+    Logger::log( Logger::Category::IO, msg);
+
+    return true;
 }
+
 
 void MainView::drawForeground( QPainter* painter,
                                const QRectF & rect)

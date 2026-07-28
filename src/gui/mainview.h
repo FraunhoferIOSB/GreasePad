@@ -66,9 +66,9 @@ private:
     void slotToggleShowBackgroundTiles();
     void slotZoomIn()  {  scale( zoom_in,  zoom_in ); }
     void slotZoomOut() {  scale( zoom_out, zoom_out); }
-    void slotCopyScreenshotToClipboard();
-    void slotCopySvgToClipboard();
-    void slotCopyPdfToClipboard();
+    bool slotCopyScreenshotToClipboard();
+    bool slotCopySvgToClipboard();
+    bool slotCopyPdfToClipboard();
 
     static bool s_showBackgroundTiles;
 
