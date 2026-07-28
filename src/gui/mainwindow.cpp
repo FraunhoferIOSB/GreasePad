@@ -20,6 +20,7 @@
 #include "graphics/qconstraints.h"
 #include "graphics/qsegment.h"
 #include "graphics/qstroke.h"
+#include "helper.h"
 #include "logger.h"
 #include "mainscene.h"
 #include "mainview.h"
@@ -75,21 +76,6 @@
 
 
 namespace GUI {
-
-    std::unique_ptr<QAction> makeAction( const QString & name, const QString & toolTip,
-        QKeySequence shortCut, QIcon icon,
-        bool isEnabled, bool isCheckable, bool isChecked, bool iconIsVisibleInMenu)
-    {
-        std::unique_ptr<QAction> a = std::make_unique<QAction>(name);
-        a->setShortcut(shortCut);
-        a->setIcon(icon);
-        a->setEnabled(isEnabled);
-        a->setCheckable(isCheckable);
-        a->setChecked(isChecked);
-        a->setIconVisibleInMenu(iconIsVisibleInMenu);
-        return a;
-    }
-
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)

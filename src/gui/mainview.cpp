@@ -16,6 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "helper.h"
 #include "mainview.h"
 
 #include "qgraphicsscene.h"
@@ -104,41 +105,45 @@ void MainView::establishConnections()
 
 void MainView::createActions()
 {
-    actionZoomIn = std::make_unique<QAction>( "Zoom in" );
+     actionZoomIn = makeAction(
+        QStringLiteral("Zoom in"),
+        QStringLiteral("Zoom in (%1)") // [+]
+            .arg(QKeySequence(Qt::Key_Plus).toString(QKeySequence::NativeText)),
+        Qt::Key_Plus,
+        QPixmap(":/icons/Tango/List-add.svg"),
+        true, false, false, false);
 
-    actionZoomIn->setToolTip(  QStringLiteral("Zoom in (%1)")
-                               .arg(QKeySequence(QKeySequence::ZoomIn).toString(QKeySequence::NativeText))
-                               );
+    actionZoomOut = makeAction(
+        QStringLiteral("Zoom out"),
+        QStringLiteral("Zoom out (%1)") // [-]
+            .arg(QKeySequence(Qt::Key_Minus).toString(QKeySequence::NativeText)),
+        Qt::Key_Minus,
+        QPixmap(":/icons/Tango/List-remove.svg"),
+        true, false, false, false);
 
-    QList<QKeySequence> listIn;
-    // listIn << QKeySequence::ZoomIn << Qt::Key_Plus;
-    listIn << Qt::Key_Plus;  //  [Ctrl]+[+] : move selected items to top
-    actionZoomIn->setShortcuts( listIn);
-    actionZoomIn->setIcon(      QPixmap(":/icons/Tango/List-add.svg"));
+    actionToggleShowBackgroundTiles = makeAction(
+        QStringLiteral("Show background tiles"), QStringLiteral("Show background tiles"),
+        QKeySequence( QStringLiteral("Ctrl+T") ),
+        QPixmap(":/icons/show_checker.svg"),
+        true, true, false, false);
 
-    QList<QKeySequence> listOut;
-    // listOut << QKeySequence::ZoomOut << Qt::Key_Minus;
-    listOut << Qt::Key_Minus;  // [Ctrl]+[-] : move selected items to bottom
-    actionZoomOut = std::make_unique<QAction>( "Zoom out" );
-    actionZoomOut->setToolTip(    QStringLiteral("Zoom out (%1)")
-                                  .arg(QKeySequence(QKeySequence::ZoomOut).toString(QKeySequence::NativeText))
-                                );
-    actionZoomOut->setShortcuts( listOut );
-    actionZoomOut->setIcon(      QPixmap(":/icons/Tango/List-remove.svg"));
+    actionCopyScreenshotToClipboard = makeAction(
+        QStringLiteral("Copy screenshot (image) to clipboard"), {},
+        {}, {},
+        true, false, false, false);
 
-    actionToggleShowBackgroundTiles = std::make_unique<QAction>( "Show background tiles" );
-    actionToggleShowBackgroundTiles->setShortcut(  QKeySequence( QStringLiteral("Ctrl+T") ) );
-    actionToggleShowBackgroundTiles->setToolTip(   QStringLiteral("Show background tiles") );
-    actionToggleShowBackgroundTiles->setCheckable( true );
-    actionToggleShowBackgroundTiles->setChecked(   false);
-    actionToggleShowBackgroundTiles->setIcon(      QPixmap(":/icons/show_checker.svg"));
-    actionToggleShowBackgroundTiles->setIconVisibleInMenu( false );
+    actionCopyPdfToClipboard = makeAction(
+        QStringLiteral("Copy PDF to clipboard (application/pdf)"), {},
+        {}, {},
+        true, false, false, false);
 
-    actionCopyScreenshotToClipboard = std::make_unique<QAction>( "Copy screenshot (image) to clipboard" );
-    actionCopyPdfToClipboard = std::make_unique<QAction>( "Copy PDF to clipboard (application/pdf)" );
-    actionCopySvgToClipboard = std::make_unique<QAction>( "Copy SVG to clipboard (image/svg+xml)" );
-    actionCopySvgToClipboard->setShortcut(  QKeySequence::Copy );//( "Ctrl+C" ) );
+    actionCopySvgToClipboard = makeAction(
+        QStringLiteral("Copy SVG to clipboard (image/svg+xml)"), {},
+        QKeySequence::Copy,  // Ctrl+C
+        QIcon(),
+        true, false, false, false);
 }
+
 
 void MainView::slotToggleShowBackgroundTiles()
 {

@@ -29,6 +29,7 @@ set(SOURCES
   graphics/qconstraints.cpp
   graphics/qsegment.cpp
   graphics/qstroke.cpp
+  gui/logger.cpp
   gui/mainwindow.cpp
   gui/mainscene.cpp
   gui/mainview.cpp
@@ -51,6 +52,7 @@ set(HEADERS
   geometry/conics.h
   geometry/minrot.h
   geometry/skew.h
+  gui/helper.h
   gui/logger.h
   reasoning/adjustment.h
   reasoning/commands.h
@@ -104,7 +106,6 @@ add_executable(${PROJECT_NAME}
   ${HEADERS}
 #  ${GENERATED_MOCS}
   ${RESOURCES}
-  gui/logger.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
