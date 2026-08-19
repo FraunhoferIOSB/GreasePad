@@ -23,6 +23,7 @@
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
+#include <QDebug>
 
 namespace Stats {
 

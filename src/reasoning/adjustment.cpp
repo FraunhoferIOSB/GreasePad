@@ -41,7 +41,9 @@
 
 #include <Eigen/Core>
 #include <Eigen/SparseCore>
+#include <Eigen/OrderingMethods>
 
+#include <Eigen//SparseQR>
 
 using Graph::IncidenceMatrix;
 using Constraint::ConstraintBase;
@@ -62,7 +64,7 @@ using Eigen::Vector;
 using Geometry::Rot_ab;
 
 using Matfun::null;
-using Matfun::is_rank_deficient;
+//using Matfun::is_rank_deficient;
 using Matfun::find;
 
 using TextColor::black;
@@ -117,6 +119,7 @@ void AdjustmentFramework::update( const VectorXd &x)
     }
 }
 
+//#include <iostream>
 
 bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<ConstraintBase> > & constr,
                                               const IncidenceMatrix & relsub,
@@ -153,7 +156,7 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
 
     l0_ = l_; // set adjusted observations  l0 := l
 
-    double reciprocalConditionNumber = 0.;
+    //double reciprocalConditionNumber = 0.;
     double normUpdateReducedObserv   = 0.;
 
     // allocation ......................................................
@@ -171,26 +174,25 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
         Jacobian( constr, relsub, BBr, mapc, status, g0);
         reduce();
 
-        // check rank and condition .....................................
+        BBr.makeCompressed();
+        const Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> qr1(BBr);
+        auto r1 = qr1.matrixR().diagonal();
+        const double tol = 1e-8; // maybe more sophisticated
+        qDebug() << r1.cwiseAbs().minCoeff();
 
-        if ( is_rank_deficient( BBr, threshold_rankEstimate()) ) {
-            // redundant or contradictory constraint
-            if ( verbose ) {
-                qDebug().noquote() << red << QStringLiteral("-> Rank deficiency") << black;
-            }
-            return false;
-        }
 
-        // rank-revealing decomposition
-        const Eigen::FullPivLU<MatrixXd> lu_decomp(BBr * rSigma_ll * BBr.adjoint());
-        reciprocalConditionNumber = lu_decomp.rcond();
-        if ( reciprocalConditionNumber < threshold_ReciprocalConditionNumber() ) {
-            // redundant or contradictory constraint
-            if ( verbose ) {
-                qDebug().noquote() << red
-                                   << QStringLiteral("-> ill-conditioned. Reciprocal condition number = %1").arg(reciprocalConditionNumber)
-                                   << black;
-            }
+
+        const Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> qr(BBr * rSigma_ll * BBr.adjoint());
+
+        auto r = qr.matrixR().diagonal();
+        // const double tol = 1e-8; // maybe more sophisticated
+        const Eigen::IOFormat fmt(4, 0, ", ", "\n", "[", "]");
+        std::stringstream ss;
+        ss << r.format(fmt);
+        qDebug().noquote() << QString::fromStdString( ss.str() );
+        if ( r.cwiseAbs().minCoeff() < tol) {
+
+            qDebug().noquote() << red << QStringLiteral("-> Rank deficiency") << black;
             return false;
         }
 
@@ -198,7 +200,7 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
         const VectorXd cg = -g0 -BBr*lr;
 
         // estimated update of reduced coordinates observations
-        const VectorXd redl = rSigma_ll*BBr.adjoint()*lu_decomp.solve(cg) +lr;
+        const VectorXd redl = rSigma_ll*BBr.adjoint()*qr.solve(cg) +lr;
 
         // updates adjusted observations, via retraction
         update( redl );
@@ -216,14 +218,14 @@ bool AdjustmentFramework::enforceConstraints( const QVector<std::shared_ptr<Cons
         if ( verbose ) {
             qDebug().noquote() << red << QString( nIterMax()==1 ?
                 "-> Not converged after %1 iteration." :  "-> Not converged after %1 iterations.").arg(nIterMax());
-            qDebug().noquote() << QStringLiteral("Reciprocal condition number = %1").arg(reciprocalConditionNumber) << black;
+            //qDebug().noquote() << QStringLiteral("Reciprocal condition number = %1").arg(reciprocalConditionNumber) << black;
         }
         return false;
     }
     if ( verbose ) {
         qDebug().noquote() << green << QString( it==0 ?
              "-> Converged after %1 iteration." : "-> Converged after %1 iterations.").arg(it+1);
-        qDebug().noquote() << QStringLiteral("Reciprocal condition number = %1").arg( reciprocalConditionNumber ) << black;
+       // qDebug().noquote() << QStringLiteral("Reciprocal condition number = %1").arg( reciprocalConditionNumber ) << black;
     }
 
     // check constraints

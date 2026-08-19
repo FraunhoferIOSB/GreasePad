@@ -227,11 +227,19 @@ public:
         this->mergeCurrentCharFormat(fmt);
     }
 
-    void appendText (Logger::Category cat, const QString & msg, const QTextCharFormat & fmt)
+    void appendText (const QString & msg, const QTextCharFormat & fmt)
     {
         setCurrentCharFormat(fmt);
-        const QString prefixed = QString("[%1] %2").arg(Logger::name(cat), msg);
-        appendPlainText(prefixed);
+        //const QString prefixed = QString("[%1] %2").arg(Logger::name(cat), msg);
+        appendPlainText(msg);
+    }
+    void appendText2 (const QString & msg)
+    {
+        // QTextCursor tc = textCursor();
+        //tc.deletePreviousChar();
+
+        // moveCursor(QTextCursor::End);
+        insertPlainText(msg);
     }
 };
 

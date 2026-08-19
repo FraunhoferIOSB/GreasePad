@@ -37,7 +37,13 @@ Logger* Logger::instance()
 
 void Logger::log(Category cat, const QString & msg)
 {
-    Q_EMIT instance()->messageLogged(cat, msg, formatFor(cat));
+    const QString prefixed = QStringLiteral("[%1] %2").arg(Logger::name(cat), msg);
+    Q_EMIT instance()->messageLogged( prefixed, formatFor(cat));
+}
+
+void Logger::append(const QString & msg)
+{
+    Q_EMIT instance()->messageAppend(msg);
 }
 
 

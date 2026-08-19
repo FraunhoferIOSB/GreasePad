@@ -104,8 +104,8 @@ private:
 
     static constexpr int    nIterMax_ = 10;          // maximal number of iterations
     static constexpr double convergence     = 1e-7;  // Threshold convergence
-    static constexpr double ReciprocalConditionNumber = 1e-4;  // condition number
-    static constexpr double rankEstimate    = 1e-6;  // rank estimation
+    static constexpr double ReciprocalConditionNumber = 1e-6;  // condition number
+    static constexpr double rankEstimate    = 1e-7;  // rank estimation
     static constexpr double numericalCheck  = 1e-5;  // numerical check of constraints
 };
 

@@ -21,13 +21,14 @@
 
 
 #include <Eigen/Core>
-#include <Eigen/OrderingMethods>
+//#include <Eigen/OrderingMethods>
 #include <Eigen/SparseCore>
-#include <Eigen/SparseQR>
+//#include <Eigen/SparseQR>
 
-#include <algorithm>
+//#include <algorithm>
 #include <cassert>
 
+//#include "gui/logger.h"
 
 namespace Matfun {
 
@@ -35,9 +36,11 @@ using Eigen::Matrix3d;
 using Eigen::SparseMatrix;
 
 
-//! check if the matrix AA is rank-deficient
+/*! check if the matrix AA is rank-deficient
 [[maybe_unused]] static bool is_rank_deficient( SparseMatrix<double,Eigen::ColMajor> & AA, const double threshold )
 {
+    //Eigen::FullPivLU<SparseMatrix<double> > lu(AA);
+
     // Eigen::ColPivHouseholderQR<MatrixXd> qr(AA);
     // qr.setThreshold( T );
     Eigen::SparseQR<SparseMatrix<double>,Eigen::COLAMDOrdering<int>> qr;
@@ -45,8 +48,9 @@ using Eigen::SparseMatrix;
     qr.compute(AA);
     qr.setPivotThreshold( threshold );
 
+    Logger::log( Logger::Category::Reasoning, QString("QR: err= %1").arg(qr.lastErrorMessage()));
     return ( qr.rank() < std::min( AA.rows(), AA.cols()) );
-}
+}*/
 
 
 //! 3x3 cofactor matrix, i.e., transposed adjugate

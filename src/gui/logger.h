@@ -41,10 +41,13 @@ public:
 
     static Logger* instance(); // singleton
     static void log(Category cat, const QString &msg);
+    static void append(const QString & msg);
+
     static QString name(Category cat);
 
 Q_SIGNALS:
-    void messageLogged(Logger::Category cat, const QString &msg, const QTextCharFormat &fmt);
+    void messageLogged(const QString &msg, const QTextCharFormat &fmt);
+    void messageAppend(const QString &msg);
 
 private:
     Logger() = default;

@@ -176,6 +176,8 @@ void MainWindow::createOutputConsole()
 
     connect( Logger::instance(),   &Logger::messageLogged,
             m_outputWidget.get(),  &PlainTextOutput::appendText);
+    connect( Logger::instance(),   &Logger::messageAppend,
+            m_outputWidget.get(),  &PlainTextOutput::appendText2);
     connect( m_outputWidget.get(), &QPlainTextEdit::customContextMenuRequested,
              this,                 &MainWindow::slotShowCustomContextMenu);
 
@@ -869,6 +871,7 @@ void MainWindow::slotCmdTabulaRasa()
                 );
 
     setWindowModified( true );
+    // m_outputWidget->clear();
 }
 
 // invoked by MainScene:signalCmdAddStroke:

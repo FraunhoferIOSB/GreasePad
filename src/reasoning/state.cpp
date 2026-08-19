@@ -117,7 +117,7 @@ Quantiles::Recognition State::recogn_;
 Quantiles::Snapping    State::snap_;
 
 
-namespace {
+namespace IO {
 
 //! Serialization of sparse incidence matrix
 QDataStream & operator<< (QDataStream & out, const IncidenceMatrix & AA)
@@ -203,6 +203,8 @@ QDataStream & operator>> (QDataStream & in, Array<T,Dynamic,1> & v)
 
 } // namespace
 
+using IO::operator>>;
+using IO::operator<<;
 
 
 //! Implementation details of class 'state' (pImpl idiom)
@@ -672,6 +674,7 @@ Index impl::findNewConstraints()
             establish_diagonal(c);
         }
     }
+
     if ( State::considerOrthogonal() ) {
         lookOutForOrthogonality(c);
     }
@@ -681,6 +684,7 @@ Index impl::findNewConstraints()
     if ( State::considerCopunctual() ) {
         lookOutForCopunctuality(c);
     }
+
 
     return m_constr.length() -previously;
 }
@@ -804,7 +808,12 @@ void impl::solve_subtask_greedy( const int cc )
             last_constraint_required = a.enforceConstraints( m_constr, relsub, mapc_, m_status, m_enforced );
 
             if ( !last_constraint_required ) {
+                Logger::append(  " -- redundant.");
                 m_status(mapc_(c)) = Attribute::Redundant;
+            }
+            else {
+
+                Logger::append(" -- required.");
             }
         }
     }
